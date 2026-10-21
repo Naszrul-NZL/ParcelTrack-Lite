@@ -42,11 +42,11 @@ Tracking identifiers are generated on the server. Recipient accounts, parcel edi
 
 | Provides | To | Phase |
 | --- | --- | --- |
-| H02 roles/Alembic/hardening template and lint; H07 `unit_of_work`; H08 constants; H09 migration 0003; H11 fixtures; H12 DTOs | NASZ, Qee | PH1 |
-| H22 `create_parcel`, A10, A12 v1; H25 parcel fixtures | Qee, group | PH2 |
-| H34 complete detail and slot contract; H36 retention functions | Qee, NASZ | PH3 |
-| H40 retention job; matrix rows and grants snapshot | Qee, NASZ | PH4 |
-| H52 grant verification and RLS runner | NASZ, Qee | PH5 |
+| H02 roles/Alembic/hardening template and lint; H07 `unit_of_work`; H08 constants; H09 migration 0003; H11 fixtures; H12 DTOs | Naszrul, Syauqi | PH1 |
+| H22 `create_parcel`, A10, A12 v1; H25 parcel fixtures | Syauqi, group | PH2 |
+| H34 complete detail and slot contract; H36 retention functions | Syauqi, Naszrul | PH3 |
+| H40 retention job; matrix rows and grants snapshot | Syauqi, Naszrul | PH4 |
+| H52 grant verification and RLS runner | Naszrul, Syauqi | PH5 |
 
 Consumes: H03 (0002, `lock_active_actor`), H04/H20 (auth), H21 (rate limit, audit), H10 (harness), H35 (proof table and components), H33 (runner), H13 (lock design), H50-H54 (AWS stack). Substitutes: see the [handoff register](../../shared/dependency-matrix.md#handoff-register).
 
@@ -54,16 +54,16 @@ Consumes: H03 (0002, `lock_active_actor`), H04/H20 (auth), H21 (rate limit, audi
 
 - /seller/parcels: own-parcel table/list, search, status filter, pagination, clear empty state and link to registration/detail.
 - /seller/parcels/new: recipient name, international phone, delivery address and weight. Show field constraints, validate on the server, prevent duplicate submission and show the returned tracking number after success.
-- /parcels/:id: shared authorized detail/history page. Private recipient fields appear only after a successful authorized response. Qee supplies the Rider action panel and proof viewer through typed slots; Admin assignment UI links here.
+- /parcels/:id: shared authorized detail/history page. Private recipient fields appear only after a successful authorized response. Syauqi supplies the Rider action panel and proof viewer through typed slots; Admin assignment UI links here.
 - /track: public tracking form and status timeline. Show no recipient fields, actor names, proof URLs or hidden private payloads. Copy/share UI must not leak tokens into third-party analytics or referrers.
 
 Search/filter changes reset pagination and stale results. A previous user's parcel list is cleared on identity change. Handle 401, inaccessible 404, validation 422, rate-limit 429, unknown tracking number and temporary server/network failures distinctly without disclosing private data.
 
 ## API and data ownership
 
-Own A10 through A13 in the [endpoint table](../../shared/system-contract.md#endpoint-ownership). Own parcel and parcel_status_history schema (migration 0003) plus safe summary/detail/public DTOs, the role bootstrap, the Alembic conventions, the RLS context helper, constants and the fixture loader. Qee authors assignment/delivery writes against these tables through the agreed functions; Zikri reviews shared schema changes. No module creates a second Parcel model or status-history table.
+Own A10 through A13 in the [endpoint table](../../shared/system-contract.md#endpoint-ownership). Own parcel and parcel_status_history schema (migration 0003) plus safe summary/detail/public DTOs, the role bootstrap, the Alembic conventions, the RLS context helper, constants and the fixture loader. Syauqi authors assignment/delivery writes against these tables through the agreed functions; Zikri reviews shared schema changes. No module creates a second Parcel model or status-history table.
 
-Zikri coordinates migration ordering but does not take ownership of other members' assessed code: NASZ writes 0002, Qee writes 0005 to 0007, each reviewed for function hardening; 0003 is complete in PH1 and never edited.
+Zikri coordinates migration ordering but does not take ownership of other members' assessed code: Naszrul writes 0002, Syauqi writes 0005 to 0007, each reviewed for function hardening; 0003 is complete in PH1 and never edited.
 
 ## Work package map
 
@@ -87,7 +87,7 @@ Use Pydantic response models with explicit field allowlists. For public tracking
 
 Private detail calls use the same role/ownership policy for Seller, assigned Rider and Admin. Authorizing the parent parcel is required before reading history or proof metadata. Reassignment immediately removes the old Rider's access. After anonymization, private detail shows the retained history with recipient fields null and an explicit anonymized state; public tracking continues to work.
 
-Retention uses terminalAt, with the P3 Delivered deadline and the documented extension for Failed parcels (D-06). Proof access is blocked before file cleanup (the `anonymized_at` flag is the hand-off to Qee's purge job), and retryable cleanup must be safe to rerun. No browser-triggered cleanup endpoint or public export route is added.
+Retention uses terminalAt, with the P3 Delivered deadline and the documented extension for Failed parcels (D-06). Proof access is blocked before file cleanup (the `anonymized_at` flag is the hand-off to Syauqi's purge job), and retryable cleanup must be safe to rerun. No browser-triggered cleanup endpoint or public export route is added.
 
 ## Security and policies
 
@@ -97,7 +97,7 @@ RLS is tested independently of an application WHERE seller_id filter. It does no
 
 ## Testing and acceptance
 
-All M2 tests are listed per phase and aggregated in [test-plan.md](test-plan.md). Run worksheet rows M2-01 to M2-10, RLS-01 to RLS-09 (RLS-03 and RLS-10 jointly with Qee) and the M2 shares of S-01, S-03, S-08. Use real PostgreSQL for RLS/transaction tests and browser tests for UI/privacy checks. Record exact input, expected/actual outcomes, safe evidence and Zikri's name. Keep more than five distinct security input types in the final record.
+All M2 tests are listed per phase and aggregated in [test-plan.md](test-plan.md). Run worksheet rows M2-01 to M2-10, RLS-01 to RLS-09 (RLS-03 and RLS-10 jointly with Syauqi) and the M2 shares of S-01, S-03, S-08. Use real PostgreSQL for RLS/transaction tests and browser tests for UI/privacy checks. Record exact input, expected/actual outcomes, safe evidence and Zikri's name. Keep more than five distinct security input types in the final record.
 
 ### Checkpoint slice versus completion
 

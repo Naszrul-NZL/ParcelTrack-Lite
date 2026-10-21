@@ -6,13 +6,18 @@ Secure parcel tracking coursework for STTCK3033, based on the RapidExpress case 
 
 | Member | GitHub | Module |
 | --- | --- | --- |
-| NASZ | [Naszrul-NZL](https://github.com/Naszrul-NZL) | M1 Login and User Management |
+| Naszrul | [Naszrul-NZL](https://github.com/Naszrul-NZL) | M1 Login and User Management |
 | Zikri | [Zikri809](https://github.com/Zikri809) | M2 Parcel Registration and Public Tracking |
-| Qee | [Qee110](https://github.com/Qee110) | M3 Delivery Update and Admin Dashboard |
+| Syauqi | [Qee110](https://github.com/Qee110) | M3 Delivery Update and Admin Dashboard |
 
 Allocation confirmed by the team on 21 October 2026. Database design, layout and integration are shared responsibilities.
 
 ## Checkpoint preparation
+
+- [Week 5 presentation, report and runnable interface demo](deliverables/week-5-checkpoint/README.md)
+- [React prototype source and run instructions](checkpoint-demo/README.md)
+
+The checkpoint prototype uses synthetic browser data. Backend, RLS, server security and AWS acceptance gates remain planned.
 
 - [Deliverable plan for 22 October](docs/checkpoint-plan.md)
 - [Initial ERD and data rules](docs/initial-erd.md)
@@ -27,9 +32,9 @@ Six shared phases (PH1 foundation, PH2 checkpoint slice, PH3 complete functional
 - [Phase framework, milestone matrix and gates](docs/shared/phase-framework.md)
 - [Dependency matrix and handoffs](docs/shared/dependency-matrix.md)
 - [First execution sequence for each member](docs/shared/execution-sequence.md)
-- NASZ M1: [plan and phases](docs/modules/module-1-auth/README.md), [test plan](docs/modules/module-1-auth/test-plan.md)
+- Naszrul M1: [plan and phases](docs/modules/module-1-auth/README.md), [test plan](docs/modules/module-1-auth/test-plan.md)
 - Zikri M2: [plan and phases](docs/modules/module-2-parcels/README.md), [test plan](docs/modules/module-2-parcels/test-plan.md)
-- Qee M3: [plan and phases](docs/modules/module-3-delivery/README.md), [test plan](docs/modules/module-3-delivery/test-plan.md)
+- Syauqi M3: [plan and phases](docs/modules/module-3-delivery/README.md), [test plan](docs/modules/module-3-delivery/test-plan.md)
 - [Shared API data and security contract](docs/shared/system-contract.md)
 - [Integration scenarios](docs/shared/integration-tests.md) and [whole-project workflow trace](docs/shared/workflow-trace.md)
 - [Requirement to phase, task and test traceability](docs/shared/traceability.md)
@@ -46,6 +51,6 @@ FastAPI and PostgreSQL are the team's selected alternatives to the framework/dat
 
 ## Current status
 
-The repository contains planning documents, a documentation checker (`tools/check_plan_docs.py`) and local reference materials. The phased plans were independently reviewed (plans only, [resolutions](docs/review-resolutions.md)) and remain drafts until the team approves them. Application code, working module interfaces, security controls, test suites and cloud deployment have not been implemented or run. There is no application start command yet.
+The repository contains planning documents, a documentation checker (`tools/check_plan_docs.py`), local reference materials and a React checkpoint interface in `checkpoint-demo/`. Run `npm ci` and `npm run dev` in that folder, or use the portable demo ZIP in the checkpoint package. Its six domain tests and browser smoke journey cover the frontend only. The real FastAPI backend, PostgreSQL/RLS, production security and AWS deployment remain planned. The full plans were independently reviewed ([resolutions](docs/review-resolutions.md)); their real backend gates have not passed.
 
-The lecturer's briefing, case study and rubric are included at the repository root. Only Office temporary files are ignored. The planning documents distinguish source requirements from proposed implementation choices.
+The lecturer's briefing, case study and rubric are included at the repository root. Office temporary files, local demo dependencies/builds and private artifact verification outputs are ignored. The planning documents distinguish source requirements from proposed implementation choices.

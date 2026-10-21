@@ -25,9 +25,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 MODULES = {
-    "M1": ("module-1-auth", "NASZ"),
+    "M1": ("module-1-auth", "Naszrul"),
     "M2": ("module-2-parcels", "Zikri"),
-    "M3": ("module-3-delivery", "Qee"),
+    "M3": ("module-3-delivery", "Syauqi"),
 }
 PHASE_FILES = {
     1: "PH1-foundation.md",

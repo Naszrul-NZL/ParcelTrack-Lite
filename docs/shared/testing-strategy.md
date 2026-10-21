@@ -52,20 +52,20 @@ Layers start with the first feature they can test; later phases extend them.
 
 ```text
 backend/tests/
-  harness/                   Qee: role-asserting connections, reset, clock, barriers
-  unit/auth/                 NASZ
+  harness/                   Syauqi: role-asserting connections, reset, clock, barriers
+  unit/auth/                 Naszrul
   unit/parcels/              Zikri
-  unit/delivery/             Qee
+  unit/delivery/             Syauqi
   integration/auth/          actual API/session/account behavior
   integration/parcels/       registration, reads, tracking and retention
   integration/delivery/      assignment, outcomes and proof files
   integration/rls/           real roles, functions and pooled connections
   integration/cross_module/  INT scenarios and concurrent operations
-  integration/authz_matrix/  NASZ runner, rows contributed by each endpoint owner
+  integration/authz_matrix/  Naszrul runner, rows contributed by each endpoint owner
 frontend/src/features/*/     colocated component tests owned by each member
-tests/e2e/                   browser journeys owned by feature leads (Qee skeleton)
+tests/e2e/                   browser journeys owned by feature leads (Syauqi skeleton)
 tests/operations/            clean startup, restart, backup/restore and jobs
-tests/fixtures/files/        generated harmless upload fixtures (Qee)
+tests/fixtures/files/        generated harmless upload fixtures (Syauqi)
 tests/fixtures/payloads/     SQL injection, XSS and Unicode corpora (Zikri)
 tools/check_plan_docs.py     documentation consistency checker
 ```
@@ -84,20 +84,20 @@ Owners use table-driven tests for valid, invalid and boundary cases. Test observ
 
 | Test family | Required cases | Owner |
 | --- | --- | --- |
-| UT-A01 Account input | Username normalization/length/characters; display-name boundaries; 9/10/128/129-character passwords; common-password rejection; no silent truncation | NASZ |
-| UT-A02 Session lifecycle | Anonymous/authenticated idle and absolute expiry just before/at/after boundary; active flag; matching/mismatched session version; first-change restriction | NASZ |
-| UT-A03 Auth decisions | Correct/wrong password outcomes, generic unknown-user outcome, permitted role sets, CSRF match/mismatch/missing, session rotation/revocation decisions | NASZ |
-| UT-A04 Safe output | Principal/UserSummary field allowlists; password/body redaction; generic internal errors and safe field errors | NASZ |
-| UT-A05 Rate windows | Threshold minus one/threshold/over threshold, expiry, counter-key normalization and privacy-safe keyed identities | NASZ |
+| UT-A01 Account input | Username normalization/length/characters; display-name boundaries; 9/10/128/129-character passwords; common-password rejection; no silent truncation | Naszrul |
+| UT-A02 Session lifecycle | Anonymous/authenticated idle and absolute expiry just before/at/after boundary; active flag; matching/mismatched session version; first-change restriction | Naszrul |
+| UT-A03 Auth decisions | Correct/wrong password outcomes, generic unknown-user outcome, permitted role sets, CSRF match/mismatch/missing, session rotation/revocation decisions | Naszrul |
+| UT-A04 Safe output | Principal/UserSummary field allowlists; password/body redaction; generic internal errors and safe field errors | Naszrul |
+| UT-A05 Rate windows | Threshold minus one/threshold/over threshold, expiry, counter-key normalization and privacy-safe keyed identities | Naszrul |
 | UT-P01 Parcel input | Required/empty/Unicode/overlong recipient fields; phone normalization; weight precision and 0/0.001/100.000/over-limit/invalid numeric input | Zikri |
 | UT-P02 Tracking/replay | Token shape/entropy-source use, collision retry classification, canonical request fingerprint, same/different/replayed/expired request keys | Zikri |
 | UT-P03 Data selection | Own/assigned/Admin decisions, literal search escaping, sort allowlist, pagination bounds and stable tie-breaker | Zikri |
 | UT-P04 Privacy/retention | Public DTO exact fields, private anonymized representation, calendar-month retention boundary and timezone handling, fingerprint removal | Zikri |
-| UT-D01 State machine | Every pair of five statuses plus role/assignment/active variations; only legal transitions pass; final-state immutability | Qee |
-| UT-D02 Assignment | Active/non-Rider/inactive targets, first assignment, same-Rider no-op, unfinished reassignment and terminal-state rejection | Qee |
-| UT-D03 Proof input | Allowed format, extension/MIME/content mismatch, corrupt/multiple-frame data, byte/pixel/output limits, unsafe names and metadata removal | Qee |
-| UT-D04 Recovery decisions | File prepared/committed/unreferenced states, rollback compensation, referenced-file preservation and retryable retention cleanup | Qee |
-| UT-D05 Dashboard | Five fixed status keys, missing statuses represented by zero and coherent total from the aggregate result | Qee |
+| UT-D01 State machine | Every pair of five statuses plus role/assignment/active variations; only legal transitions pass; final-state immutability | Syauqi |
+| UT-D02 Assignment | Active/non-Rider/inactive targets, first assignment, same-Rider no-op, unfinished reassignment and terminal-state rejection | Syauqi |
+| UT-D03 Proof input | Allowed format, extension/MIME/content mismatch, corrupt/multiple-frame data, byte/pixel/output limits, unsafe names and metadata removal | Syauqi |
+| UT-D04 Recovery decisions | File prepared/committed/unreferenced states, rollback compensation, referenced-file preservation and retryable retention cleanup | Syauqi |
+| UT-D05 Dashboard | Five fixed status keys, missing statuses represented by zero and coherent total from the aggregate result | Syauqi |
 
 Do not claim randomness is proven by generating a few unique values. Check use of the cryptographic generator and database uniqueness behavior. Do not claim access control is proven solely by a mocked permission helper.
 
@@ -113,18 +113,18 @@ For 404-protected parcel/proof routes, compare nonexistent IDs with inaccessible
 
 | Test family | Required cases | Owner |
 | --- | --- | --- |
-| IT-A01 Accounts | Successful/duplicate/concurrent registration; forced Seller role; Admin-only Rider creation; initial password-change gate; no public Admin creation | NASZ |
-| IT-A02 Sessions | Actual Set-Cookie flags, hashed stored token, login/CSRF rotation, old-cookie replay, idle/absolute expiry, logout and all-session password-change invalidation | NASZ |
-| IT-A03 Locking | Disable/reactivate, incident-lock including Admin through private command, login versus password-change race and session revocation during a pending write | NASZ |
-| IT-A04 Audit/limits | Failure audit and counters persist when authentication fails; successful writes/audit commit together; concurrent workers share limits; failed audit store cannot issue an untracked successful login | NASZ |
+| IT-A01 Accounts | Successful/duplicate/concurrent registration; forced Seller role; Admin-only Rider creation; initial password-change gate; no public Admin creation | Naszrul |
+| IT-A02 Sessions | Actual Set-Cookie flags, hashed stored token, login/CSRF rotation, old-cookie replay, idle/absolute expiry, logout and all-session password-change invalidation | Naszrul |
+| IT-A03 Locking | Disable/reactivate, incident-lock including Admin through private command, login versus password-change race and session revocation during a pending write | Naszrul |
+| IT-A04 Audit/limits | Failure audit and counters persist when authentication fails; successful writes/audit commit together; concurrent workers share limits; failed audit store cannot issue an untracked successful login | Naszrul |
 | IT-P01 Atomic registration | Parcel/history/audit commit together; failure rollback; tracking collision handling; concurrent request-key replay creates one parcel; changed payload conflicts | Zikri |
 | IT-P02 Read isolation | Own-list/search/detail/history filtering, pagination, literal search/injection, cross-user IDs and reassignment removal of old Rider access | Zikri |
 | IT-P03 Tracking | Exact output allowlist for all states, malformed/unknown token behavior, rate windows, SQL injection and public-role privilege denial | Zikri |
-| IT-P04 Retention | Delivered/Failed before/at/after 12 calendar months, leap/month-end handling, anonymized fields/fingerprint, proof deny-before-delete and restartable batches | Zikri + Qee |
-| IT-D01 Assignment | Active target check under concurrency, first Assigned history, same-Rider no-op, stale conflict, audit-only reassignment and disabled-Rider continuity | Qee |
-| IT-D02 Finalization | Both final outcomes, exactly one photo, missing/invalid/multiple photo rejection, actor/time/version correctness and terminal immutability | Qee |
-| IT-D03 File/DB faults | Failure before/after file publication, DB error, commit acknowledgment uncertainty, response failure, interrupted cleanup, referenced-file survival and no broken committed proof | Qee |
-| IT-D04 Dashboard/photo | One consistent aggregate snapshot; zeros/total; actual private image stream headers/permissions; path traversal; no static/public photo route | Qee |
+| IT-P04 Retention | Delivered/Failed before/at/after 12 calendar months, leap/month-end handling, anonymized fields/fingerprint, proof deny-before-delete and restartable batches | Zikri + Syauqi |
+| IT-D01 Assignment | Active target check under concurrency, first Assigned history, same-Rider no-op, stale conflict, audit-only reassignment and disabled-Rider continuity | Syauqi |
+| IT-D02 Finalization | Both final outcomes, exactly one photo, missing/invalid/multiple photo rejection, actor/time/version correctness and terminal immutability | Syauqi |
+| IT-D03 File/DB faults | Failure before/after file publication, DB error, commit acknowledgment uncertainty, response failure, interrupted cleanup, referenced-file survival and no broken committed proof | Syauqi |
+| IT-D04 Dashboard/photo | One consistent aggregate snapshot; zeros/total; actual private image stream headers/permissions; path traversal; no static/public photo route | Syauqi |
 
 Use an actual Argon2id hash round trip in integration tests with deployed settings. Faster deterministic password stubs are acceptable for isolated unit cases, but cannot substitute for the real hash/session pipeline.
 
@@ -208,7 +208,7 @@ The case study requires that each module be tested with suitable security tools 
 
 ## Final security test document
 
-One document, organized by module, with the owner's name, assembled from the three module sections (each owner assembles their own; NASZ merges and exports it, H60). One row per executed test input:
+One document, organized by module, with the owner's name, assembled from the three module sections (each owner assembles their own; Naszrul merges and exports it, H60). One row per executed test input:
 
 | Column | Content |
 | --- | --- |

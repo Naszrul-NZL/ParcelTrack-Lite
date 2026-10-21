@@ -1,6 +1,6 @@
 # Module 1 Login and User Management
 
-Owner: NASZ, GitHub Naszrul-NZL. Deliver the FastAPI auth module and React auth feature. This folder is the module's complete phased plan, including work after the 22 October checkpoint. Everything here is a reviewable plan; no application code or test has been written or run.
+Owner: Naszrul, GitHub Naszrul-NZL. Deliver the FastAPI auth module and React auth feature. This folder is the module's complete phased plan, including work after the 22 October checkpoint. Everything here is a reviewable plan; no application code or test has been written or run.
 
 Read the [shared contract](../../shared/system-contract.md), the [phase framework](../../shared/phase-framework.md), the [dependency matrix](../../shared/dependency-matrix.md) and the [security worksheet](../../security-tests.md). The shared contract owns exact payloads, role names, limits and errors; do not create alternative definitions in this module.
 
@@ -34,8 +34,8 @@ Admin provisioning is a private deployment command. There is no public Admin reg
 | --- | --- | --- | --- | --- |
 | PH1 | Buildable skeleton and shared auth foundation | T01-T03 skeleton, T06-T07 migration and actor lock, T08 interface, T10 passwords | Zikri's roles and Alembic base (H02) | G1 |
 | PH2 | Real login/logout slice with security baseline | T02-T06 sessions, CSRF, login, rate limit; T09 retire TMP-01; T10 UI; T12 matrix | H07, H10, H11 | G2 |
-| PH3 | All five features and the runner skeleton | T01-T07 endpoints, T08-T09 screens, T10 runner and maintenance gate, T12 walking-skeleton AWS deployment | Qee's consumption of A07/A09 | G3 |
-| PH4 | Prove controls under hostile and concurrent conditions | T01 matrix, T02-T04 suites, T05 incident commands, T07 headers, T08 canary scan | Rows from Zikri/Qee (H43) | G4 |
+| PH3 | All five features and the runner skeleton | T01-T07 endpoints, T08-T09 screens, T10 runner and maintenance gate, T12 walking-skeleton AWS deployment | Syauqi's consumption of A07/A09 | G3 |
+| PH4 | Prove controls under hostile and concurrent conditions | T01 matrix, T02-T04 suites, T05 incident commands, T07 headers, T08 canary scan | Rows from Zikri/Syauqi (H43) | G4 |
 | PH5 | AWS deployment and operations | T01-T04 stack and first boot, T06 HTTPS cookies, T07 release, T12 client IP | EXT-04, H51, H52 | G5 |
 | PH6 | Final evidence and demonstration | T02 test document, T04 demo, T06 allocation evidence | G5 | G6 |
 
@@ -43,11 +43,11 @@ Admin provisioning is a private deployment command. There is no public Admin reg
 
 | Handoff | Consumer | Phase |
 | --- | --- | --- |
-| H01 skeleton/Compose; H03 migration 0002 and `lock_active_actor`; H04 auth interface; H05 error/log conventions; H06 API client; H14 password service | Zikri, Qee | PH1 |
-| H20 real sessions and `login_as`; H21 rate-limit and audit services; H24 authorization-matrix harness | Zikri, Qee | PH2 |
-| H30 Rider directory (A07); H31 disablement (A09); H32 must-change gate (PH2 dependency, full tests PH3); H33 maintenance runner and gate | Qee, Zikri | PH3 |
-| H42 private lock/recover/purge-sessions commands | Qee, Zikri | PH4 |
-| H50 AWS stack, proxy, secrets, first boot; H53 client-IP trust | Zikri, Qee | PH5 |
+| H01 skeleton/Compose; H03 migration 0002 and `lock_active_actor`; H04 auth interface; H05 error/log conventions; H06 API client; H14 password service | Zikri, Syauqi | PH1 |
+| H20 real sessions and `login_as`; H21 rate-limit and audit services; H24 authorization-matrix harness | Zikri, Syauqi | PH2 |
+| H30 Rider directory (A07); H31 disablement (A09); H32 must-change gate (PH2 dependency, full tests PH3); H33 maintenance runner and gate | Syauqi, Zikri | PH3 |
+| H42 private lock/recover/purge-sessions commands | Syauqi, Zikri | PH4 |
+| H50 AWS stack, proxy, secrets, first boot; H53 client-IP trust | Zikri, Syauqi | PH5 |
 
 ## What M1 consumes
 
@@ -67,7 +67,7 @@ Forms support keyboard use, visible labels, field errors and pending states. Pas
 
 Own A01 through A09 and A20 in the [endpoint table](../../shared/system-contract.md#endpoint-ownership). Implement backend/app/modules/auth and frontend/src/features/auth, plus the shared session provider, CSRF-aware client plumbing, security dependencies and maintenance runner consumed by M2/M3.
 
-Own app_user, auth_session, rate_limit_bucket, system_state and audit_event definitions (migration 0002). Zikri adds the audit-to-parcel foreign key in 0003; Qee and Zikri write their own event producers through the audit event-type list in the contract. Export only Principal/UserSummary DTOs; never serialize the ORM user record automatically.
+Own app_user, auth_session, rate_limit_bucket, system_state and audit_event definitions (migration 0002). Zikri adds the audit-to-parcel foreign key in 0003; Syauqi and Zikri write their own event producers through the audit event-type list in the contract. Export only Principal/UserSummary DTOs; never serialize the ORM user record automatically.
 
 ### Shared services delivered to the team
 
@@ -79,9 +79,9 @@ Own app_user, auth_session, rate_limit_bucket, system_state and audit_event defi
 | principal_uow | M2 and M3 | Verified principal plus transaction-scoped RLS context from Zikri's `unit_of_work` | PH2 |
 | password service | Registration, Rider creation, password change, bootstrap, fixtures | Argon2id hash/verify through maintained library | PH1 (H14) |
 | rate-limit and audit services | All modules | Atomic PostgreSQL counters; allowlisted audit events | PH2 (H21) |
-| active Rider directory | Qee assignment UI | Admin-only A07 role=RIDER,isActive=true, revalidated by the database during assignment | PH3 (H30) |
-| maintenance runner | Zikri, Qee | Job registry, advisory locks, backup-lock check | skeleton PH3 (H33), jobs PH4 |
-| private operations commands | Operators, Qee's restore drill | Lock/recover any account, purge sessions | PH4 (H42) |
+| active Rider directory | Syauqi assignment UI | Admin-only A07 role=RIDER,isActive=true, revalidated by the database during assignment | PH3 (H30) |
+| maintenance runner | Zikri, Syauqi | Job registry, advisory locks, backup-lock check | skeleton PH3 (H33), jobs PH4 |
+| private operations commands | Operators, Syauqi's restore drill | Lock/recover any account, purge sessions | PH4 (H42) |
 
 ## Work package map
 
@@ -109,7 +109,7 @@ Rate-limit counters and failed-login audit events must survive a rejected login;
 
 ## Integration edge cases
 
-- When an Admin disables a Rider, do not delete the Rider or change any parcel state. Qee flags and reassigns their unfinished parcels; history keeps the original actor reference.
+- When an Admin disables a Rider, do not delete the Rider or change any parcel state. Syauqi flags and reassigns their unfinished parcels; history keeps the original actor reference.
 - A role or active flag cached by React or an old session cannot override the latest account record. An old tab receives 401 after password change/disablement.
 - First-password-change restrictions apply to direct M2/M3 calls too, not only screen routing.
 - Account status update uses expectedVersion so two Admin tabs cannot silently overwrite each other. React refreshes after 409.
@@ -118,7 +118,7 @@ Rate-limit counters and failed-login audit events must survive a rejected login;
 
 ## Testing and acceptance
 
-All M1 tests are listed per phase in the phase files and aggregated in [test-plan.md](test-plan.md). Execute worksheet rows M1-01 through M1-12 and the M1 shares of S-01 to S-06, S-08, S-09. Use real PostgreSQL for integration tests; an in-memory database does not prove production constraints or shared limiter behavior. Record input, expected result, actual result, evidence and NASZ's name. More than five input types must be demonstrated for the rubric's highest testing band.
+All M1 tests are listed per phase in the phase files and aggregated in [test-plan.md](test-plan.md). Execute worksheet rows M1-01 through M1-12 and the M1 shares of S-01 to S-06, S-08, S-09. Use real PostgreSQL for integration tests; an in-memory database does not prove production constraints or shared limiter behavior. Record input, expected result, actual result, evidence and Naszrul's name. More than five input types must be demonstrated for the rubric's highest testing band.
 
 ### Checkpoint slice versus completion
 
@@ -136,4 +136,4 @@ Tick a box only with a linked passing result from the stated phase.
 - [ ] All session, password, disablement, rate-limit, race, incident-command and audit checks pass (G4); M1-01 to M1-12 have actual results.
 - [ ] M1 unit/component and real-PostgreSQL/API suites meet the testing strategy gates, including the authorization matrix.
 - [ ] Account migrations/fixtures work in a clean local stack and the AWS deployment (G5).
-- [ ] NASZ can demonstrate blocked attacks on the cloud URL and explain the implementation within the individual demo (G6).
+- [ ] Naszrul can demonstrate blocked attacks on the cloud URL and explain the implementation within the individual demo (G6).

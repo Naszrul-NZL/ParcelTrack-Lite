@@ -12,9 +12,9 @@ The team confirmed this allocation on 21 October 2026:
 
 | Owner | GitHub | Required module | Primary responsibility |
 | --- | --- | --- | --- |
-| NASZ | Naszrul-NZL | M1 Login and User Management | Seller registration, login/logout, password change, admin management of Rider accounts |
+| Naszrul | Naszrul-NZL | M1 Login and User Management | Seller registration, login/logout, password change, admin management of Rider accounts |
 | Zikri | Zikri809 | M2 Parcel Registration and Public Tracking | Parcel registration, seller parcel list/search, tracking numbers, public status history |
-| Qee | Qee110 | M3 Delivery Update and Admin Dashboard | Admin assignment, rider parcel list/status updates, proof photo, dashboard counts |
+| Syauqi | Qee110 | M3 Delivery Update and Admin Dashboard | Admin assignment, rider parcel list/status updates, proof photo, dashboard counts |
 
 Database design, shared layout and integration belong to all three members. Each member must understand, test and explain their own module's code. The confirmed GitHub handles are not substitutes for the full names and matric numbers required on the lecturer's allocation sheet.
 
@@ -59,9 +59,9 @@ Suggested future source organization:
 
 ```text
 backend/app/    shared API application (see the contract's code layout)
-  modules/auth/       conceptual M1 package owned by NASZ
+  modules/auth/       conceptual M1 package owned by Naszrul
   modules/parcels/    conceptual M2 package owned by Zikri
-  modules/delivery/   conceptual M3 package owned by Qee
+  modules/delivery/   conceptual M3 package owned by Syauqi
 backend/alembic/ shared schema and RLS migrations
 frontend/       React application with module feature folders
 infra/          Docker Compose and cloud configuration
@@ -82,7 +82,7 @@ For tomorrow, aim for a small integrated database-backed workflow. A screen draw
 | M2 | Seller registration form and own-parcel list | Create a parcel, obtain its tracking number and refresh to verify persistence | Invalid weight rejected; another Seller cannot retrieve the parcel |
 | M3 | Rider assigned-parcel page | Seed an assigned parcel and persist its change to Out for Delivery | Another Rider cannot update it; actor/time are recorded |
 
-The detailed tasks and tests for these slices are [M1-PH2](modules/module-1-auth/phases/PH2-checkpoint-slice.md), [M2-PH2](modules/module-2-parcels/phases/PH2-checkpoint-slice.md) and [M3-PH2](modules/module-3-delivery/phases/PH2-checkpoint-slice.md), with the group scenarios INT-CP-01 to INT-CP-03 in the [integration scenarios](shared/integration-tests.md#checkpoint-scenarios-end-of-ph2). Qee compiles the checkpoint evidence (M3-PH2-T08). Gate G2 defines what counts as passing; anything not exercised is reported as Planned.
+The detailed tasks and tests for these slices are [M1-PH2](modules/module-1-auth/phases/PH2-checkpoint-slice.md), [M2-PH2](modules/module-2-parcels/phases/PH2-checkpoint-slice.md) and [M3-PH2](modules/module-3-delivery/phases/PH2-checkpoint-slice.md), with the group scenarios INT-CP-01 to INT-CP-03 in the [integration scenarios](shared/integration-tests.md#checkpoint-scenarios-end-of-ph2). Syauqi compiles the checkpoint evidence (M3-PH2-T08). Gate G2 defines what counts as passing; anything not exercised is reported as Planned.
 
 Public tracking, Admin assignment/dashboard and proof upload belong to the complete project scope. Seeded assignments are acceptable for demonstrating an early slice (temporary substitute TMP-02, retired in M3-PH3-T04); they do not count as implemented assignment functionality.
 
@@ -92,14 +92,14 @@ Prepare one Admin, two Sellers and two Riders using synthetic names and contact 
 
 ### Later integrated demonstration order
 
-1. NASZ logs in as Seller A and shows a failed login, successful login and denied Admin access.
+1. Naszrul logs in as Seller A and shows a failed login, successful login and denied Admin access.
 2. Zikri registers a parcel and notes the generated tracking number. Refresh to show that it is stored.
 3. Zikri switches to Seller B and demonstrates that direct access to Seller A's parcel fails.
-4. Qee logs in as Admin and assigns that parcel to Rider A.
-5. Qee logs in as Rider B and demonstrates that an update to Rider A's parcel fails.
-6. Qee logs in as Rider A, records Out for Delivery, and then Delivered with a valid proof image.
+4. Syauqi logs in as Admin and assigns that parcel to Rider A.
+5. Syauqi logs in as Rider B and demonstrates that an update to Rider A's parcel fails.
+6. Syauqi logs in as Rider A, records Out for Delivery, and then Delivered with a valid proof image.
 7. Zikri opens public tracking without login and shows status timestamps without recipient data or the photo.
-8. Qee returns to the Admin dashboard and shows the updated counts.
+8. Syauqi returns to the Admin dashboard and shows the updated counts.
 
 This sequence is the later end-to-end target after the small checkpoint slices work. The Week 14 requirement is a 30-minute group demonstration, approximately 10 minutes per person. The supplied documents do not set tomorrow's presentation length.
 
@@ -152,9 +152,9 @@ Check Git history and the published branch/PR for the revision being presented. 
 
 ### Execution order before the checkpoint
 
-1. Use the confirmed FastAPI stack and shared contract. NASZ completes/submits the lecturer's allocation sheet by Week 5, including full names/matric numbers and starter-kit declaration if applicable, and retains the receipt. Current submission status is unverified; do not assume tomorrow is the Week 5 deadline.
+1. Use the confirmed FastAPI stack and shared contract. Naszrul completes/submits the lecturer's allocation sheet by Week 5, including full names/matric numbers and starter-kit declaration if applicable, and retains the receipt. Current submission status is unverified; do not assume tomorrow is the Week 5 deadline.
 2. Create the shared schema/migrations and seed synthetic accounts, parcels and Rider assignments (M2-PH1-T01 to T06, M1-PH1-T06, T07).
-3. NASZ builds login/logout (M1-PH2-T02 to T06); Zikri builds registration/persistence (M2-PH2-T01 to T04, T06); Qee builds assigned-parcel view and Out for Delivery update (M3-PH2-T02 to T04).
+3. Naszrul builds login/logout (M1-PH2-T02 to T06); Zikri builds registration/persistence (M2-PH2-T01 to T04, T06); Syauqi builds assigned-parcel view and Out for Delivery update (M3-PH2-T02 to T04).
 4. Run the three checkpoint slices against the same database/session (INT-CP-01 to INT-CP-03) and record actual outcomes.
 5. Present the ERD, security requirements, full module plans and AWS architecture. Confirm AWS account access for subsequent deployment; if a live cloud slice is available, demonstrate it accurately.
 6. Capture real evidence and list unimplemented features explicitly. Continue through PH3 to PH6 of the full project plan after the checkpoint.
@@ -166,9 +166,9 @@ If time prevents a cloud demo, disclose that gap. A deployment plan does not sat
 1. Project purpose, team and confirmed module ownership.
 2. Proposed or confirmed stack, repository URL and cloud status.
 3. Initial ERD and shared data rules.
-4. NASZ demonstrates M1 and one rejected access attempt.
+4. Naszrul demonstrates M1 and one rejected access attempt.
 5. Zikri demonstrates the PH2 registration/persistence slice and ownership check; describes public tracking/privacy as planned until implemented.
-6. Qee demonstrates the PH2 assigned-parcel/Out for Delivery slice (seeded assignment, disclosed); describes assignment/dashboard/upload controls as planned until implemented.
+6. Syauqi demonstrates the PH2 assigned-parcel/Out for Delivery slice (seeded assignment, disclosed); describes assignment/dashboard/upload controls as planned until implemented.
 7. Security requirements with actual test evidence where available.
 8. Completed work, current challenges and next steps.
 

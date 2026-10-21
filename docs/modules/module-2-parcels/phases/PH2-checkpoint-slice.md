@@ -4,7 +4,7 @@ Owner: Zikri. Phase PH2 of [phase framework](../../../shared/phase-framework.md)
 
 ## 1 Objective
 
-A logged-in Seller registers a parcel through the React form; the server creates it in PostgreSQL with a random tracking number and a REGISTERED history row under RLS; the Seller sees it in their own list after refresh; another Seller cannot retrieve it. The shared private detail endpoint (A12 v1) exists for Qee's Rider screen and for the ownership demonstration.
+A logged-in Seller registers a parcel through the React form; the server creates it in PostgreSQL with a random tracking number and a REGISTERED history row under RLS; the Seller sees it in their own list after refresh; another Seller cannot retrieve it. The shared private detail endpoint (A12 v1) exists for Syauqi's Rider screen and for the ownership demonstration.
 
 ## 2 Entry criteria
 
@@ -16,12 +16,12 @@ A logged-in Seller registers a parcel through the React form; the server creates
 
 | Needs | From | Handoff | Substitute |
 | --- | --- | --- | --- |
-| `lock_active_actor` function | NASZ M1-PH1-T07 | H03 | none (merged in PH1) |
-| `require_authenticated`, `require_role`, `verify_csrf`, `principal_uow` | NASZ M1-PH2-T03, T06, T08 | H04, H20 | TMP-01 test principal and test-only CSRF stub until H20; removed before G2 |
-| `login_as` helper and real cookies for INT-CP-01 | NASZ M1-PH2-T09 | H20 | TMP-04 |
-| API client, session provider | NASZ M1-PH1-T09 | H06 | MSW mock (TMP-03) |
-| Playwright skeleton, harness, controlled clock | Qee M3-PH1-T01, T02 | H10 | none |
-| Rider assigned fixtures consume this loader | Qee M3-PH2-T01 | H25 | Zikri ships loader hook first |
+| `lock_active_actor` function | Naszrul M1-PH1-T07 | H03 | none (merged in PH1) |
+| `require_authenticated`, `require_role`, `verify_csrf`, `principal_uow` | Naszrul M1-PH2-T03, T06, T08 | H04, H20 | TMP-01 test principal and test-only CSRF stub until H20; removed before G2 |
+| `login_as` helper and real cookies for INT-CP-01 | Naszrul M1-PH2-T09 | H20 | TMP-04 |
+| API client, session provider | Naszrul M1-PH1-T09 | H06 | MSW mock (TMP-03) |
+| Playwright skeleton, harness, controlled clock | Syauqi M3-PH1-T01, T02 | H10 | none |
+| Rider assigned fixtures consume this loader | Syauqi M3-PH2-T01 | H25 | Zikri ships loader hook first |
 
 Independent now: T01, T02 (database), T04 partial.
 
@@ -36,7 +36,7 @@ Independent now: T01, T02 (database), T04 partial.
 | M2-PH2-T05 (CP) | React: `/seller/parcels/new` (labels with constraints, server field errors, submit disabled while pending, client request ID generated once per form instance and kept across failures, token displayed after success with link to detail) and `/seller/parcels` (table/list, empty state, pagination, error states); identity change clears cached lists; also the read-only `/parcels/:id` detail route (recipient fields as text, history, not-found state for inaccessible IDs) that the Seller list, the Rider list and TC14 link to | Components render recipient strings as text only | TC12, TC13 | H06, T03, T04 |
 | M2-PH2-T06 (CP) | A12 v1 `GET /parcels/{parcelId}`: shared private detail service for Seller own, Rider assigned and Admin all; reads parcel and history through `principal_uow` under RLS; returns `ParcelDetail` fields available in PH2 (recipient, status, history ordered by `changed_at` then `id`, `version`); inaccessible and nonexistent IDs return the same 404 (identical status, code, message and shape); invalid ID format 422 | Cross-user access impossible by ID guessing | TC10, TC15 | T01 |
 | M2-PH2-T07 (CP) | Security baseline tests and worksheet entries for this slice: M2-03 (validation), M2-04 (cross-Seller read), M2-08, M2-09 (role and forged fields), RLS-02, RLS-04, RLS-05, partial RLS-06 (direct DML denied, function derives actor), S-01 for A10 | Actual results with commit recorded; remaining M2 rows stay Planned | TC02-TC10 | T01-T06 |
-| M2-PH2-T08 | Fixture profiles: Seller A and B REGISTERED parcels; the loader hook for Qee's profile of ASSIGNED parcels for Rider A and Rider B (**TMP-02**: Qee owns the profile data, the loader inserts assignment history through `SET ROLE domain_writer`, not through the real assignment function); expose profile names | Profiles idempotent; labeled as seeded | TC14, TC16 | H11 |
+| M2-PH2-T08 | Fixture profiles: Seller A and B REGISTERED parcels; the loader hook for Syauqi's profile of ASSIGNED parcels for Rider A and Rider B (**TMP-02**: Syauqi owns the profile data, the loader inserts assignment history through `SET ROLE domain_writer`, not through the real assignment function); expose profile names | Profiles idempotent; labeled as seeded | TC14, TC16 | H11 |
 | M2-PH2-T09 | Browser slice test and INT-CP-01 Seller path in Playwright using real login: create, token shown, refresh, list, logout, Seller B cannot open Seller A's detail | Runs against Compose with fixtures | TC14 | H20, H10 |
 | M2-PH2-T10 | M2 checkpoint demo script: invalid weight rejected, registration, token, refresh persistence, Seller B 404 on Seller A's ID, Rider/Admin denied on A10; tracking page, search, replay safety, retention named as planned | Rehearsed on checkpoint commit | demo notes | T09 |
 
@@ -74,7 +74,7 @@ Seller derived from the session, never from the body; server-side validation; pa
 
 ## 8 Deliverables and handoffs
 
-H22 (`create_parcel`, A10, A12 v1) to Qee's detail link and the checkpoint scenario; H25 (merged 0003 and parcel fixture profiles) to Qee; H24 rows consumed from NASZ's harness. Qee confirms by loading the ASSIGNED fixture profile and fetching a parcel through A12.
+H22 (`create_parcel`, A10, A12 v1) to Syauqi's detail link and the checkpoint scenario; H25 (merged 0003 and parcel fixture profiles) to Syauqi; H24 rows consumed from Naszrul's harness. Syauqi confirms by loading the ASSIGNED fixture profile and fetching a parcel through A12.
 
 ## 9 Exit criteria
 
@@ -84,7 +84,7 @@ H22 (`create_parcel`, A10, A12 v1) to Qee's detail link and the checkpoint scena
 
 ## 10 Integration checkpoint
 
-On the same database and cookies as NASZ and Qee: Seller A creates a parcel; the fixture profile provides the Assigned parcel Rider A starts; Admin reads both through A12. Record commit and database revision in the checkpoint evidence.
+On the same database and cookies as Naszrul and Syauqi: Seller A creates a parcel; the fixture profile provides the Assigned parcel Rider A starts; Admin reads both through A12. Record commit and database revision in the checkpoint evidence.
 
 ## 11 Failure risks and recovery
 

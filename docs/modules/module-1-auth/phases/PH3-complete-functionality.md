@@ -1,10 +1,10 @@
 # M1 PH3: Complete module functionality
 
-Owner: NASZ. Phase PH3 of [phase framework](../../../shared/phase-framework.md). Status: Planned.
+Owner: Naszrul. Phase PH3 of [phase framework](../../../shared/phase-framework.md). Status: Planned.
 
 ## 1 Objective
 
-All M1 features work through the React UI and direct API against real PostgreSQL: Seller self-registration (M1-F01), login/logout for every role (M1-F02, completed in PH2), Admin creation of Riders with a forced first password change (M1-F03), password change that revokes every session (M1-F04), and user listing, disablement and reactivation plus the audit viewer (M1-F05). The Rider directory (A07) and disablement (A09) that Qee needs, and the maintenance-runner skeleton that Zikri and Qee need, are delivered early in the phase.
+All M1 features work through the React UI and direct API against real PostgreSQL: Seller self-registration (M1-F01), login/logout for every role (M1-F02, completed in PH2), Admin creation of Riders with a forced first password change (M1-F03), password change that revokes every session (M1-F04), and user listing, disablement and reactivation plus the audit viewer (M1-F05). The Rider directory (A07) and disablement (A09) that Syauqi needs, and the maintenance-runner skeleton that Zikri and Syauqi need, are delivered early in the phase.
 
 ## 2 Entry criteria
 
@@ -15,10 +15,10 @@ All M1 features work through the React UI and direct API against real PostgreSQL
 
 | Needs | From | Handoff | Substitute until delivered |
 | --- | --- | --- | --- |
-| Domain surface to exercise must-change gate on M2/M3 endpoints (A10-A12, A16, A17) | Zikri, Qee PH2 | H22, H23 | Probe route in test factory for the gate itself; real endpoints added to matrix when merged |
-| Parcel and assignment effects of disablement (reassignment flag, A14/A15) for INT-05 | Qee M3-PH3-T02, T03 | H37 | Test disablement and session rejection alone; INT-05 reassignment leg waits |
-| Job modules to register in runner | Zikri M2-PH4-T03, Qee M3-PH4-T02, T04 | H40 | Runner proven with a dummy job; real jobs in PH4 |
-| Backup/maintenance lock design | Qee M3-PH1-T06 | H13 | Runner checks the lock through an interface with a no-op implementation until PH4 |
+| Domain surface to exercise must-change gate on M2/M3 endpoints (A10-A12, A16, A17) | Zikri, Syauqi PH2 | H22, H23 | Probe route in test factory for the gate itself; real endpoints added to matrix when merged |
+| Parcel and assignment effects of disablement (reassignment flag, A14/A15) for INT-05 | Syauqi M3-PH3-T02, T03 | H37 | Test disablement and session rejection alone; INT-05 reassignment leg waits |
+| Job modules to register in runner | Zikri M2-PH4-T03, Syauqi M3-PH4-T02, T04 | H40 | Runner proven with a dummy job; real jobs in PH4 |
+| Backup/maintenance lock design | Syauqi M3-PH1-T06 | H13 | Runner checks the lock through an interface with a no-op implementation until PH4 |
 
 Independent now: T01-T04, T06, T07, T10 (own tables and services).
 
@@ -26,7 +26,7 @@ Independent now: T01-T04, T06, T07, T10 (own tables and services).
 
 | ID | Task | Contract and validation | Evidence | Needs |
 | --- | --- | --- | --- | --- |
-| M1-PH3-T01 | A07 `GET /admin/users`: filters `role`, `isActive`, `page`, `pageSize` (default 20, max 100), newest first with id tie-break; response `UserSummary` = Principal fields plus `isActive` and `version` only; Admin only; reads the column-limited `app_user` view of columns (never the hash). First task so Qee can build the assignment picker (`role=RIDER&isActive=true`) | Field allowlist test; Seller/Rider/anonymous denied; parameterized filters | TC09, TC12 | PH2 deps |
+| M1-PH3-T01 | A07 `GET /admin/users`: filters `role`, `isActive`, `page`, `pageSize` (default 20, max 100), newest first with id tie-break; response `UserSummary` = Principal fields plus `isActive` and `version` only; Admin only; reads the column-limited `app_user` view of columns (never the hash). First task so Syauqi can build the assignment picker (`role=RIDER&isActive=true`) | Field allowlist test; Seller/Rider/anonymous denied; parameterized filters | TC09, TC12 | PH2 deps |
 | M1-PH3-T02 | A09 `PATCH /admin/users/{userId}/status` `{isActive, expectedVersion}` through `set_user_active` (revision `account_functions`, shared with T03 and T06): Seller and Rider targets only (`403 TARGET_NOT_ALLOWED` for Admin or self); lock target row (after actor), compare version (`409 VERSION_CONFLICT`), set flag, increment `version` and `session_version`, delete the target's `auth_session` rows, audit `USER_STATUS_CHANGED` and append to the off-database account journal; reactivation does not revive sessions; no parcel changes | Disablement takes effect on the next request of the old cookie; stale version and double-submit safe | TC11, TC22 | H03, H20 |
 | M1-PH3-T03 | A02 `POST /auth/register` `{username, displayName, password}` through `register_account` (role forced `SELLER` inside the function): strict schema (`extra=forbid`), normalized username, policy from password service, role forced `SELLER`, duplicate-safe via unique constraint (concurrent winners/losers return `201`/`409 USERNAME_TAKEN`, never 500), no auto-login, audit `USER_CREATED`, registration throttle 30 per source per hour (configurable), CSRF required | Role-injection fields rejected; no account for rejected requests | TC01-TC05, TC20 | H20, H21 |
 | M1-PH3-T04 | A08 `POST /admin/riders` `{username, displayName, initialPassword}` through `register_account` (the function accepts `RIDER` only when the verified context is an Admin): Admin only; same validation; role `RIDER`, `must_change_password=true`; initial password expires after 72 hours if unused; never echoed or logged; response `UserSummary`; audit `USER_CREATED` and journal entry. Also (SHOULD) A21 `POST /admin/users/{userId}/password-reset` for Seller/Rider targets: random one-time password returned once, must-change set, sessions revoked, audit `PASSWORD_RESET`, 72-hour expiry. Also the private `provision-admin` command (revision `ops_functions`): reads the password privately, creates a named Admin with `must_change_password`, rerun for an existing username is a no-op, supports the two Admins of the case study | Role cannot be supplied; duplicate 409; expired initial password cannot log in; Admin creation only via the command | TC10, TC23, TC24 | T01 |
@@ -82,7 +82,7 @@ Role forced server-side; strict request schemas; password policy and common-pass
 
 ## 8 Deliverables and handoffs
 
-H30 (A07 Rider directory) and H31 (A09 disablement) to Qee in the first days of PH3; H32 (must-change gate) to all; H33 (maintenance runner skeleton) to Zikri and Qee. Qee confirms the assignment picker uses real A07 data (TMP-05 retired).
+H30 (A07 Rider directory) and H31 (A09 disablement) to Syauqi in the first days of PH3; H32 (must-change gate) to all; H33 (maintenance runner skeleton) to Zikri and Syauqi. Syauqi confirms the assignment picker uses real A07 data (TMP-05 retired).
 
 ## 9 Exit criteria
 
@@ -93,7 +93,7 @@ H30 (A07 Rider directory) and H31 (A09 disablement) to Qee in the first days of 
 
 ## 10 Integration checkpoint
 
-Full journey in one local stack: register Seller, Admin creates Rider, Rider changes password, Seller registers parcel (Zikri), Admin assigns (Qee), Admin disables Rider and the old cookie fails. Matrix harness includes rows for every A01-A09/A20 endpoint and the must-change case for A10-A12, A16-A19.
+Full journey in one local stack: register Seller, Admin creates Rider, Rider changes password, Seller registers parcel (Zikri), Admin assigns (Syauqi), Admin disables Rider and the old cookie fails. Matrix harness includes rows for every A01-A09/A20 endpoint and the must-change case for A10-A12, A16-A19.
 
 ## 11 Failure risks and recovery
 

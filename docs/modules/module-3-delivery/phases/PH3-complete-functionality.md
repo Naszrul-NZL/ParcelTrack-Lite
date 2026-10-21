@@ -1,6 +1,6 @@
 # M3 PH3: Complete module functionality
 
-Owner: Qee. Phase PH3 of [phase framework](../../../shared/phase-framework.md). Status: Planned.
+Owner: Syauqi. Phase PH3 of [phase framework](../../../shared/phase-framework.md). Status: Planned.
 
 ## 1 Objective
 
@@ -9,18 +9,18 @@ All M3 functions work through the React UI and direct API on real PostgreSQL and
 ## 2 Entry criteria
 
 - G2 passed; real sessions in use by all slices.
-- Migration 0003 and A12 v1 merged; NASZ has A07 (Rider directory) and A09 (disablement) on the way (M1-PH3-T01, T02 are the first M1 PH3 tasks).
+- Migration 0003 and A12 v1 merged; Naszrul has A07 (Rider directory) and A09 (disablement) on the way (M1-PH3-T01, T02 are the first M1 PH3 tasks).
 
 ## 3 Dependencies
 
 | Needs | From | Handoff | Substitute |
 | --- | --- | --- | --- |
-| A07 active Rider directory (`role=RIDER&isActive=true`) | NASZ M1-PH3-T01 | H30 | **TMP-05** static Rider list in the assignment dialog |
-| A09 disablement for continuity tests | NASZ M1-PH3-T02 | H31 | Disable by direct database update in tests; real path before G3 |
+| A07 active Rider directory (`role=RIDER&isActive=true`) | Naszrul M1-PH3-T01 | H30 | **TMP-05** static Rider list in the assignment dialog |
+| A09 disablement for continuity tests | Naszrul M1-PH3-T02 | H31 | Disable by direct database update in tests; real path before G3 |
 | Complete A12 with slot contract for `RiderActionPanel` and `ProofViewer` | Zikri M2-PH3-T03, T07 | H34 | Own temporary page wrapper in `features/delivery`, removed once slots exist |
-| Maintenance runner skeleton | NASZ M1-PH3-T10 | H33 | Direct function tests; job wiring in PH4 |
-| Rate-limit/audit services | NASZ M1-PH2 | H21 | none |
-| Fixture loader extension points | Zikri M2-PH3-T09 | H11, H38 | Qee-owned proof profile files |
+| Maintenance runner skeleton | Naszrul M1-PH3-T10 | H33 | Direct function tests; job wiring in PH4 |
+| Rate-limit/audit services | Naszrul M1-PH2 | H21 | none |
+| Fixture loader extension points | Zikri M2-PH3-T09 | H11, H38 | Syauqi-owned proof profile files |
 
 First task in the phase: T01 (merge `delivery_proof`), because Zikri's `hasProof` and fixtures depend on it.
 
@@ -82,7 +82,7 @@ Admin-only assignment and dashboard; assigned-Rider checks in SQL and service; a
 
 ## 8 Deliverables and handoffs
 
-H35 (`delivery_proof`, `hasProof`, action panel and proof viewer) to Zikri; H37 (`assign_parcel`/A15, retiring TMP-02) to all; H38 (proof fixtures) to Zikri's loader. Consumed: H30, H31, H34. Zikri confirms slots render real components; NASZ confirms audit viewer shows M3 events.
+H35 (`delivery_proof`, `hasProof`, action panel and proof viewer) to Zikri; H37 (`assign_parcel`/A15, retiring TMP-02) to all; H38 (proof fixtures) to Zikri's loader. Consumed: H30, H31, H34. Zikri confirms slots render real components; Naszrul confirms audit viewer shows M3 events.
 
 ## 9 Exit criteria
 
@@ -93,7 +93,7 @@ H35 (`delivery_proof`, `hasProof`, action panel and proof viewer) to Zikri; H37 
 
 ## 10 Integration checkpoint
 
-One local run through the full chain: NASZ's Seller and Admin, Zikri's registration and tracking, Qee's assignment, proof and dashboard, with the same images that will deploy. Check tracking history timestamps equal the database and dashboard totals equal the sum of statuses.
+One local run through the full chain: Naszrul's Seller and Admin, Zikri's registration and tracking, Syauqi's assignment, proof and dashboard, with the same images that will deploy. Check tracking history timestamps equal the database and dashboard totals equal the sum of statuses.
 
 ## 11 Failure risks and recovery
 

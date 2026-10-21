@@ -29,7 +29,7 @@ Each end-to-end workflow is traced through the phase plans. "First partial" is t
 | Public tracking shows history | PH3 | PH4 | M2-PH3-T04 to T06 | M2-PH3-TC06 to TC10; M2-PH4-TC06 |
 | Dashboard counts | PH3 | PH4 | M3-PH3-T08, T09 | M3-PH3-TC09, TC19; M3-PH4-TC08 |
 
-Continuity checks: history rows written by Zikri's `create_parcel` and Qee's functions are the only history source for private detail, tracking and dashboard; no separate copy exists. Timestamps are server UTC and shown in Malaysia time. After INT-02 and INT-03 the five dashboard counts equal a direct database count.
+Continuity checks: history rows written by Zikri's `create_parcel` and Syauqi's functions are the only history source for private detail, tracking and dashboard; no separate copy exists. Timestamps are server UTC and shown in Malaysia time. After INT-02 and INT-03 the five dashboard counts equal a direct database count.
 
 ## W2 Failed delivery
 

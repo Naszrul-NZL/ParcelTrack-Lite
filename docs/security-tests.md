@@ -4,7 +4,7 @@ All requirements are planned. No application exists yet and no test in this work
 
 Use the [separate module plans](project-plan.md#plans-by-owner) for full functional acceptance, the [shared contract](shared/system-contract.md) for exact behavior, and the [integration scenarios](shared/integration-tests.md) for cross-module acceptance. The column First executed gives the phase in which each row first gets an observed result; [traceability section F](shared/traceability.md#f-security-worksheet-rows-51-to-phases-and-test-cases) lists the planned test cases for every row, PH4 consolidates all rows on one commit and PH6 records the final results. The rows here are security tests, not the entire project's test scope.
 
-## Module 1 owned by NASZ
+## Module 1 owned by Naszrul
 
 | ID | Security requirement | Test input or action | Expected result | First executed | Actual result |
 | --- | --- | --- | --- | --- | --- |
@@ -36,7 +36,7 @@ Use the [separate module plans](project-plan.md#plans-by-owner) for full functio
 | M2-09 | Bind ownership to the authenticated Seller | Seller A registers with an extra Seller B identifier | New parcel belongs to Seller A or request is rejected | PH2 | Not run |
 | M2-10 | Implement the project's retention policy | Synthetic Delivered parcel older than 12 months goes through cleanup | Recipient data anonymized/deleted and identifying proof removed according to the documented process | PH3 | Not run |
 
-## Module 3 owned by Qee
+## Module 3 owned by Syauqi
 
 | ID | Security requirement | Test input or action | Expected result | First executed | Actual result |
 | --- | --- | --- | --- | --- | --- |

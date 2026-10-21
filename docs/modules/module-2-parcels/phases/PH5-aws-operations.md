@@ -1,6 +1,6 @@
 # M2 PH5: Integrated AWS deployment and operational readiness
 
-Owner: Zikri. Phase PH5 of [phase framework](../../../shared/phase-framework.md). Status: Planned. Depends on NASZ's cloud stack; nothing is provisioned by this plan.
+Owner: Zikri. Phase PH5 of [phase framework](../../../shared/phase-framework.md). Status: Planned. Depends on Naszrul's cloud stack; nothing is provisioned by this plan.
 
 ## 1 Objective
 
@@ -8,17 +8,17 @@ The database boundary and M2 behavior hold on the real deployment: roles are boo
 
 ## 2 Entry criteria
 
-- G4 passed; EXT-04 resolved; NASZ's EC2/proxy/Compose stack available (M1-PH5-T01, T02, T04 at least in staging).
-- Qee's volumes and backup/restore environment available for T05 (M3-PH5-T01, T04).
+- G4 passed; EXT-04 resolved; Naszrul's EC2/proxy/Compose stack available (M1-PH5-T01, T02, T04 at least in staging).
+- Syauqi's volumes and backup/restore environment available for T05 (M3-PH5-T01, T04).
 
 ## 3 Dependencies
 
 | Needs | From | Handoff | Substitute |
 | --- | --- | --- | --- |
-| EC2, proxy, TLS, secrets, first-boot script | NASZ M1-PH5-T01-T04 | H50 | Local production-like Compose with TLS terminated by the same proxy config for dry runs |
-| Encrypted EBS volumes mounted for PostgreSQL | Qee M3-PH5-T01 | H51 | Named volumes for rehearsals |
-| Real client-IP behavior behind proxy | NASZ M1-PH5-T12 | H53 | none; T07 blocked |
-| Restore environment from backup | Qee M3-PH5-T04 | H54 | PH4 local drill |
+| EC2, proxy, TLS, secrets, first-boot script | Naszrul M1-PH5-T01-T04 | H50 | Local production-like Compose with TLS terminated by the same proxy config for dry runs |
+| Encrypted EBS volumes mounted for PostgreSQL | Syauqi M3-PH5-T01 | H51 | Named volumes for rehearsals |
+| Real client-IP behavior behind proxy | Naszrul M1-PH5-T12 | H53 | none; T07 blocked |
+| Restore environment from backup | Syauqi M3-PH5-T04 | H54 | PH4 local drill |
 
 Independent now: T01 (scripts), T06 (queries on a local copy).
 
@@ -26,11 +26,11 @@ Independent now: T01 (scripts), T06 (queries on a local copy).
 
 | ID | Task | Contract and validation | Evidence | Needs |
 | --- | --- | --- | --- | --- |
-| M2-PH5-T01 | Production database bootstrap and verification: run the PH4 role-bootstrap and `verify_grants` scripts (authored in M2-PH4-T01, consumed by NASZ's first-boot script) -- run role bootstrap on an empty volume and verify; on an existing volume verify roles and attributes without changing passwords; run the migration job once with the migration credential; `verify_grants` script compares live catalog to `grants.snapshot.json` and fails on drift; publish no database port; restrict `pg_hba` to the Compose network | Empty and existing volume runs pass; drift detection proven with a deliberate change in a test instance | TC01, TC02 | H50 |
-| M2-PH5-T02 | Database runtime configuration with Qee and NASZ: pool sizes versus `max_connections`, per-role timeouts, memory settings suited to the chosen instance, log settings that exclude statement parameters for sensitive tables, PostgreSQL data on the encrypted volume | Settings documented and verified from the running instance | TC03 | H51 |
+| M2-PH5-T01 | Production database bootstrap and verification: run the PH4 role-bootstrap and `verify_grants` scripts (authored in M2-PH4-T01, consumed by Naszrul's first-boot script) -- run role bootstrap on an empty volume and verify; on an existing volume verify roles and attributes without changing passwords; run the migration job once with the migration credential; `verify_grants` script compares live catalog to `grants.snapshot.json` and fails on drift; publish no database port; restrict `pg_hba` to the Compose network | Empty and existing volume runs pass; drift detection proven with a deliberate change in a test instance | TC01, TC02 | H50 |
+| M2-PH5-T02 | Database runtime configuration with Syauqi and Naszrul: pool sizes versus `max_connections`, per-role timeouts, memory settings suited to the chosen instance, log settings that exclude statement parameters for sensitive tables, PostgreSQL data on the encrypted volume | Settings documented and verified from the running instance | TC03 | H51 |
 | M2-PH5-T03 | Run the RLS/privilege suite (the portable subset: roles, unfiltered reads per identity, direct DML denial, function hardening catalog, pooled reuse, tracking boundary) against the deployed database using the deployed runtime credentials from the maintenance container, with synthetic data only | Suite passes under deployed credentials (OPS-08); never run with migration or superuser credentials | TC04 | T01 |
-| M2-PH5-T04 | Retention on the live stack: backdate synthetic parcels in a test dataset, execute the scheduled `retention_anonymize` job twice and after interruption, confirm photo denial and purge with Qee, tracking unchanged, logs contain no personal data | First safe scheduled run recorded; failure alert recipient confirmed | TC05 | H51, M3-PH5-T03 |
-| M2-PH5-T05 | Post-restore verification in Qee's isolated restore environment: recreate roles with the bootstrap script, check grants against the snapshot, run the RLS subset, run retention so expired data is anonymized and photos denied before reopening, confirm tracking and Seller lists | S-09 and INT-12 database legs pass | TC06 | H54 |
+| M2-PH5-T04 | Retention on the live stack: backdate synthetic parcels in a test dataset, execute the scheduled `retention_anonymize` job twice and after interruption, confirm photo denial and purge with Syauqi, tracking unchanged, logs contain no personal data | First safe scheduled run recorded; failure alert recipient confirmed | TC05 | H51, M3-PH5-T03 |
+| M2-PH5-T05 | Post-restore verification in Syauqi's isolated restore environment: recreate roles with the bootstrap script, check grants against the snapshot, run the RLS subset, run retention so expired data is anonymized and photos denied before reopening, confirm tracking and Seller lists | S-09 and INT-12 database legs pass | TC06 | H54 |
 | M2-PH5-T06 | Query behavior on EC2 at project scale: load synthetic scale data, run the PH4 plan checks and timing for list/search/lookup/detail/dashboard/Admin list, record numbers and instance size | Recorded measurements; no claim beyond them | TC07 | none (M3-PH5-T07 samples after this task) |
 | M2-PH5-T07 | Public tracking over HTTPS: privacy inspection (body, DOM, headers, storage, referrer), `no-store` preserved by the proxy, rate limit keyed to the real client behind the proxy, request logs without tokens, 429 behavior with `Retry-After` | INT-07 on the live URL passes | TC08 | H53 |
 | M2-PH5-T08 | M2 cloud journeys: INT-01 (Seller registers and creates), INT-04 (cross-user), INT-07, INT-08 (pooled isolation via repeated alternate-user requests), INT-11 (retention interruption leg) | Pass on the live URL with recorded commit and digests | TC09 | G5 inputs |
@@ -59,7 +59,7 @@ No database credential reuse across roles; no public database port; deployed run
 
 ## 8 Deliverables and handoffs
 
-H52 (grant verification and RLS runner under deployed credentials) to NASZ and Qee; database verification results feed restore evidence (H54 consumer). Consumed: H50, H51, H53, H54.
+H52 (grant verification and RLS runner under deployed credentials) to Naszrul and Syauqi; database verification results feed restore evidence (H54 consumer). Consumed: H50, H51, H53, H54.
 
 ## 9 Exit criteria
 
@@ -69,7 +69,7 @@ H52 (grant verification and RLS runner under deployed credentials) to NASZ and Q
 
 ## 10 Integration checkpoint
 
-Run INT-01, INT-04, INT-07, INT-08, INT-11 and INT-12 database legs on the live stack alongside NASZ's and Qee's cloud journeys, on one release candidate.
+Run INT-01, INT-04, INT-07, INT-08, INT-11 and INT-12 database legs on the live stack alongside Naszrul's and Syauqi's cloud journeys, on one release candidate.
 
 ## 11 Failure risks and recovery
 

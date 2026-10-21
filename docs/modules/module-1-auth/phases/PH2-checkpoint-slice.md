@@ -1,10 +1,10 @@
 # M1 PH2: Initial working checkpoint slice
 
-Owner: NASZ. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: Planned. This is the 22 October checkpoint slice, not M1 completion.
+Owner: Naszrul. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: Planned. This is the 22 October checkpoint slice, not M1 completion.
 
 ## 1 Objective
 
-A seeded Admin, Seller or Rider logs in through the real server-side session mechanism, lands on a role-specific protected page, survives refresh, is refused on wrong credentials or missing CSRF, and loses access after logout. The same `require_authenticated`/`require_role` dependencies, CSRF check, rate-limit and audit services are consumed by Zikri's and Qee's slices, replacing the PH1 test principal (TMP-01).
+A seeded Admin, Seller or Rider logs in through the real server-side session mechanism, lands on a role-specific protected page, survives refresh, is refused on wrong credentials or missing CSRF, and loses access after logout. The same `require_authenticated`/`require_role` dependencies, CSRF check, rate-limit and audit services are consumed by Zikri's and Syauqi's slices, replacing the PH1 test principal (TMP-01).
 
 ## 2 Entry criteria
 
@@ -17,8 +17,8 @@ A seeded Admin, Seller or Rider logs in through the real server-side session mec
 | --- | --- | --- | --- |
 | Fixture loader and dataset format | Zikri M2-PH1-T06 | H11 | Local SQL seed through a test-only provisioner role; no committed passwords |
 | `unit_of_work(principal)` context helper | Zikri M2-PH1-T03 | H07 | Skip T08 integration test until delivered; unit-test the dependency with a fake |
-| Pytest harness with role-asserting connections, controlled clock, Playwright skeleton | Qee M3-PH1-T01, T02 | H10 | Ad-hoc fixtures (not carried into G2) |
-| Role landing routes (`/seller/parcels`, `/rider/parcels`, `/admin/dashboard`) | Zikri M2-PH2-T05, Qee M3-PH2-T05 | none | Placeholder "landing" component per role until pages exist |
+| Pytest harness with role-asserting connections, controlled clock, Playwright skeleton | Syauqi M3-PH1-T01, T02 | H10 | Ad-hoc fixtures (not carried into G2) |
+| Role landing routes (`/seller/parcels`, `/rider/parcels`, `/admin/dashboard`) | Zikri M2-PH2-T05, Syauqi M3-PH2-T05 | none | Placeholder "landing" component per role until pages exist |
 
 Independent now: T02, T03, T04, T07 (pure services plus tables from 0002).
 
@@ -80,18 +80,18 @@ Server-side sessions with digest-only storage; cookie flags; session rotation at
 
 ## 8 Deliverables and handoffs
 
-H20 (real session auth, `login_as`, retires TMP-01) to Zikri and Qee; H21 (rate-limit and audit services) to all; H24 (authorization-matrix harness) to all. The consumers confirm by switching their slice tests to `login_as` and removing the principal override.
+H20 (real session auth, `login_as`, retires TMP-01) to Zikri and Syauqi; H21 (rate-limit and audit services) to all; H24 (authorization-matrix harness) to all. The consumers confirm by switching their slice tests to `login_as` and removing the principal override.
 
 ## 9 Exit criteria
 
 - T01-T13 complete; TC01-TC22 pass in CI.
-- Zikri's A10/A11/A12 and Qee's A16/A17 slice tests run under `login_as` with no principal override (INT-CP-01).
+- Zikri's A10/A11/A12 and Syauqi's A16/A17 slice tests run under `login_as` with no principal override (INT-CP-01).
 - Worksheet rows executed in T11 show actual results with commit hash; unexercised rows remain Planned.
 - Contributes to G2 items 1, 2, 3, 4.
 
 ## 10 Integration checkpoint
 
-INT-CP-01 login leg: Seller A, Rider A, Admin each log in against the shared dev database and receive working cookies; Zikri's parcel creation and Qee's start-delivery calls succeed with those cookies and fail for the wrong role or missing CSRF (INT-CP-02). See [integration tests](../../../shared/integration-tests.md).
+INT-CP-01 login leg: Seller A, Rider A, Admin each log in against the shared dev database and receive working cookies; Zikri's parcel creation and Syauqi's start-delivery calls succeed with those cookies and fail for the wrong role or missing CSRF (INT-CP-02). See [integration tests](../../../shared/integration-tests.md).
 
 ## 11 Failure risks and recovery
 

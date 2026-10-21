@@ -1,10 +1,10 @@
 # M1 PH1: Foundation and shared contracts
 
-Owner: NASZ (Naszrul-NZL). Phase PH1 of [phase framework](../../../shared/phase-framework.md). Status: Planned, nothing implemented. `(CP)` marks work required for the 22 October checkpoint.
+Owner: Naszrul (Naszrul-NZL). Phase PH1 of [phase framework](../../../shared/phase-framework.md). Status: Planned, nothing implemented. `(CP)` marks work required for the 22 October checkpoint.
 
 ## 1 Objective
 
-A clean checkout builds and starts one local stack (PostgreSQL, FastAPI, React dev server). The shared auth foundation exists so Zikri and Qee can code against real tables, a stable authentication interface and a common frontend client: migration 0002 (accounts, sessions, rate-limit buckets, audit events), the `lock_active_actor` database function, an Argon2id password service, error/logging conventions and the React API client skeleton.
+A clean checkout builds and starts one local stack (PostgreSQL, FastAPI, React dev server). The shared auth foundation exists so Zikri and Syauqi can code against real tables, a stable authentication interface and a common frontend client: migration 0002 (accounts, sessions, rate-limit buckets, audit events), the `lock_active_actor` database function, an Argon2id password service, error/logging conventions and the React API client skeleton.
 
 ## 2 Entry criteria
 
@@ -19,7 +19,7 @@ A clean checkout builds and starts one local stack (PostgreSQL, FastAPI, React d
 | DB roles bootstrap and function-owner roles (`auth_fn_owner`) before `lock_active_actor` can be created | Zikri M2-PH1-T01 | H02 | Draft SQL in a branch; merge only after H02 |
 | Alembic chain, migration 0001, hardened-function template | Zikri M2-PH1-T02 | H02 | Create `alembic.ini`/`env.py` in T01; 0001 content owned by Zikri |
 | Role/status constants for CHECK constraints | Zikri M2-PH1-T04 | H08 | Role set (`SELLER`,`RIDER`,`ADMIN`) is fixed by the contract; copy until constants land, then replace |
-| Pytest harness (disposable DB, role-asserting connection) | Qee M3-PH1-T01 | H10 | Local ad-hoc fixtures for T06/T07 tests; migrate to the harness before G1 |
+| Pytest harness (disposable DB, role-asserting connection) | Syauqi M3-PH1-T01 | H10 | Local ad-hoc fixtures for T06/T07 tests; migrate to the harness before G1 |
 
 Independent right now: T01-T05, T10, T11 (no other deliverable needed).
 
@@ -37,7 +37,7 @@ Independent right now: T01-T05, T10, T11 (no other deliverable needed).
 | M1-PH1-T08 (CP) | Authentication interface for other modules: `PrincipalDTO` (`id`,`username`,`displayName`,`role`,`mustChangePassword`; what the browser receives) separate from the internal `AuthContext` (adds `sessionVersion`), `require_authenticated`, `require_role(*roles)` and `verify_csrf` dependency signatures with documented behavior. Provide **TMP-01** test principal override, installed only by `create_app(env="test")`/pytest fixtures through FastAPI `dependency_overrides`; test hooks (failpoints, barriers) live in the same test-only registry; there is no header, query or cookie switch and the production factory does not import them | Production factory has an empty registry; request carrying a spoof header gets 401; `sessionVersion` never serialized | TC07 | T02, T04 |
 | M1-PH1-T09 (CP) | Frontend foundation: typed `apiClient` (same-origin credentials, `X-CSRF-Token` on POST/PATCH/DELETE, error normalization, `Blob` responses for A19, multipart left to the browser, no automatic mutation retry), session provider skeleton, route-guard skeleton, query-cache clear on identity change/401, OpenAPI-to-TypeScript generation script with drift check (types for DTOs appear once routes exist), MSW mocks for early UI work (**TMP-03**), excluded from production bundles by a build assertion | No private payload or token in `localStorage`/`sessionStorage`; mocks only in dev/test builds | TC08, TC09, TC10 | T01, T04 |
 | M1-PH1-T10 (CP) | Password service on a maintained Argon2id library: hash, verify, `needs_rehash`, constant-work dummy verify for unknown users using the same parameters as real hashes, parameters from settings (provisional production values chosen in PH2, benchmarked in PH5), process-wide hashing semaphore (default 4) that sheds overflow with `503 BUSY`, rejection of passwords over 128 characters before any hashing, common-password list loader (local file), policy check 10-128 characters counted as characters with no truncation. Also provides the synthetic account manifest (usernames and roles for Admin, Seller A/B, Rider A/B, inactive user, must-change Rider; no passwords) consumed by Zikri's loader | `$argon2id$` prefix; boundary, common-password and capacity cases | TC04 | T01, T02 |
-| M1-PH1-T11 | CI skeleton (GitHub Actions, third-party actions pinned by commit SHA): jobs `backend-lint-type` (ruff, mypy), `backend-unit`, `backend-migrations` (PostgreSQL service, bootstrap + upgrade head), `frontend-check` (tsc, eslint with security plugin, vitest, build), `compose-smoke`, `secret-scan` (gitleaks over tree and history), `dependency-audit` (pip-audit, npm audit; report-only until PH4). Later jobs (`backend-integration`, `authz-matrix`, `e2e-core`, `ci-contract`) are added in the phases listed in the [CI job list](../../../shared/testing-strategy.md#ci-and-release-gates). Qee wires the harness into `backend-integration` as soon as H10 exists. Add `.github/CODEOWNERS` mapping module directories to owners and shared directories to all three | First PR run green; negative control (planted canary secret on a throwaway branch, including one only in history) fails `secret-scan` | TC12 | T01 |
+| M1-PH1-T11 | CI skeleton (GitHub Actions, third-party actions pinned by commit SHA): jobs `backend-lint-type` (ruff, mypy), `backend-unit`, `backend-migrations` (PostgreSQL service, bootstrap + upgrade head), `frontend-check` (tsc, eslint with security plugin, vitest, build), `compose-smoke`, `secret-scan` (gitleaks over tree and history), `dependency-audit` (pip-audit, npm audit; report-only until PH4). Later jobs (`backend-integration`, `authz-matrix`, `e2e-core`, `ci-contract`) are added in the phases listed in the [CI job list](../../../shared/testing-strategy.md#ci-and-release-gates). Syauqi wires the harness into `backend-integration` as soon as H10 exists. Add `.github/CODEOWNERS` mapping module directories to owners and shared directories to all three | First PR run green; negative control (planted canary secret on a throwaway branch, including one only in history) fails `secret-scan` | TC12 | T01 |
 | M1-PH1-T12 | Review and merge contract v3 amendments covering M1 parts: error-code registry, security headers and CSP rules, trusted-proxy client-IP rule, maintenance-mode middleware rule, `lock_active_actor`, migration order | All three owners approve in the PR; conflicts recorded in the [decision register](../../../shared/decision-register.md) | review PR | none |
 | M1-PH1-T13 | External checks (no code), started on the first day because of lead time: confirm and record status of EXT-01 allocation submission, EXT-02 written lecturer acceptance of FastAPI/PostgreSQL together with the Week 14 date (EXT-08), EXT-03 branch protection, EXT-04 AWS access and budget decision, EXT-05 identities for the allocation sheet. Write results into the [decision register](../../../shared/decision-register.md). Do not mark any as done without receipt | Register rows updated with date and evidence reference or "unverified" | register diff | none |
 
@@ -79,18 +79,18 @@ Independent right now: T01-T05, T10, T11 (no other deliverable needed).
 
 ## 8 Deliverables and handoffs
 
-H01 (skeleton/Compose, to all), H03 (migration 0002 and `lock_active_actor`, to Zikri and Qee), H04 (auth interface and TMP-01, to all), H05 (error/log/no-store conventions, to all), H06 (frontend client, to all), H14 (password service, to fixture loader). Each handoff is accepted by the consumer commenting on the merged PR after running a smoke import/call (see [dependency matrix](../../../shared/dependency-matrix.md)).
+H01 (skeleton/Compose, to all), H03 (migration 0002 and `lock_active_actor`, to Zikri and Syauqi), H04 (auth interface and TMP-01, to all), H05 (error/log/no-store conventions, to all), H06 (frontend client, to all), H14 (password service, to fixture loader). Each handoff is accepted by the consumer commenting on the merged PR after running a smoke import/call (see [dependency matrix](../../../shared/dependency-matrix.md)).
 
 ## 9 Exit criteria
 
 - T01-T11 merged; T12 approved; T13 recorded. CP subset: T01, T02, T03, T04, T05, T06, T07, T08, T09, T10.
 - TC01-TC15 pass in CI (TC11 locally and in `compose-smoke`).
-- Zikri and Qee confirm they can import `Principal`, `require_role`, error codes, API client and apply migration 0002.
+- Zikri and Syauqi confirm they can import `Principal`, `require_role`, error codes, API client and apply migration 0002.
 - Contributes to G1 items 1, 2, 3, 6.
 
 ## 10 Integration checkpoint
 
-Run: bootstrap roles (Zikri), migrate 0001-0002, start stack, call a trivial authenticated test endpoint under the test factory with TMP-01 and confirm production factory rejects the same call. Zikri's `unit_of_work` and Qee's harness both run against the same database.
+Run: bootstrap roles (Zikri), migrate 0001-0002, start stack, call a trivial authenticated test endpoint under the test factory with TMP-01 and confirm production factory rejects the same call. Zikri's `unit_of_work` and Syauqi's harness both run against the same database.
 
 ## 11 Failure risks and recovery
 

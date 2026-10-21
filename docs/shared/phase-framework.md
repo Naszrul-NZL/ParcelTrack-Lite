@@ -60,7 +60,7 @@ The suggested six-phase sequence is kept. These refinements are adopted because 
 
 `(CP)` marks work needed for the 22 October checkpoint. Everything else may complete after the checkpoint.
 
-| Phase | NASZ (M1) | Zikri (M2) | Qee (M3) |
+| Phase | Naszrul (M1) | Zikri (M2) | Syauqi (M3) |
 | --- | --- | --- | --- |
 | PH1 | Repo skeleton, locked dependencies, dev Compose stack (CP); settings/secrets rules (CP); error envelope, request ID, log redaction, security headers (CP); migration 0002 auth_core plus `lock_active_actor` and `get_login_snapshot` (CP); Argon2id password service (CP); auth dependency interface and TMP-01 (CP); React API client, session provider skeleton, generated types; CI skeleton; CODEOWNERS | DB role bootstrap (CP); Alembic conventions, migration 0001, hardened-function template and lint (CP); `unit_of_work` RLS context helper (CP); constants and parity test (CP); migration 0003 parcels draft (CP); fixture dataset and loader (CP); DTO models | Test harness and Playwright skeleton (CP minimal); harmless file fixtures; pure state-machine and assignment modules with unit tests (CP); `ProofStore` interface; image-library decision; backup/maintenance lock design; migration 0005/0006/0007 drafts |
 | PH2 | Real session: A01, A03, A04, A05; CSRF; rate-limit service v1; audit service v1; `require_*` dependencies; login/landing/logout screens; retire TMP-01; authorization-matrix harness | Verify 0003 policies; revision 0004 `create_parcel`; A10 v1; A11 v1; A12 v1; registration and list screens; RLS isolation tests | Seeded assignment fixture (TMP-02); `update_delivery_status` (start delivery only); A16; A17 v1; Rider mobile list and Start delivery action; Rider isolation tests |
@@ -203,7 +203,7 @@ A task may start before the previous gate if every handoff it needs exists or ha
 
 Update only with evidence references. No phase has started.
 
-| Phase | M1 NASZ | M2 Zikri | M3 Qee | Group gate |
+| Phase | M1 Naszrul | M2 Zikri | M3 Syauqi | Group gate |
 | --- | --- | --- | --- | --- |
 | PH1 | Planned | Planned | Planned | G1 not passed |
 | PH2 | Planned | Planned | Planned | G2 not passed |

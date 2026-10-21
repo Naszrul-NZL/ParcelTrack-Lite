@@ -10,17 +10,17 @@ Use one FastAPI application, React with TypeScript/Vite, PostgreSQL, SQLAlchemy 
 backend/app/
   main.py                    shared router composition
   core/                      settings, DB unit of work, safe errors, principal, CSRF, logging
-  modules/auth/              NASZ: accounts, server-side sessions and permissions
+  modules/auth/              Naszrul: accounts, server-side sessions and permissions
   modules/parcels/           Zikri: parcel models, creation, seller reads and tracking
-  modules/delivery/          Qee: assignment, updates, proof and dashboard
+  modules/delivery/          Syauqi: assignment, updates, proof and dashboard
 backend/alembic/              one ordered revision history, module-authored migrations
 backend/tests/                module tests plus cross-module integration tests
 frontend/src/
   app/                       router, shared shell and session provider
   shared/                    API client, types and common form/list controls
-  features/auth/             NASZ
+  features/auth/             Naszrul
   features/parcels/          Zikri
-  features/delivery/         Qee
+  features/delivery/         Syauqi
 infra/                       Compose, proxy, backups and deployment configuration
 docs/modules/                separate implementation plans
 ```
@@ -161,7 +161,7 @@ Custom transaction settings are backend context, not unforgeable identity: SQL i
 
 ## Proof consistency and retention
 
-Files and PostgreSQL do not share one atomic transaction. Qee implements this compensating workflow: validate into private staging; begin the database transaction and call lock_delivery_target through app_runtime; under that controlled lock, move the immutable generated file into durable final storage; call update_delivery_status to insert metadata/history and commit. Delete the new file only after a rollback/non-commit is confirmed. If commit acknowledgment is lost, retain the file and reconcile via a fresh connection before cleanup; an exception alone does not prove rollback. Never delete committed proof because sending the response failed. A crash may leave an unreferenced file, so clean files older than 24 hours only after checking they are not referenced and not in an active upload. Metadata is committed only after a durable file exists. Storage failures leave the parcel's previous state intact.
+Files and PostgreSQL do not share one atomic transaction. Syauqi implements this compensating workflow: validate into private staging; begin the database transaction and call lock_delivery_target through app_runtime; under that controlled lock, move the immutable generated file into durable final storage; call update_delivery_status to insert metadata/history and commit. Delete the new file only after a rollback/non-commit is confirmed. If commit acknowledgment is lost, retain the file and reconcile via a fresh connection before cleanup; an exception alone does not prove rollback. Never delete committed proof because sending the response failed. A crash may leave an unreferenced file, so clean files older than 24 hours only after checking they are not referenced and not in an active upload. Metadata is committed only after a durable file exists. Storage failures leave the parcel's previous state intact.
 
 Unknown-commit and orphan reconciliation use a narrowly granted maintenance helper to acquire the same parcel row lock as finalization, wait for the original transaction to resolve, then check committed storage-key references in a subsequent fresh READ COMMITTED statement while holding that lock. Only a settled unreferenced key may be deleted. Lock timeout, missing recovery context or database unavailability means preserve and retry later; seeing no row before the original transaction completes is insufficient. Function owners receive only the maintenance RLS policies/grants needed for this operation, not superuser/BYPASSRLS. Generated file keys are immutable and never reused for a new submission.
 
@@ -186,13 +186,13 @@ Revision order is fixed and equals dependency order; a revision is "applied" onc
 | Revision | Owner | Content |
 | --- | --- | --- |
 | `0001_bootstrap_schema` | Zikri | Schema `app`, revoke default PUBLIC privileges, default privileges per creating role, hardening template |
-| `0002_auth_core` | NASZ | `app_user`, `auth_session`, `rate_limit_bucket`, `audit_event` (plain `parcel_id`), `system_state`, foundation functions `lock_active_actor` and `get_login_snapshot` |
+| `0002_auth_core` | Naszrul | `app_user`, `auth_session`, `rate_limit_bucket`, `audit_event` (plain `parcel_id`), `system_state`, foundation functions `lock_active_actor` and `get_login_snapshot` |
 | `0003_parcels` | Zikri | `parcel`, `parcel_status_history`, constraints, indexes, RLS enable and force, **all** policies (runtime-role and owner-role), grants, policy helper, `audit_event.parcel_id` foreign key |
 | `0004_create_parcel` | Zikri | `create_parcel` |
-| `0005_delivery_functions` | Qee | `update_delivery_status`, start-delivery branch only |
-| `0006_delivery_proof` | Qee | `delivery_proof`, its policies and grants |
-| `0007_delivery_final` | Qee | `assign_parcel`, `lock_delivery_target`, final-outcome branch, reconcile helper |
-| later, named | owner of the function | `tracking_lookup`, `retention_functions` (Zikri); `proof_maintenance_functions` (Qee); `account_functions` (`register_account`, `change_password`, `set_user_active`), `session_cleanup_functions`, `ops_functions` (NASZ) |
+| `0005_delivery_functions` | Syauqi | `update_delivery_status`, start-delivery branch only |
+| `0006_delivery_proof` | Syauqi | `delivery_proof`, its policies and grants |
+| `0007_delivery_final` | Syauqi | `assign_parcel`, `lock_delivery_target`, final-outcome branch, reconcile helper |
+| later, named | owner of the function | `tracking_lookup`, `retention_functions` (Zikri); `proof_maintenance_functions` (Syauqi); `account_functions` (`register_account`, `change_password`, `set_user_active`), `session_cleanup_functions`, `ops_functions` (Naszrul) |
 
 Roles. Login roles: `migration_owner` (owns the database and schema `app`), `app_runtime`, `tracking_runtime`, `maintenance_runtime`, `ops_runtime`, `backup_operator` (operator-only, never present in application containers, `BYPASSRLS` so a logical dump is complete; the single documented exception, listed in the grants snapshot) and, outside production only, `fixture_provisioner` (member of `domain_writer` with `SET` so seeding passes the same policies and no production migration references it). Non-login owners: `domain_writer`, `auth_fn_owner`, `lookup_fn_owner`, `maintenance_fn_owner`, `ops_fn_owner`. Function owners get `USAGE` and `CREATE` on schema `app` (needed for `ALTER FUNCTION ... OWNER TO`) and nothing more; runtime roles get neither. On PostgreSQL 16 or later memberships use `WITH SET TRUE`. `ALTER DEFAULT PRIVILEGES` is set for each function owner, not only for `migration_owner`.
 
@@ -232,7 +232,7 @@ FORCE RLS applies to the table owner; function owners are ordinary roles subject
 
 ### SQLSTATE mapping, error codes and timeouts (D-20)
 
-SQL functions raise custom SQLSTATEs in class `PT`, mapped once in `core/errors.py` (NASZ) with a unit test that the mapped set is a subset of the registry: PT001 FORBIDDEN, PT002 NOT_FOUND, PT003 VERSION_CONFLICT, PT004 INVALID_TRANSITION, PT005 INVALID_ASSIGNEE, PT006 PROOF_REQUIRED, PT007 TARGET_NOT_ALLOWED, PT008 PASSWORD_CHANGE_REQUIRED, PT009 IDEMPOTENCY_CONFLICT, PT010 REQUEST_EXPIRED, PT011 USERNAME_TAKEN, PT012 UNAUTHENTICATED (inactive account or stale session version). Lock timeout (55P03), deadlock (40P01), statement timeout (57014), advisory-lock wait timeout and connection-pool timeout map to `503 BUSY`. All modules use only registry codes; an unregistered code fails conformance test CT-03.
+SQL functions raise custom SQLSTATEs in class `PT`, mapped once in `core/errors.py` (Naszrul) with a unit test that the mapped set is a subset of the registry: PT001 FORBIDDEN, PT002 NOT_FOUND, PT003 VERSION_CONFLICT, PT004 INVALID_TRANSITION, PT005 INVALID_ASSIGNEE, PT006 PROOF_REQUIRED, PT007 TARGET_NOT_ALLOWED, PT008 PASSWORD_CHANGE_REQUIRED, PT009 IDEMPOTENCY_CONFLICT, PT010 REQUEST_EXPIRED, PT011 USERNAME_TAKEN, PT012 UNAUTHENTICATED (inactive account or stale session version). Lock timeout (55P03), deadlock (40P01), statement timeout (57014), advisory-lock wait timeout and connection-pool timeout map to `503 BUSY`. All modules use only registry codes; an unregistered code fails conformance test CT-03.
 
 | Code | HTTP | Meaning |
 | --- | --- | --- |

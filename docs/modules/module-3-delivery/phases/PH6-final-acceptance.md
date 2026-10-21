@@ -1,10 +1,10 @@
 # M3 PH6: Final acceptance, evidence and demonstration
 
-Owner: Qee. Phase PH6 of [phase framework](../../../shared/phase-framework.md). Status: Planned.
+Owner: Syauqi. Phase PH6 of [phase framework](../../../shared/phase-framework.md). Status: Planned.
 
 ## 1 Objective
 
-Qee can demonstrate M3 live on the AWS deployment in about 10 minutes, including failed attacks, explain the delivery functions, locking, upload pipeline and recovery code personally, and has a complete M3 section of the security test document (input, expected result, actual result, owner) from the release candidate, plus the backup/restore evidence for the group.
+Syauqi can demonstrate M3 live on the AWS deployment in about 10 minutes, including failed attacks, explain the delivery functions, locking, upload pipeline and recovery code personally, and has a complete M3 section of the security test document (input, expected result, actual result, owner) from the release candidate, plus the backup/restore evidence for the group.
 
 ## 2 Entry criteria
 
@@ -15,7 +15,7 @@ Qee can demonstrate M3 live on the AWS deployment in about 10 minutes, including
 
 | Needs | From | Handoff | Substitute |
 | --- | --- | --- | --- |
-| NASZ's and Zikri's scripts for the 30-minute run; shared worksheet rows | M1-PH6, M2-PH6 | H60 | none |
+| Naszrul's and Zikri's scripts for the 30-minute run; shared worksheet rows | M1-PH6, M2-PH6 | H60 | none |
 | Cloud journeys and restore results | G5 | none | none |
 
 ## 4 Ordered tasks
@@ -23,10 +23,10 @@ Qee can demonstrate M3 live on the AWS deployment in about 10 minutes, including
 | ID | Task | Contract and validation | Evidence | Needs |
 | --- | --- | --- | --- | --- |
 | M3-PH6-T01 | Release-candidate regression for M3: unit, component, PostgreSQL and filesystem integration, fault-injection matrix, concurrency suites, browser journeys (desktop and phone), authorization-matrix rows A14-A19; safe live-URL checks | All pass on one commit; failures stay open | TC01 | G5 |
-| M3-PH6-T02 | M3 section of the security test document for M3-01 to M3-10 with input, expected, actual, pass/fail, evidence, version, environment, timestamp and owner Qee; more than five distinct input types (`.php`, `shell.php.jpg`, oversized image, invalid status, update on another Rider's parcel, dashboard without Admin login, forged assignment fields, concurrent final updates) | Every actual result observed on the release candidate | TC02 | T01 |
-| M3-PH6-T03 | Evidence for shared operational rows: S-02 (with NASZ), S-07, S-09, RLS-03 and RLS-10 with Zikri, backup/restore record (timings, backup age, verification table) and fault-injection summary | Cross-referenced in the worksheet | TC02 | T01 |
+| M3-PH6-T02 | M3 section of the security test document for M3-01 to M3-10 with input, expected, actual, pass/fail, evidence, version, environment, timestamp and owner Syauqi; more than five distinct input types (`.php`, `shell.php.jpg`, oversized image, invalid status, update on another Rider's parcel, dashboard without Admin login, forged assignment fields, concurrent final updates) | Every actual result observed on the release candidate | TC02 | T01 |
+| M3-PH6-T03 | Evidence for shared operational rows: S-02 (with Naszrul), S-07, S-09, RLS-03 and RLS-10 with Zikri, backup/restore record (timings, backup age, verification table) and fault-injection summary | Cross-referenced in the worksheet | TC02 | T01 |
 | M3-PH6-T04 | Demo script (about 10 minutes): Rider B cannot update Rider A's parcel, invalid status rejected, upload `shell.php.jpg` and an oversized image rejected, dashboard requested with no login at all and Seller/Rider denied on dashboard and assignment, Admin assigns, Rider (phone) starts and delivers with a valid photo, Failed case with PNG, history with actor and time, dashboard counts, anonymous photo request denied, storage listing showing random names outside the web root, concurrent final updates giving one winner; fallback evidence clearly marked | Timed rehearsal on the cloud URL | TC03 | T01 |
-| M3-PH6-T05 | Code walkthrough notes: `rules.py` and the SQL functions, locking order, `lock_delivery_target`, proof pipeline, finalization sequence and compensation, reconciliation, purge job, backup lock, restore runbook; likely questions and answers | Peer questioning by NASZ and Zikri recorded | TC04 | none |
+| M3-PH6-T05 | Code walkthrough notes: `rules.py` and the SQL functions, locking order, `lock_delivery_target`, proof pipeline, finalization sequence and compensation, reconciliation, purge job, backup lock, restore runbook; likely questions and answers | Peer questioning by Naszrul and Zikri recorded | TC04 | none |
 | M3-PH6-T06 | Operational handover: runbooks for backup, restore, rollback of image digest, forced storage-failure check, with who holds recovery credentials (recorded privately, only roles in Git) | Walkthrough by a second member from the runbook alone | TC05 | M3-PH5-T04 |
 | M3-PH6-T07 | Test-data and hygiene check for M3: only synthetic images and parcels, upload corpus harmless, no real photos, demo accounts rotated, proof directory in demo environment cleaned after the demo | Scan and directory listing | TC06 | none |
 | M3-PH6-T08 | Group 30-minute rehearsals (two): M3 segment timing and the full ordered scenario; contingency if the phone/4G demo fails (desktop viewport with disclosure) | Two logged run-throughs | TC07 | H60 |
@@ -64,7 +64,7 @@ M3 section of the security test document; backup/restore record; demo script; co
 
 ## 10 Integration checkpoint
 
-Single live walk through the full ordered demonstration with NASZ and Zikri on the same deployment, then clean-up of demo data and rotation of demo credentials.
+Single live walk through the full ordered demonstration with Naszrul and Zikri on the same deployment, then clean-up of demo data and rotation of demo credentials.
 
 ## 11 Failure risks and recovery
 

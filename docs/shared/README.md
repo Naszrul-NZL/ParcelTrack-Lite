@@ -48,9 +48,9 @@ React never connects directly to PostgreSQL. RLS complements backend authorizati
 
 | Work | Coordinator | Required collaboration |
 | --- | --- | --- |
-| Repository skeleton, FastAPI entry point, session/CSRF dependencies, API client, route guards, maintenance runner, CI skeleton, AWS stack and release | NASZ | Zikri and Qee consume the same contracts |
+| Repository skeleton, FastAPI entry point, session/CSRF dependencies, API client, route guards, maintenance runner, CI skeleton, AWS stack and release | Naszrul | Zikri and Syauqi consume the same contracts |
 | Role bootstrap, Alembic chain, function-hardening template and lint, RLS context helper, constants, fixture loader, grants snapshot | Zikri | Each owner writes their own module migrations and policies; all review grants |
-| Test harness, Playwright and file fixtures, proof storage, backup coordination, backup/restore, retention file cleanup | Qee | Zikri supplies retention candidates; NASZ supplies scheduler identity |
+| Test harness, Playwright and file fixtures, proof storage, backup coordination, backup/restore, retention file cleanup | Syauqi | Zikri supplies retention candidates; Naszrul supplies scheduler identity |
 | ERD, common layout, contract changes and final acceptance | All three | One review of each module plus the complete cloud journey |
 
 Coordinating shared work does not transfer ownership of another member's assessed code. API/schema changes require updates to the contract, the affected phase files and tests in the same PR.

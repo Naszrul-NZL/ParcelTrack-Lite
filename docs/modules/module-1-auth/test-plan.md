@@ -1,6 +1,6 @@
 # Module 1 test plan
 
-Owner: NASZ. Coverage plan for M1 linked to phases, tasks and requirements. Every test below is planned; none has run. A phase cannot pass because its screens render or because test counts look high: each listed case must show its expected outcome with evidence. Test case (TC) definitions live in the phase files; the index at the end is generated from them by `tools/check_plan_docs.py`.
+Owner: Naszrul. Coverage plan for M1 linked to phases, tasks and requirements. Every test below is planned; none has run. A phase cannot pass because its screens render or because test counts look high: each listed case must show its expected outcome with evidence. Test case (TC) definitions live in the phase files; the index at the end is generated from them by `tools/check_plan_docs.py`.
 
 Related: [testing strategy](../../shared/testing-strategy.md), [integration scenarios](../../shared/integration-tests.md), [traceability](../../shared/traceability.md), [security worksheet](../../security-tests.md).
 

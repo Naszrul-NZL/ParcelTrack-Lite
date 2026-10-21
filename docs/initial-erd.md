@@ -109,7 +109,7 @@ The case study lists these states and roles but does not fully specify retries, 
 
 Public tracking must select only status and timestamp fields. Exclude recipient information, actor identity, internal user IDs and proof links from the entire public response, including hidden fields and embedded scripts.
 
-At 12 months after delivery, the project's P3 policy requires deletion or anonymization of recipient data. Clear personal fields and remove identifying proof images while keeping non-identifying history. The implementation baseline also applies 12 months after terminal_at for Failed parcels as an explicit design choice. Deny photo access before retryable file deletion: `anonymized_at` is the flag that makes proof endpoints return 404 immediately, and Qee's purge job then removes files and clears proof metadata. Follow the [backup retention/restore procedure](shared/integration-and-aws.md#backup-and-restore); after any restore, run retention again before reopening (D-17).
+At 12 months after delivery, the project's P3 policy requires deletion or anonymization of recipient data. Clear personal fields and remove identifying proof images while keeping non-identifying history. The implementation baseline also applies 12 months after terminal_at for Failed parcels as an explicit design choice. Deny photo access before retryable file deletion: `anonymized_at` is the flag that makes proof endpoints return 404 immediately, and Syauqi's purge job then removes files and clears proof metadata. Follow the [backup retention/restore procedure](shared/integration-and-aws.md#backup-and-restore); after any restore, run retention again before reopening (D-17).
 
 ## Initial implementation decisions
 

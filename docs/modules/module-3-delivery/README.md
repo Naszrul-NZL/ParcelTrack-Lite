@@ -1,6 +1,6 @@
 # Module 3 Delivery Update and Admin Dashboard
 
-Owner: Qee, GitHub Qee110. Deliver backend delivery operations, the shared test harness, private proof storage, backup/restore coordination and React delivery/Admin screens. This folder is the full phased plan after the checkpoint as well. Everything here is a reviewable plan; no application code or test has been written or run.
+Owner: Syauqi, GitHub Qee110. Deliver backend delivery operations, the shared test harness, private proof storage, backup/restore coordination and React delivery/Admin screens. This folder is the full phased plan after the checkpoint as well. Everything here is a reviewable plan; no application code or test has been written or run.
 
 Follow the [shared contract](../../shared/system-contract.md), [phase framework](../../shared/phase-framework.md), [dependency matrix](../../shared/dependency-matrix.md), [ERD](../../initial-erd.md) and [security worksheet](../../security-tests.md). Use the shared state/permission rules and DTOs rather than duplicating them here. Transaction/file failure cases require actual PostgreSQL and private filesystem integration.
 
@@ -43,11 +43,11 @@ Admin can assign/read but cannot submit Rider delivery updates. Delivered/Failed
 
 | Provides | To | Phase |
 | --- | --- | --- |
-| H10 harness, Playwright skeleton, file fixtures; H13 ProofStore, lock design, storage layout | NASZ, Zikri | PH1 |
+| H10 harness, Playwright skeleton, file fixtures; H13 ProofStore, lock design, storage layout | Naszrul, Zikri | PH1 |
 | H23 `update_delivery_status` v1, A16/A17 v1; checkpoint evidence compilation | group | PH2 |
 | H35 `delivery_proof`, Rider action panel, proof viewer; H37 assignment; H38 proof fixtures | Zikri, all | PH3 |
-| H41 backup lock; H44 backup/restore scripts; reconcile and purge jobs; matrix rows A14-A19 (H43) | NASZ, Zikri | PH4 |
-| H51 volumes, backups, timers; H54 restore environment | NASZ, Zikri | PH5 |
+| H41 backup lock; H44 backup/restore scripts; reconcile and purge jobs; matrix rows A14-A19 (H43) | Naszrul, Zikri | PH4 |
+| H51 volumes, backups, timers; H54 restore environment | Naszrul, Zikri | PH5 |
 
 Consumes: H02/H03/H07/H08/H09 (PH1), H20/H25 (PH2), H30/H31/H34 (PH3), H33/H40/H42 (PH4), H50/H52 (PH5). Substitutes: see the [handoff register](../../shared/dependency-matrix.md#handoff-register).
 
@@ -101,7 +101,7 @@ All search/filter SQL is parameterized. Multipart requests still require CSRF pr
 
 ## Testing and acceptance
 
-All M3 tests are listed per phase and aggregated in [test-plan.md](test-plan.md). Run worksheet rows M3-01 to M3-10, RLS-03, RLS-10 and the M3 shares of S-01, S-05, S-07, S-09. Use actual PostgreSQL roles and private storage in integration tests; a mocked upload handler alone does not prove the final workflow. Record exact input, expected/actual results, safe evidence and Qee's name.
+All M3 tests are listed per phase and aggregated in [test-plan.md](test-plan.md). Run worksheet rows M3-01 to M3-10, RLS-03, RLS-10 and the M3 shares of S-01, S-05, S-07, S-09. Use actual PostgreSQL roles and private storage in integration tests; a mocked upload handler alone does not prove the final workflow. Record exact input, expected/actual results, safe evidence and Syauqi's name.
 
 ### Checkpoint slice versus completion
 
@@ -119,4 +119,4 @@ Tick a box only with a linked passing result from the stated phase.
 - [ ] M3 unit/component and PostgreSQL/filesystem suites meet the testing strategy, including controlled locking, unknown commit outcomes and fault recovery.
 - [ ] Rider disablement/reassignment and private-photo retention work across modules.
 - [ ] Local backup/restore drill passed (G4); AWS restart/redeploy and tested restoration preserve data and files (G5).
-- [ ] Qee can demonstrate the module and explain the controls and failure handling personally (G6).
+- [ ] Syauqi can demonstrate the module and explain the controls and failure handling personally (G6).
