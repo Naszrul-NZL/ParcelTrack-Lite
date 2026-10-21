@@ -81,14 +81,14 @@ Status of every row is as of this document; nothing is implemented. Update the s
 
 | ID | Dependency | Needed by | Owner to chase | Status |
 | --- | --- | --- | --- | --- |
-| EXT-01 | Week 5 module allocation submission (full names, matric numbers, starter-kit declaration if any) and a retained receipt | Overdue risk: Week 5 may already have passed; act on the first day, evidence by G6 | NASZ (M1-PH1-T13, M1-PH6-T06) | Unverified; submission status not known to the plan |
-| EXT-02 | Lecturer notice and written acceptance of FastAPI/PostgreSQL (and ask the Week 14 date, EXT-08, in the same message) | Before PH1 code is merged; at the latest G1 | NASZ (M1-PH1-T13) | Not recorded |
-| EXT-03 | Apply PR-only branch protection (`.github/branch-protection.json`) with repository administration access; decide required checks after CI exists | PH1 CI complete; M1-PH5-T10 | NASZ | Pending; not applied |
-| EXT-04 | AWS account access, region, instance size, budget, domain or accepted address, TLS approach | Decision before PH3 starts (walking-skeleton deployment, M1-PH3-T12); PH5 entry | NASZ with the team (M1-PH1-T13) | Unresolved |
+| EXT-01 | Week 5 module allocation submission (full names, matric numbers, starter-kit declaration if any) and a retained receipt | Overdue risk: Week 5 may already have passed; act on the first day, evidence by G6 | Naszrul (M1-PH1-T13, M1-PH6-T06) | Unverified; submission status not known to the plan |
+| EXT-02 | Lecturer notice and written acceptance of FastAPI/PostgreSQL (and ask the Week 14 date, EXT-08, in the same message) | Before PH1 code is merged; at the latest G1 | Naszrul (M1-PH1-T13) | Not recorded |
+| EXT-03 | Apply PR-only branch protection (`.github/branch-protection.json`) with repository administration access; decide required checks after CI exists | PH1 CI complete; M1-PH5-T10 | Naszrul | Pending; not applied |
+| EXT-04 | AWS account access, region, instance size, budget, domain or accepted address, TLS approach | Decision before PH3 starts (walking-skeleton deployment, M1-PH3-T12); PH5 entry | Naszrul with the team (M1-PH1-T13) | Unresolved |
 | EXT-05 | Full names and matric numbers for the allocation sheet and the test document | EXT-01, G6 | each member | Needed |
-| EXT-06 | Private record of the incident contact channel and who holds the operations credential | Before cloud release (PH5) | NASZ | Not recorded |
-| EXT-07 | Backup encryption key custody and the identities of recovery operators | PH5 | Qee with the team | Not decided |
-| EXT-08 | Week 14 calendar date (not stated in the source documents) | Needed to schedule gates backwards; no date is invented | NASZ asks the lecturer with EXT-02 | Unknown |
+| EXT-06 | Private record of the incident contact channel and who holds the operations credential | Before cloud release (PH5) | Naszrul | Not recorded |
+| EXT-07 | Backup encryption key custody and the identities of recovery operators | PH5 | Syauqi with the team | Not decided |
+| EXT-08 | Week 14 calendar date (not stated in the source documents) | Needed to schedule gates backwards; no date is invented | Naszrul asks the lecturer with EXT-02 | Unknown |
 
 ## How a proposal becomes a requirement
 

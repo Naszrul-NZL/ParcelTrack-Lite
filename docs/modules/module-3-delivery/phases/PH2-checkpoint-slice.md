@@ -1,10 +1,10 @@
 # M3 PH2: Initial working checkpoint slice
 
-Owner: Qee. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: Planned. This is the 22 October checkpoint slice, not M3 completion.
+Owner: Syauqi. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: Planned. This is the 22 October checkpoint slice, not M3 completion.
 
 ## 1 Objective
 
-An assigned Rider logs in on a phone-width screen, sees only their own assigned parcels, starts delivery on one (ASSIGNED to OUT_FOR_DELIVERY), and the change persists with the Rider as actor and a server timestamp in history; another Rider cannot see or change it. Assignment is seeded (TMP-02). Qee also compiles the checkpoint evidence for the three slices.
+An assigned Rider logs in on a phone-width screen, sees only their own assigned parcels, starts delivery on one (ASSIGNED to OUT_FOR_DELIVERY), and the change persists with the Rider as actor and a server timestamp in history; another Rider cannot see or change it. Assignment is seeded (TMP-02). Syauqi also compiles the checkpoint evidence for the three slices.
 
 ## 2 Entry criteria
 
@@ -15,11 +15,11 @@ An assigned Rider logs in on a phone-width screen, sees only their own assigned 
 
 | Needs | From | Handoff | Substitute |
 | --- | --- | --- | --- |
-| Parcel and history tables with RLS, fixture loader, assigned profile hook | Zikri M2-PH2-T01, T08 | H25 | Loader hook agreed in PH1; Qee adds the dataset rows |
-| `lock_active_actor`, `require_role`, `verify_csrf`, `principal_uow` | NASZ M1-PH1-T07, M1-PH2-T03, T06, T08 | H03, H04, H20 | TMP-01 in the test factory only |
-| `login_as`, real cookies | NASZ M1-PH2-T09 | H20 | TMP-04 |
+| Parcel and history tables with RLS, fixture loader, assigned profile hook | Zikri M2-PH2-T01, T08 | H25 | Loader hook agreed in PH1; Syauqi adds the dataset rows |
+| `lock_active_actor`, `require_role`, `verify_csrf`, `principal_uow` | Naszrul M1-PH1-T07, M1-PH2-T03, T06, T08 | H03, H04, H20 | TMP-01 in the test factory only |
+| `login_as`, real cookies | Naszrul M1-PH2-T09 | H20 | TMP-04 |
 | Detail endpoint A12 v1 and DTOs | Zikri M2-PH1-T07, M2-PH2-T06 | H12, H22 | Rider list links to a placeholder until A12 v1 merges |
-| API client, session provider | NASZ M1-PH1-T09 | H06 | MSW mocks (TMP-03) |
+| API client, session provider | Naszrul M1-PH1-T09 | H06 | MSW mocks (TMP-03) |
 
 Independent now: T02 (database function), T04 after 0003.
 
@@ -69,7 +69,7 @@ Assigned-Rider check in SQL (function) and in the service; RLS isolation; actor,
 
 ## 8 Deliverables and handoffs
 
-H23 (`update_delivery_status` v1, A16/A17 v1) used by the checkpoint scenario; TMP-02 labeled for the demo. The checkpoint evidence file goes to the group report. Zikri and NASZ confirm via INT-CP-01 on the same database.
+H23 (`update_delivery_status` v1, A16/A17 v1) used by the checkpoint scenario; TMP-02 labeled for the demo. The checkpoint evidence file goes to the group report. Zikri and Naszrul confirm via INT-CP-01 on the same database.
 
 ## 9 Exit criteria
 
@@ -79,7 +79,7 @@ H23 (`update_delivery_status` v1, A16/A17 v1) used by the checkpoint scenario; T
 
 ## 10 Integration checkpoint
 
-On the same database and cookies: Seller A's parcel (Zikri) appears for Admin in A12; the seeded Rider flow completes; NASZ's login protects every call. INT-CP-01 to INT-CP-03 run by Qee and attached to the checkpoint report.
+On the same database and cookies: Seller A's parcel (Zikri) appears for Admin in A12; the seeded Rider flow completes; Naszrul's login protects every call. INT-CP-01 to INT-CP-03 run by Syauqi and attached to the checkpoint report.
 
 ## 11 Failure risks and recovery
 

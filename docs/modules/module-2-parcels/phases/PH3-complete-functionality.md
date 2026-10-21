@@ -4,23 +4,23 @@ Owner: Zikri. Phase PH3 of [phase framework](../../../shared/phase-framework.md)
 
 ## 1 Objective
 
-All M2 functions work through the React UI and direct API on real PostgreSQL: retry-safe parcel registration (M2-F01), Seller list, literal search, filters and full private detail (M2-F02), public status tracking with no personal data (M2-F03), and the retention selection/anonymization functions with tests at the 12-month boundary (M2-F04, scheduled in PH4). The shared detail page offers slots so Qee's Rider action panel and proof viewer plug in without duplicating permission logic.
+All M2 functions work through the React UI and direct API on real PostgreSQL: retry-safe parcel registration (M2-F01), Seller list, literal search, filters and full private detail (M2-F02), public status tracking with no personal data (M2-F03), and the retention selection/anonymization functions with tests at the 12-month boundary (M2-F04, scheduled in PH4). The shared detail page offers slots so Syauqi's Rider action panel and proof viewer plug in without duplicating permission logic.
 
 ## 2 Entry criteria
 
 - G2 passed; TMP-01 and TMP-04 retired; Seller registration and login real (M1-PH3-T03 for the register leg in browser tests).
-- Qee merges migration 0006 (`delivery_proof`) early in PH3 so `hasProof` and fixtures are real; until then `hasProof` is false.
+- Syauqi merges migration 0006 (`delivery_proof`) early in PH3 so `hasProof` and fixtures are real; until then `hasProof` is false.
 
 ## 3 Dependencies
 
 | Needs | From | Handoff | Substitute |
 | --- | --- | --- | --- |
-| Rate-limit service v1 and audit service | NASZ M1-PH2-T04, T07 | H21 | none (delivered in PH2) |
-| `delivery_proof` table and policies, `hasProof` source | Qee M3-PH3-T01 | H35 | `hasProof` constant false |
-| Rider action panel and proof viewer React components with the agreed props | Qee M3-PH3-T10 | H35 | Placeholder components in the slots |
-| `assign_parcel` (real assignment) to create ASSIGNED fixtures and reassignment visibility | Qee M3-PH3-T03 | H37 | TMP-02 seeds |
-| Maintenance runner skeleton | NASZ M1-PH3-T10 | H33 | Retention functions are tested directly; job wiring in PH4 |
-| Seller registration for browser journey | NASZ M1-PH3-T03 | none | Seeded Seller |
+| Rate-limit service v1 and audit service | Naszrul M1-PH2-T04, T07 | H21 | none (delivered in PH2) |
+| `delivery_proof` table and policies, `hasProof` source | Syauqi M3-PH3-T01 | H35 | `hasProof` constant false |
+| Rider action panel and proof viewer React components with the agreed props | Syauqi M3-PH3-T10 | H35 | Placeholder components in the slots |
+| `assign_parcel` (real assignment) to create ASSIGNED fixtures and reassignment visibility | Syauqi M3-PH3-T03 | H37 | TMP-02 seeds |
+| Maintenance runner skeleton | Naszrul M1-PH3-T10 | H33 | Retention functions are tested directly; job wiring in PH4 |
+| Seller registration for browser journey | Naszrul M1-PH3-T03 | none | Seeded Seller |
 
 Independent now: T01, T02, T04, T08 (database and services).
 
@@ -30,15 +30,15 @@ Independent now: T01, T02, T04, T08 (database and services).
 | --- | --- | --- | --- | --- |
 | M2-PH3-T01 | Replay-safe creation: compute the creation fingerprint as HMAC-SHA256, keyed by `FINGERPRINT_KEY`, over the canonical normalized request (trimmed fields, normalized phone, three-place weight); store it on the parcel; `create_parcel` returns the original parcel when `(seller_id, client_request_id)` exists with the same fingerprint (API 200), conflicts with a different fingerprint (409 `IDEMPOTENCY_CONFLICT`), and returns 409 `REQUEST_EXPIRED` when the fingerprint was cleared by anonymization; concurrency safe through the unique constraint; React keeps one client request ID per intended registration | Replay, conflict and expiry cases pass | TC01, TC02 | PH2 |
 | M2-PH3-T02 | A11 search/filter/sort: `q` (1-64 characters) matches the tracking number as a case-insensitive literal prefix or the recipient name as a literal substring, with `\`, `%` and `_` escaped so wildcards never broaden results (design choice D-08); `status` from the enum; `sort` from an allowlist (`createdAt` desc default, `currentStatus`) with id tie-break; pagination page >= 1, pageSize cap 100; add a supporting prefix index only if EXPLAIN at scale demands it | Invalid parameters 422; own rows only | TC03, TC04 | PH2 |
-| M2-PH3-T03 | A12 complete: for ADMIN each history item also carries `changedBy {id, displayName}` (never for other roles); `assignedRider` (`id`, `displayName`, `isActive`) or null, `hasProof`, `anonymized`, `terminalAt`, history ordered by `changed_at` then `id`; inaccessible/nonexistent uniform 404; shared service used by Seller, Rider and Admin; publish the slot contract in `shared/types` (props of `RiderActionPanel` and `ProofViewer`: `parcel: ParcelDetail`, `onChanged(): void`) so the detail page imports Qee's components without circular type dependencies | Same service for all roles; DTO allowlist test | TC05, TC11 | H35 |
+| M2-PH3-T03 | A12 complete: for ADMIN each history item also carries `changedBy {id, displayName}` (never for other roles); `assignedRider` (`id`, `displayName`, `isActive`) or null, `hasProof`, `anonymized`, `terminalAt`, history ordered by `changed_at` then `id`; inaccessible/nonexistent uniform 404; shared service used by Seller, Rider and Admin; publish the slot contract in `shared/types` (props of `RiderActionPanel` and `ProofViewer`: `parcel: ParcelDetail`, `onChanged(): void`) so the detail page imports Syauqi's components without circular type dependencies | Same service for all roles; DTO allowlist test | TC05, TC11 | H35 |
 | M2-PH3-T04 | Revision `tracking_lookup`: `lookup_tracking(token)` hardened function owned by `lookup_fn_owner` with column-limited SELECT on parcel (`id`, `tracking_number`) and history (`id`, `parcel_id`, `status`, `changed_at`; `id` is needed for ordering) and explicit read policies for that owner; exact token match, returns rows ordered by time then id; `EXECUTE` granted only to `tracking_runtime`; separate `tracking_runtime` pool in the backend | `tracking_runtime` cannot read tables or enumerate; hostile search_path ignored | TC06 | H02 |
 | M2-PH3-T05 | A13 `POST /public/tracking` `{trackingNumber}`: no CSRF token and no anonymous session (read-only), but the same-origin check applies; normalize/validate token (422 on bad format); rate limit 30 lookups per source per minute through the shared limiter (source from the trusted-proxy rule, invalid tokens counted too); call `lookup_tracking` via `tracking_runtime`; unknown valid token 404; response exactly `{history:[{status,changedAt}]}`; `no-store`; token never written to logs or URLs; never uses the private detail serializer | Public body allowlist test across all statuses | TC07, TC08 | H21 |
 | M2-PH3-T06 | React `/track`: form, POST lookup (no token or session bootstrap needed), timeline with Malaysia time, distinct messages for 404, 422, 429 and network failure, no token in URL/referrer/analytics, nothing stored in browser storage, `Referrer-Policy: no-referrer` honored | Browser tests inspect DOM and network | TC09, TC10 | T05 |
 | M2-PH3-T07 | React search/filter UI on `/seller/parcels` (debounce, pagination reset on filter change, ignore stale responses), full `/parcels/:id` with slots (`RiderActionPanel` for assigned Rider while status allows an action, `ProofViewer` when `hasProof`), anonymized view, 401/404/422/429 handling | Component tests with slot doubles; real components in G3 journeys | TC11 | H35 |
 | M2-PH3-T08 | Revision `retention_functions` (`maintenance_fn_owner`, executable only by `maintenance_runtime`): `list_retention_candidates(batch, as_of)` selecting terminal parcels whose `terminal_at + interval '12 months'` has passed and `anonymized_at IS NULL` (DELIVERED and FAILED alike, D-06; SHOULD: non-terminal parcels with no status change for 12 months as well, D-31); `anonymize_parcel(id)` sets recipient name, phone and address to null, clears the fingerprint, sets `anonymized_at`, increments version, audits `RETENTION_ANONYMIZED`; `as_of` accepted only through the maintenance role so no request path can move the clock; idempotent; never touches history | Boundary tests incl. month-end and leap year | TC12, TC13 | H02 |
-| M2-PH3-T09 | Full fixture dataset: parcels in all five statuses, an anonymized parcel, two ownership groups, zero-count and non-zero dashboard datasets, parcels with proof rows created through real flows where possible and test-provisioner DML otherwise (TMP-06, test-only); Qee supplies proof-file fixtures | Dataset loads on empty database; contains no real data | TC18 | H35, H38 |
+| M2-PH3-T09 | Full fixture dataset: parcels in all five statuses, an anonymized parcel, two ownership groups, zero-count and non-zero dashboard datasets, parcels with proof rows created through real flows where possible and test-provisioner DML otherwise (TMP-06, test-only); Syauqi supplies proof-file fixtures | Dataset loads on empty database; contains no real data | TC18 | H35, H38 |
 | M2-PH3-T10 | Execute and record feature-level security rows: M2-01, M2-02 (API/DOM-literal side), M2-03, M2-04 (list, search, detail, history), M2-05, M2-06 (API side), M2-07 (basic boundary), M2-08, M2-09, RLS-07, RLS-08 (initial), S-01 for A10/A13 | Worksheet updated with actual results and commit | TC03, TC06-TC08, TC14, TC15 | T01-T06 |
-| M2-PH3-T11 | Run and record the integrated journeys that include M2: INT-01 (register, login, create, refresh), INT-04 (cross-user parcel, partial), INT-07 (public privacy, API and DOM for all statuses) with Qee's and NASZ's pieces | Playwright specs pass on Compose | TC16, TC09 | G3 inputs |
+| M2-PH3-T11 | Run and record the integrated journeys that include M2: INT-01 (register, login, create, refresh), INT-04 (cross-user parcel, partial), INT-07 (public privacy, API and DOM for all statuses) with Syauqi's and Naszrul's pieces | Playwright specs pass on Compose | TC16, TC09 | G3 inputs |
 | M2-PH3-T12 | Conformance of A10-A13 to the contract (paths, schemas, status codes, error-code registry) | CT-03 passes | TC17 | M1-PH3-T13 |
 
 ## 5 Affected components
@@ -78,7 +78,7 @@ Keyed idempotency fingerprint that is not a plain hash of personal data; literal
 
 ## 8 Deliverables and handoffs
 
-H34 (complete A12 and slot contracts) to Qee; H36 (retention functions) to Qee and NASZ; the full fixture dataset to everyone; A13 and `/track` to the integrated journeys. Consumers confirm: Qee plugs real components into the slots (TC11 with real components in G3), Qee's purge job reads `anonymized_at` in PH4.
+H34 (complete A12 and slot contracts) to Syauqi; H36 (retention functions) to Syauqi and Naszrul; the full fixture dataset to everyone; A13 and `/track` to the integrated journeys. Consumers confirm: Syauqi plugs real components into the slots (TC11 with real components in G3), Syauqi's purge job reads `anonymized_at` in PH4.
 
 ## 9 Exit criteria
 
@@ -89,13 +89,13 @@ H34 (complete A12 and slot contracts) to Qee; H36 (retention functions) to Qee a
 
 ## 10 Integration checkpoint
 
-Compose run: NASZ's registered Seller creates parcels, Qee's Admin assigns and Rider finalizes, Zikri's `/track` shows the same history with identical timestamps, and retention functions applied to a backdated copy keep tracking working. All with the same images and fixtures.
+Compose run: Naszrul's registered Seller creates parcels, Syauqi's Admin assigns and Rider finalizes, Zikri's `/track` shows the same history with identical timestamps, and retention functions applied to a backdated copy keep tracking working. All with the same images and fixtures.
 
 ## 11 Failure risks and recovery
 
 | Risk | Recovery |
 | --- | --- |
-| Slot integration blocked by Qee's components | Placeholder components behind the agreed props; replace before G3 |
+| Slot integration blocked by Syauqi's components | Placeholder components behind the agreed props; replace before G3 |
 | Search query slow without index | Add index through a reviewed additive migration after EXPLAIN evidence |
 | Tracking source address wrong behind proxy | Rate limiting keyed to proxy address would throttle everyone; blocked until M1-PH5-T12 verifies; local tests use socket address |
 | Fingerprint key rotated | Existing fingerprints no longer match replays; document that key rotation expires replay protection, acceptable because replays happen within minutes |

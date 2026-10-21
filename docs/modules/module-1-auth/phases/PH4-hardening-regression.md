@@ -1,6 +1,6 @@
 # M1 PH4: Security, failure handling and regression coverage
 
-Owner: NASZ. Phase PH4 of [phase framework](../../../shared/phase-framework.md). Status: Planned. PH4 expands and proves controls that PH2/PH3 already introduced; it does not postpone any essential control.
+Owner: Naszrul. Phase PH4 of [phase framework](../../../shared/phase-framework.md). Status: Planned. PH4 expands and proves controls that PH2/PH3 already introduced; it does not postpone any essential control.
 
 ## 1 Objective
 
@@ -15,10 +15,10 @@ Every M1 security requirement (M1-01 to M1-12, M1 portions of S-01 to S-09) pass
 
 | Needs | From | Handoff | Substitute |
 | --- | --- | --- | --- |
-| Matrix rows for A10-A19 (expected outcomes per identity) | Zikri M2-PH4-T11, Qee M3-PH4-T11 | H43 | Rows contributed in PH2/PH3 are used; gaps listed as failing "missing row" checks |
-| Domain functions to race against disablement (`update_delivery_status`, `create_parcel`) | Qee M3, Zikri M2 PH2/PH3 | H22, H23 | None; real functions exist at G3 |
-| Backup lock implementation the runner must honor | Qee M3-PH4-T07 | H41 | No-op interface from PH3 |
-| Local restore drill to consume session purge | Qee M3-PH4-T07 | H44 | Run purge command against a manual restore until the drill exists |
+| Matrix rows for A10-A19 (expected outcomes per identity) | Zikri M2-PH4-T11, Syauqi M3-PH4-T11 | H43 | Rows contributed in PH2/PH3 are used; gaps listed as failing "missing row" checks |
+| Domain functions to race against disablement (`update_delivery_status`, `create_parcel`) | Syauqi M3, Zikri M2 PH2/PH3 | H22, H23 | None; real functions exist at G3 |
+| Backup lock implementation the runner must honor | Syauqi M3-PH4-T07 | H41 | No-op interface from PH3 |
+| Local restore drill to consume session purge | Syauqi M3-PH4-T07 | H44 | Run purge command against a manual restore until the drill exists |
 
 Independent now: T02, T04, T05, T07, T08, T10, T11.
 
@@ -28,7 +28,7 @@ Independent now: T02, T04, T05, T07, T08, T10, T11.
 | --- | --- | --- | --- | --- |
 | M1-PH4-T01 | Complete the authorization matrix for A01-A20 x identities (anonymous, Seller A, Seller B, Rider A, Rider B, Admin, inactive, must-change): success where valid, wrong role, wrong ownership, expired/revoked session, missing/invalid CSRF on unsafe methods, malformed fields, unexpected sensitive fields; compare nonexistent versus inaccessible parcel/proof IDs; assert no unintended DB/file change and exact error shape | Matrix fails when any implemented endpoint lacks a row or an expectation differs from the contract | TC01, TC20 | H43 |
 | M1-PH4-T02 | Session and CSRF hardening suites: attacker-chosen cookie not adopted (fixation), unknown cookie ignored, idle/absolute expiry over HTTP with a controlled clock, multi-device invalidation, `Origin`/`Host` validation, CSRF on every unsafe route including multipart and tracking POST | Matches contract session protocol | TC02, TC03, TC20, TC21 | T01 |
-| M1-PH4-T03 | Race suite with barriers and separate connections: login versus password change, login versus disablement, logout versus last-seen touch, same-username registration (PH3), pending Rider write versus disablement (with Qee's function); at least five forced orderings per race using barriers (randomized interleavings beyond that are STRETCH) | Obsolete credential never yields a current session; revoked row never recreated; operation committed before disablement is valid, later ones denied | TC04-TC07 | H03, H23 |
+| M1-PH4-T03 | Race suite with barriers and separate connections: login versus password change, login versus disablement, logout versus last-seen touch, same-username registration (PH3), pending Rider write versus disablement (with Syauqi's function); at least five forced orderings per race using barriers (randomized interleavings beyond that are STRETCH) | Obsolete credential never yields a current session; revoked row never recreated; operation committed before disablement is valid, later ones denied | TC04-TC07 | H03, H23 |
 | M1-PH4-T04 | Failure independence: failed-login audit and limiter counters survive a rejected request; audit-store failure means no session issued; two real server processes share the limiter | Fault injection around the real transaction boundary, not a mock of the whole service | TC08, TC09 | T01 |
 | M1-PH4-T05 | Private operations commands using `ops_runtime` (never the web credential), as `ops_fn_owner` functions: `lock-account` (any role including Admin: disable, bump `session_version`, delete sessions, audit `ACCOUNT_LOCKED`), `recover-account` (privately reset credential, require password change, reactivate only after the operator confirms investigation, audit `ACCOUNT_RECOVERED`), `purge-sessions` (all sessions, audit `SESSIONS_PURGED`), `lock-accounts --from-file`, `reconcile-accounts --from-journal` and `quarantine-after-restore` (disable every Rider, force password change for all). Every account-changing event from the web endpoints and the commands is appended to the off-database account journal (write-only S3 prefix or CloudWatch Logs, buffered locally when offline; user ID, event and time only). No HTTP route exists | Route enumeration proves no public lock/recover path; hardened functions pass RLS-09; reconciliation proven by TC11 | TC10, TC11 | H03 |
 | M1-PH4-T06 | Register M1 jobs in the runner: `purge_expired_sessions` (revision `session_cleanup_functions`) deleting expired sessions and rate-limit buckets in small batches, run hourly; a security-alert job every 5 minutes that checks the audit table for bursts (more than 20 `LOGIN_FAILED` per username or source, any Admin `LOGIN_THROTTLED`, more than 200 Admin `PARCEL_VIEWED` per hour) and notifies the recipient recorded for job failures; idempotent; logs counts only; honors the backup lock | Run twice, interrupt, concurrent copy blocked; burst alert fires on injected audit rows | TC16, TC22 | H33, H41 |
@@ -36,7 +36,7 @@ Independent now: T02, T04, T05, T07, T08, T10, T11.
 | M1-PH4-T08 | Canary scan and repository review: run the complete suite with canary passwords, tokens, addresses and a canary typed into the username field; scan captured application logs, proxy and PostgreSQL logs, audit rows, error bodies and test artifacts; the scanner has a positive control (a test-only route guarded by CT-02 logs a canary that the scan must find, and every scanned source must contain a minimum number of lines); run secret scanning on tree and history; confirm `.env.example` placeholders only (S-03, S-04, S-05) | Zero canary hits; positive control found; scan result stored with the run | TC14 | all suites |
 | M1-PH4-T09 | M1 browser regression (Playwright): register, login, logout, Back button, session expiry mid-use, account switching in separate contexts, must-change flow, 403 CSRF refresh path | Runs in CI against Compose | TC15 | H10 |
 | M1-PH4-T10 | Enforce CI gates and security tooling for M1: dependency audit (pip-audit, npm audit) blocks high/critical reachable findings, backend coverage gate (85 percent line, 80 percent branch) with the scenario lists above treated as required test names, frontend gate for auth features; run Bandit or Semgrep on `modules/auth`, Trivy and hadolint on the images and Compose, OWASP ZAP baseline and sqlmap against login, registration and the user-management routes on the Compose stack; record tool, version and output summary for the test document | A deliberate failing scenario blocks merge in a test PR; tool outputs stored | TC17, TC23 | T01-T09 |
-| M1-PH4-T11 | Incident runbook (S-06): reporting to the Admin within one hour, who may run the private commands, custody of the operations credential so one locked Admin cannot block recovery, evidence preservation, post-restore reconciliation using the operations log; tabletop walk-through recorded | Reviewed by Zikri and Qee; contact channel recorded privately (placeholder only in Git) | TC19 | T05 |
+| M1-PH4-T11 | Incident runbook (S-06): reporting to the Admin within one hour, who may run the private commands, custody of the operations credential so one locked Admin cannot block recovery, evidence preservation, post-restore reconciliation using the operations log; tabletop walk-through recorded | Reviewed by Zikri and Syauqi; contact channel recorded privately (placeholder only in Git) | TC19 | T05 |
 | M1-PH4-T12 | Consolidated execution of worksheet rows M1-01 to M1-12 plus M1 shares of S-01, S-03 to S-06, S-08 against the same commit; update actual-result columns and attach safe evidence | Every row Pass or an open defect; no unexecuted row marked Pass | TC18 | T01-T11 |
 
 ## 5 Affected components
@@ -77,7 +77,7 @@ Controls verified or completed: fixation resistance, expiry, rotation, revocatio
 
 ## 8 Deliverables and handoffs
 
-H42 (private lock/recover/purge commands) to Qee for the restore drill and to the incident runbook; the authorization matrix runner with all rows to the group; runner jobs registered. Consumers confirm: Qee runs `purge-sessions` in OPS-05; Zikri's retention job runs under the same runner.
+H42 (private lock/recover/purge commands) to Syauqi for the restore drill and to the incident runbook; the authorization matrix runner with all rows to the group; runner jobs registered. Consumers confirm: Syauqi runs `purge-sessions` in OPS-05; Zikri's retention job runs under the same runner.
 
 ## 9 Exit criteria
 
@@ -87,7 +87,7 @@ H42 (private lock/recover/purge commands) to Qee for the restore drill and to th
 
 ## 10 Integration checkpoint
 
-Cross-module run on one commit: INT-04, INT-06 and INT-09 pass; INT-05 races pass with Qee's functions; incident commands operate against the same database used by Zikri's and Qee's suites; the CI job list matches the names recorded for branch protection.
+Cross-module run on one commit: INT-04, INT-06 and INT-09 pass; INT-05 races pass with Syauqi's functions; incident commands operate against the same database used by Zikri's and Syauqi's suites; the CI job list matches the names recorded for branch protection.
 
 ## 11 Failure risks and recovery
 

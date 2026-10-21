@@ -1,6 +1,6 @@
 # Module 3 test plan
 
-Owner: Qee. Coverage plan for M3, the shared test harness and backup/restore, linked to phases, tasks and requirements. Every test below is planned; none has run. A phase cannot pass because its screens render: state, permission and file/database consistency cases must show their expected outcomes with evidence. Test case (TC) definitions live in the phase files; the index at the end is generated from them by `tools/check_plan_docs.py`.
+Owner: Syauqi. Coverage plan for M3, the shared test harness and backup/restore, linked to phases, tasks and requirements. Every test below is planned; none has run. A phase cannot pass because its screens render: state, permission and file/database consistency cases must show their expected outcomes with evidence. Test case (TC) definitions live in the phase files; the index at the end is generated from them by `tools/check_plan_docs.py`.
 
 Related: [testing strategy](../../shared/testing-strategy.md), [integration scenarios](../../shared/integration-tests.md), [traceability](../../shared/traceability.md), [security worksheet](../../security-tests.md).
 

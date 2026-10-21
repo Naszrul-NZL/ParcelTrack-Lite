@@ -6,9 +6,9 @@ Planning baseline agreed on 21 October 2026: React frontend, FastAPI backend, Po
 
 | Owner | Module plan (README, phases, test plan) | Scope |
 | --- | --- | --- |
-| NASZ | [M1 Login and User Management](modules/module-1-auth/README.md): [phases](modules/module-1-auth/phases/PH1-foundation.md), [test plan](modules/module-1-auth/test-plan.md) | Accounts, sessions, permissions, password change, user administration, maintenance runner, AWS stack |
+| Naszrul | [M1 Login and User Management](modules/module-1-auth/README.md): [phases](modules/module-1-auth/phases/PH1-foundation.md), [test plan](modules/module-1-auth/test-plan.md) | Accounts, sessions, permissions, password change, user administration, maintenance runner, AWS stack |
 | Zikri | [M2 Parcel Registration and Public Tracking](modules/module-2-parcels/README.md): [phases](modules/module-2-parcels/phases/PH1-foundation.md), [test plan](modules/module-2-parcels/test-plan.md) | Database roles and RLS foundation, parcel creation, seller access/search, privacy-preserving tracking, retention |
-| Qee | [M3 Delivery Update and Admin Dashboard](modules/module-3-delivery/README.md): [phases](modules/module-3-delivery/phases/PH1-foundation.md), [test plan](modules/module-3-delivery/test-plan.md) | Test harness, assignment, delivery outcomes, proof handling, dashboard, backup and restore |
+| Syauqi | [M3 Delivery Update and Admin Dashboard](modules/module-3-delivery/README.md): [phases](modules/module-3-delivery/phases/PH1-foundation.md), [test plan](modules/module-3-delivery/test-plan.md) | Test harness, assignment, delivery outcomes, proof handling, dashboard, backup and restore |
 
 Each owner delivers their module's backend, React screens, migrations, security tests and demonstration. The group delivers one integrated application, not three applications. Each module folder contains one detailed Markdown file per phase (PH1 to PH6) with tasks, dependencies, deliverables, tests and exit criteria.
 
@@ -60,7 +60,7 @@ A criterion is checked only with a linked passing result. The group gates in the
 - [ ] No real recipient data, usable test passwords or deployment secrets are committed.
 - [ ] Each member can explain their own code and security decisions in the final demonstration (G6).
 - [ ] Unit/component, API/PostgreSQL and core browser suites pass the testing strategy gates, with operational restore/maintenance evidence before cloud release (G4, G5).
-- [ ] NASZ's lecturer allocation-sheet submission and the variation notice are recorded with real evidence or as unverified (EXT-01, EXT-02).
+- [ ] Naszrul's lecturer allocation-sheet submission and the variation notice are recorded with real evidence or as unverified (EXT-01, EXT-02).
 
 ## Remaining decisions and external dependencies
 
@@ -68,7 +68,7 @@ Tracked in the [decision register](shared/decision-register.md). In summary:
 
 1. FastAPI and PostgreSQL replace the frameworks/databases explicitly named in the brief (D-01). The team selected them; lecturer acceptance is unverified (EXT-02).
 2. AWS account access, region, domain and instance budget need actual values before provisioning (EXT-04). No AWS resources have been created by this planning work.
-3. The prepared PR-only branch protection has not been applied (EXT-03); NASZ needs repository administration access.
+3. The prepared PR-only branch protection has not been applied (EXT-03); Naszrul needs repository administration access.
 4. Full names and matric numbers are needed for the lecturer's allocation sheet and test document (EXT-05); allocation submission is unverified (EXT-01).
 5. Open design points: secrets location (D-10), proxy and TLS choice (D-11), runtime versions (D-21), incident contact and backup key custody (EXT-06, EXT-07).
 

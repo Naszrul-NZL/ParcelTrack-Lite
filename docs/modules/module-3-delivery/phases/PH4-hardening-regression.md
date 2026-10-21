@@ -1,6 +1,6 @@
 # M3 PH4: Security, failure handling and regression coverage
 
-Owner: Qee. Phase PH4 of [phase framework](../../../shared/phase-framework.md). Status: Planned. PH4 proves and extends controls introduced in PH2/PH3 (assigned-Rider checks, validation, private storage, locking).
+Owner: Syauqi. Phase PH4 of [phase framework](../../../shared/phase-framework.md). Status: Planned. PH4 proves and extends controls introduced in PH2/PH3 (assigned-Rider checks, validation, private storage, locking).
 
 ## 1 Objective
 
@@ -15,11 +15,11 @@ Delivery state and proof files stay consistent under every injected failure and 
 
 | Needs | From | Handoff | Substitute |
 | --- | --- | --- | --- |
-| Runner, job registry and backup-lock check | NASZ M1-PH3-T10, M1-PH4-T06 | H33 | Jobs invoked directly in tests |
+| Runner, job registry and backup-lock check | Naszrul M1-PH3-T10, M1-PH4-T06 | H33 | Jobs invoked directly in tests |
 | Retention job setting `anonymized_at` | Zikri M2-PH4-T03 | H40 | `anonymize_parcel` called directly by tests |
-| Ops commands `purge-sessions`, `lock-accounts --from-file` | NASZ M1-PH4-T05 | H42 | Manual SQL on a throwaway restore until delivered; real command before G4 |
+| Ops commands `purge-sessions`, `lock-accounts --from-file` | Naszrul M1-PH4-T05 | H42 | Manual SQL on a throwaway restore until delivered; real command before G4 |
 | Zikri's grant snapshot and RLS runner for post-restore checks | Zikri M2-PH4-T01 | H45 | Local `psql` checks until delivered |
-| `disable user` path for race with finalization | NASZ M1-PH3-T02 | H31 | none |
+| `disable user` path for race with finalization | Naszrul M1-PH3-T02 | H31 | none |
 
 Independent now: T01, T03, T06, T08, T09, T10.
 
@@ -33,11 +33,11 @@ Independent now: T01, T03, T06, T08, T09, T10.
 | M3-PH4-T04 | Proof purge job `proof_purge` consuming Zikri's `anonymized_at` through `list_proofs_to_purge(batch)` (anonymized parcels that still hold proof metadata): for parcels anonymized with a proof row, delete the file through `ProofStore`, then call `clear_proof_after_purge(parcel_id)`, which clears proof metadata and audits `PROOF_PURGED`; idempotent when the file is already gone; A19 denies access from the moment `anonymized_at` is set; batch size and logs with counts and opaque IDs only; honors backup lock | Interrupt before and after file deletion; denial holds throughout | TC04 | H40 |
 | M3-PH4-T05 | Concurrency suites with barriers and separate connections: reassignment versus finalization from the same `expectedVersion`; two identical finalizations; DELIVERED versus FAILED simultaneously; two Admins assigning different Riders; assignment versus Rider disablement; finalization versus disablement; retention anonymization versus proof read | One valid winner each; no duplicate history or proof; loser gets 404/409 and its prepared file is cleaned; operations committed before disablement are valid | TC05, TC13 | H31 |
 | M3-PH4-T06 | Upload attack corpus beyond the PH3 smoke set: polyglots, appended payloads, EXIF/GPS, large ICC and text chunks, CMYK and 16-bit variants, progressive JPEG, decompression bombs, extension-case and double extensions, Unicode and path-separator filenames, 15 concurrent uploads (memory bound), slow-body client (timeout aborts and cleans staging) | None stored served or executable; filename never used; output re-encoded | TC06 | PH3 |
-| M3-PH4-T07 | Backup and restore tooling and local drill (the shared advisory lock in `unit_of_work` and the maintenance gate are built by M2-PH1-T03 and M1-PH3-T10; this task uses them): backup script as `backup_operator` holding a session-level `pg_advisory_lock` for the whole dump and archive with a bounded wait and a `trap` that clears the maintenance flag if the script dies; logical dump with the migration revision, proof directory archive, manifest with checksums, public-key encryption; restore script into an isolated Compose project (data-only: bootstrap roles, `alembic upgrade` to the manifest revision, `pg_restore --data-only --disable-triggers`, `verify_grants`), then NASZ's `purge-sessions`, account journal reconciliation, retention rerun, and verification of counts, history, sample photo hashes, grants equal snapshot, revoked cookie 401, fresh login | Drill passes while retention and reconciliation jobs run near the backup moment | TC07, TC15, TC16 | H41, H42 |
+| M3-PH4-T07 | Backup and restore tooling and local drill (the shared advisory lock in `unit_of_work` and the maintenance gate are built by M2-PH1-T03 and M1-PH3-T10; this task uses them): backup script as `backup_operator` holding a session-level `pg_advisory_lock` for the whole dump and archive with a bounded wait and a `trap` that clears the maintenance flag if the script dies; logical dump with the migration revision, proof directory archive, manifest with checksums, public-key encryption; restore script into an isolated Compose project (data-only: bootstrap roles, `alembic upgrade` to the manifest revision, `pg_restore --data-only --disable-triggers`, `verify_grants`), then Naszrul's `purge-sessions`, account journal reconciliation, retention rerun, and verification of counts, history, sample photo hashes, grants equal snapshot, revoked cookie 401, fresh login | Drill passes while retention and reconciliation jobs run near the backup moment | TC07, TC15, TC16 | H41, H42 |
 | M3-PH4-T08 | Dashboard and proof endpoint hardening: dashboard consistency under concurrent writers, traversal encodings, `Range`/`HEAD` behavior, missing-file-with-row handling (generic 404/503, alert log), headers on error responses, method restrictions | Responses never leak paths, keys or stack traces | TC08, TC09 | PH3 |
 | M3-PH4-T09 | Mobile browser regression with an interrupted network: abort the request after it is sent, lose connection mid-upload, throttled 4G profile, offline form retention; UI shows an uncertain state, refetches, never auto-resubmits, and reflects the committed state if it happened | Playwright phone project | TC10 | H10 |
 | M3-PH4-T10 | P5 audit and log review for M3: assignment, reassignment, status change and proof events carry actor, time, parcel ID and request ID; no full addresses, phone numbers, filenames or file contents; canary scan across logs | Zero canary hits | TC11 | M1-PH4-T08 |
-| M3-PH4-T11 | Coverage gates and consolidated execution: delivery backend (85 percent line, 80 percent branch) and frontend gates with required scenarios present (every legal and illegal transition edge, role matrix rows, file fault points); contribute matrix rows A14-A19 to NASZ's harness; run M3-01 to M3-10, RLS-03, RLS-10 and M3 shares of S-rows on one commit and update the worksheet | No row marked Pass without execution | TC12 | H43 |
+| M3-PH4-T11 | Coverage gates and consolidated execution: delivery backend (85 percent line, 80 percent branch) and frontend gates with required scenarios present (every legal and illegal transition edge, role matrix rows, file fault points); contribute matrix rows A14-A19 to Naszrul's harness; run M3-01 to M3-10, RLS-03, RLS-10 and M3 shares of S-rows on one commit and update the worksheet | No row marked Pass without execution | TC12 | H43 |
 
 ## 5 Affected components
 
@@ -70,7 +70,7 @@ Verified: no committed proof without a valid durable file and vice versa, no del
 
 ## 8 Deliverables and handoffs
 
-H41 (backup lock and scripts) to NASZ (runner honors lock) and Zikri (post-restore verification); `proof_reconcile` and `proof_purge` jobs to the runner; matrix rows A14-A19 to NASZ (H43). Zikri's retention job and Qee's purge job demonstrated together in INT-11.
+H41 (backup lock and scripts) to Naszrul (runner honors lock) and Zikri (post-restore verification); `proof_reconcile` and `proof_purge` jobs to the runner; matrix rows A14-A19 to Naszrul (H43). Zikri's retention job and Syauqi's purge job demonstrated together in INT-11.
 
 ## 9 Exit criteria
 
@@ -81,7 +81,7 @@ H41 (backup lock and scripts) to NASZ (runner honors lock) and Zikri (post-resto
 
 ## 10 Integration checkpoint
 
-INT-04, INT-05, INT-09, INT-10, INT-11 and the local half of INT-12 run in CI/Compose together with NASZ's and Zikri's suites; Zikri's grant snapshot includes migration 0006 functions; the runner executes all registered jobs.
+INT-04, INT-05, INT-09, INT-10, INT-11 and the local half of INT-12 run in CI/Compose together with Naszrul's and Zikri's suites; Zikri's grant snapshot includes migration 0006 functions; the runner executes all registered jobs.
 
 ## 11 Failure risks and recovery
 

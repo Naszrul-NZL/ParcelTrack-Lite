@@ -15,7 +15,7 @@ Zikri can demonstrate M2 live on the AWS deployment in about 10 minutes, includi
 
 | Needs | From | Handoff | Substitute |
 | --- | --- | --- | --- |
-| NASZ's and Qee's scripts for the 30-minute rehearsal and shared worksheet rows | M1-PH6, M3-PH6 | H60 | none |
+| Naszrul's and Syauqi's scripts for the 30-minute rehearsal and shared worksheet rows | M1-PH6, M3-PH6 | H60 | none |
 | Cloud journeys passing on the release candidate | G5 | none | none |
 
 ## 4 Ordered tasks
@@ -24,9 +24,9 @@ Zikri can demonstrate M2 live on the AWS deployment in about 10 minutes, includi
 | --- | --- | --- | --- | --- |
 | M2-PH6-T01 | Release-candidate regression for M2: unit, component, PostgreSQL/RLS integration, browser journeys, scale plan checks and the M2 rows of the authorization matrix on one commit; live-URL checks that are safe to repeat | All pass; failures stay open | TC01 | G5 |
 | M2-PH6-T02 | M2 section of the security test document for M2-01 to M2-10 with input, expected, actual, pass/fail, evidence, version, environment, timestamp and owner Zikri; more than five distinct input types (SQL injection in search, XSS in address, invalid phone/weight, changed parcel ID, guessed/sequential tracking number, rapid lookups, forged seller ID, role misuse) | Every actual result observed on the release candidate | TC02 | T01 |
-| M2-PH6-T03 | RLS-01 to RLS-09 evidence package (with Qee for RLS-03, RLS-10): catalog listings, query outputs and test run references stored safely; S-01, S-03, S-08 contributions for M2 | Linked from the worksheet | TC02 | T01 |
+| M2-PH6-T03 | RLS-01 to RLS-09 evidence package (with Syauqi for RLS-03, RLS-10): catalog listings, query outputs and test run references stored safely; S-01, S-03, S-08 contributions for M2 | Linked from the worksheet | TC02 | T01 |
 | M2-PH6-T04 | Demo script (about 10 minutes): invalid weight/phone rejected, registration with token, refresh persistence, Seller B tries Seller A's ID (404), SQL-injection string in search harmless, a real tracking number with its neighbours and sequential values all returning the same uniform 404 (random 128-bit source shown in code), XSS address rendered as text, public tracking showing status/time only with network tab visible, repeated lookups reaching 429, a Rider/Admin POST to `/parcels` denied, show the RLS role listing and an unfiltered query returning only one Seller's rows; fallback evidence clearly marked | Timed rehearsal on the cloud URL | TC03 | T01 |
-| M2-PH6-T05 | Code walkthrough notes: schema and constraints, migration order, `unit_of_work` and transaction-local context, policies and helper, `create_parcel` and replay, `lookup_tracking`, retention functions and job, tracking token generator; likely questions and answers | Peer questioning by NASZ and Qee recorded | TC04 | none |
+| M2-PH6-T05 | Code walkthrough notes: schema and constraints, migration order, `unit_of_work` and transaction-local context, policies and helper, `create_parcel` and replay, `lookup_tracking`, retention functions and job, tracking token generator; likely questions and answers | Peer questioning by Naszrul and Syauqi recorded | TC04 | none |
 | M2-PH6-T06 | Evidence for retention and data protection policy P3: documented procedure, last scheduled run, anonymization sample on synthetic data, backup expiry interpretation of the 12-month policy (D-17) | Procedure and sample linked | TC05 | M2-PH5-T04 |
 | M2-PH6-T07 | Repository and data hygiene for M2: synthetic data only, no real recipients, payload corpora contain no personal data, fixtures flagged, secrets scan | Scan clean | TC06 | none |
 | M2-PH6-T08 | Group 30-minute rehearsals (two) with timing for the M2 segment and the full end-to-end order from the [checkpoint plan](../../../checkpoint-plan.md#later-integrated-demonstration-order) | Two logged run-throughs | TC07 | H60 |
@@ -64,7 +64,7 @@ M2 section of the security test document; RLS evidence; demo script; code notes;
 
 ## 10 Integration checkpoint
 
-Single end-to-end live run in the planned order with NASZ and Qee, using the same deployment, then reset of demo accounts.
+Single end-to-end live run in the planned order with Naszrul and Syauqi, using the same deployment, then reset of demo accounts.
 
 ## 11 Failure risks and recovery
 
