@@ -1,6 +1,6 @@
 # ParcelTrack Lite initial ERD
 
-Conceptual database design for team review. This is a draft, not an implemented database. The [shared system contract](shared/system-contract.md) defines authoritative field constraints and operations. Session, migration and rate-limit infrastructure is omitted from the business-entity diagram.
+Conceptual database design for team review. This is a draft, not an implemented database. The [shared system contract](shared/system-contract.md) defines authoritative field constraints and operations. Session, migration, rate-limit and `system_state` (maintenance flag) infrastructure is omitted from the business-entity diagram. Tables are created in the fixed order `0002_auth_core` (USER, AuditEvent without the parcel foreign key), `0003_parcels` (PARCEL, ParcelStatusHistory and the AuditEvent-to-Parcel foreign key), `0006_delivery_proof` (DeliveryProof); see the [dependency matrix](shared/dependency-matrix.md#migration-and-layer-order).
 
 ```mermaid
 erDiagram
@@ -86,9 +86,9 @@ erDiagram
 | Personal data | Name, phone and address are required at registration. Allow anonymization later without deleting the status history. Store phone values as strings. |
 | Status history | Each parcel starts with Registered history in the same transaction as creation. Record each subsequent change with the acting User and timestamp. No public endpoint may return actor information. |
 | Current status | Stored on Parcel for lists/counts. Update it and append history in the same database transaction. Lock the parcel during transitions so concurrent updates cannot create contradictory history. |
-| Proof | Zero or one photo per parcel in this initial scope. Store only its private storage key and metadata in the database. The application must restrict who can retrieve it. |
+| Proof | Zero or one photo per parcel in this initial scope. Store only its private storage key (`<parcelId>/<32 hex>.<jpg\|png>`, D-13) and metadata in the database. The application must restrict who can retrieve it. After retention purge the file is removed first and the metadata cleared afterwards. |
 | Final outcome | Proposed rule: Delivered and Failed require a valid proof photo. Commit the proof metadata and final status together; failure must not leave a final status without proof. |
-| Audit | Actor is nullable for unauthenticated failures. Log a safe event category and outcome. Do not put submitted passwords, complete addresses or raw login payloads in this table. |
+| Audit | Actor is nullable for unauthenticated failures. Log a safe event category from the contract's event-type list and outcome. `parcel_id` becomes a foreign key in migration 0003. Do not put submitted passwords, complete addresses or raw login payloads in this table. |
 | Time | Store timezone-aware timestamps consistently and display Malaysia time in the demo. Public tracking returns only status, date and time. |
 
 ## Proposed allowed status transitions
@@ -109,7 +109,7 @@ The case study lists these states and roles but does not fully specify retries, 
 
 Public tracking must select only status and timestamp fields. Exclude recipient information, actor identity, internal user IDs and proof links from the entire public response, including hidden fields and embedded scripts.
 
-At 12 months after delivery, the project's P3 policy requires deletion or anonymization of recipient data. Clear personal fields and remove identifying proof images while keeping non-identifying history. The implementation baseline also applies 12 months after terminal_at for Failed parcels as an explicit design choice. Deny photo access before retryable file deletion and follow the [backup retention/restore procedure](shared/integration-and-aws.md#backup-and-restore).
+At 12 months after delivery, the project's P3 policy requires deletion or anonymization of recipient data. Clear personal fields and remove identifying proof images while keeping non-identifying history. The implementation baseline also applies 12 months after terminal_at for Failed parcels as an explicit design choice. Deny photo access before retryable file deletion: `anonymized_at` is the flag that makes proof endpoints return 404 immediately, and Qee's purge job then removes files and clears proof metadata. Follow the [backup retention/restore procedure](shared/integration-and-aws.md#backup-and-restore); after any restore, run retention again before reopening (D-17).
 
 ## Initial implementation decisions
 

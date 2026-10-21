@@ -1,20 +1,18 @@
 # ParcelTrack Lite complete project plan
 
-Planning baseline agreed on 21 October 2026: React frontend, FastAPI backend, PostgreSQL with RLS, Docker Compose, and AWS hosting. This is an implementation plan. It does not claim application code, tests or deployment are complete.
+Planning baseline agreed on 21 October 2026: React frontend, FastAPI backend, PostgreSQL with RLS, Docker Compose, and AWS hosting. This is an implementation plan. It does not claim application code, tests or deployment are complete. Verified repository state: documentation and reference files only.
 
 ## Plans by owner
 
-| Owner | Independent module plan | Scope |
+| Owner | Module plan (README, phases, test plan) | Scope |
 | --- | --- | --- |
-| NASZ | [M1 Login and User Management](modules/module-1-auth/README.md) | Accounts, sessions, permissions, password change and user administration |
-| Zikri | [M2 Parcel Registration and Public Tracking](modules/module-2-parcels/README.md) | Parcel creation, seller access/search and privacy-preserving tracking |
-| Qee | [M3 Delivery Update and Admin Dashboard](modules/module-3-delivery/README.md) | Assignment, delivery outcomes, proof handling and dashboard |
+| NASZ | [M1 Login and User Management](modules/module-1-auth/README.md): [phases](modules/module-1-auth/phases/PH1-foundation.md), [test plan](modules/module-1-auth/test-plan.md) | Accounts, sessions, permissions, password change, user administration, maintenance runner, AWS stack |
+| Zikri | [M2 Parcel Registration and Public Tracking](modules/module-2-parcels/README.md): [phases](modules/module-2-parcels/phases/PH1-foundation.md), [test plan](modules/module-2-parcels/test-plan.md) | Database roles and RLS foundation, parcel creation, seller access/search, privacy-preserving tracking, retention |
+| Qee | [M3 Delivery Update and Admin Dashboard](modules/module-3-delivery/README.md): [phases](modules/module-3-delivery/phases/PH1-foundation.md), [test plan](modules/module-3-delivery/test-plan.md) | Test harness, assignment, delivery outcomes, proof handling, dashboard, backup and restore |
 
-Each owner delivers their module's backend, React screens, migrations, security tests and demonstration. The group delivers one integrated application, not three applications.
+Each owner delivers their module's backend, React screens, migrations, security tests and demonstration. The group delivers one integrated application, not three applications. Each module folder contains one detailed Markdown file per phase (PH1 to PH6) with tasks, dependencies, deliverables, tests and exit criteria.
 
-Read the [shared system contract](shared/system-contract.md) before implementation. It is authoritative for API paths, payloads, status values, permissions and transaction rules. The [integration and AWS plan](shared/integration-and-aws.md) defines the release sequence and shared completion gates. [Initial ERD](initial-erd.md) and [security test worksheet](security-tests.md) support these plans.
-
-The [automated testing strategy](shared/testing-strategy.md) defines unit, component, real-PostgreSQL/API integration, browser and deployment/recovery suites, with coverage gates and a mapping for all 14 features. [Independent review resolutions](review-resolutions.md) record gaps found and addressed before implementation.
+Start here: [shared architecture and index](shared/README.md), [phase framework and group gates](shared/phase-framework.md), [dependency matrix](shared/dependency-matrix.md), [first execution sequence](shared/execution-sequence.md). The [shared system contract](shared/system-contract.md) is authoritative for API paths, payloads, status values, permissions and transaction rules. The [integration and AWS plan](shared/integration-and-aws.md) defines deployment, backup and incident operations. [Initial ERD](initial-erd.md) and the [security test worksheet](security-tests.md) support these plans. The [testing strategy](shared/testing-strategy.md), [integration scenarios](shared/integration-tests.md), [workflow trace](shared/workflow-trace.md) and [traceability](shared/traceability.md) define and map the evidence. The [decision register](shared/decision-register.md) separates source requirements, confirmed decisions, proposals and external dependencies. [Independent review resolutions](review-resolutions.md) record gaps found and addressed before implementation.
 
 ## Product boundary
 
@@ -22,77 +20,59 @@ The completed system covers every function in case-study sections 4 and 5: Selle
 
 Payments, courier integrations, maps/GPS, notifications, a mobile app, account recovery by email, multiple proof images, redelivery after a final outcome and multiple organizations are outside this scope. Excluding them does not remove a listed case-study function. Reassignment of an unfinished parcel is included so disabling a departed Rider cannot strand delivery work.
 
-## Single architecture
+## Architecture
 
-```mermaid
-flowchart LR
-    Browser[React in browser] --> Proxy[HTTPS reverse proxy on AWS EC2]
-    Proxy --> Assets[Built React files]
-    Proxy --> API[One FastAPI application]
-    API --> Auth[M1 accounts and sessions]
-    API --> Parcels[M2 registration and tracking]
-    API --> Delivery[M3 delivery and dashboard]
-    Auth --> PG[(PostgreSQL)]
-    Parcels --> PG
-    Delivery --> PG
-    Delivery --> Proof[Private proof files on EBS]
-    PG --> Backup[Encrypted off-host backups]
-    Proof --> Backup
-```
+One React frontend, one FastAPI application with M1/M2/M3 packages, one PostgreSQL database, private proof storage and a maintenance runner, on one EC2 instance behind an HTTPS proxy. See the [shared architecture](shared/README.md#single-architecture) and the contract for the code layout and privilege model.
 
-React never connects directly to PostgreSQL. RLS complements backend authorization. The public tracking database connection has a separate restricted role. All module endpoints share /api/v1 and one frontend session.
+## Delivery phases
 
-## Shared ownership
+Every module plan uses the same six phases and identifiers. The earlier labels P0 to P5 were replaced because they collided with case-study policies P1 to P5.
 
-| Work | Coordinator | Required collaboration |
+| Phase | Work | Group gate |
 | --- | --- | --- |
-| FastAPI entry point, session/CSRF dependencies, shared API client and route guards | NASZ | Zikri and Qee consume the same contracts |
-| Schema ordering, Alembic revision integration, RLS context helper and shared data types | Zikri | Each owner writes their own module migrations and policies; all review grants |
-| Proof storage, retention file cleanup and backup/restore procedure | Qee | Zikri supplies retention candidates; NASZ supplies scheduled-job identity |
-| Docker, CI and AWS release integration | NASZ | Zikri verifies database/RLS; Qee verifies private files and restoration |
-| ERD, common layout and final acceptance | All three | One review of each module plus the complete cloud journey |
+| PH1 Foundation and shared contracts | Repository skeleton, Compose/PostgreSQL, role bootstrap, migrations 0001-0003, harness, fixtures, constants, DTOs, auth interface, contract v3 | G1: clean checkout starts, runtime roles cannot bypass RLS, CI green |
+| PH2 Initial working checkpoint slice | M1 real login/logout; M2 parcel registered and listed under RLS; M3 assigned parcel moved to Out for Delivery; security baseline active | G2: INT-CP-01 to INT-CP-03 |
+| PH3 Complete module functionality | All module functions and screens, public tracking, assignment/reassignment, final outcomes/photo, password and user administration | G3: successful and Failed journeys, no temporary substitutes |
+| PH4 Security, failure handling and regression | Full authorization matrix, RLS suites, races, fault injection, upload corpus, retention job, local backup/restore, CI gates | G4: all worksheet rows pass locally |
+| PH5 Integrated AWS deployment and operations | EC2 HTTPS deployment, private PostgreSQL, durable storage, backups, scheduled jobs, cloud journeys, restore procedure | G5a: all roles on the live URL, restart and rollback proven; G5b: extended operations |
+| PH6 Final acceptance, evidence and demonstration | Release-candidate regression, security test document, rehearsals, individual explanations | G6: documented evidence and demonstration readiness |
 
-Coordinating integration does not transfer ownership of another member's assessed code. API/schema changes require updates to the shared contract and affected module plans in the same PR.
+Details, entry and exit criteria, and the per-member milestone matrix are in the [phase framework](shared/phase-framework.md). PH2 is the 22 October checkpoint target, not the whole-project definition of done. Source documents set the final submission at Week 14; no invented calendar date is assigned here. Phases can overlap only under the framework's overlap rule; a module is not complete until its own exit criteria and the group gates pass.
 
-## Implementation order
+Work is tiered MUST, SHOULD or STRETCH ([priority tiers and cut line](shared/phase-framework.md#priority-tiers-and-cut-line)); gates G3 to G6 pass on MUST and SHOULD, STRETCH items are reported honestly and never block. Gate G5 is split into a rubric-critical minimum G5a (HTTPS cloud deployment, all roles online, restart persistence, rollback) and extended operations G5b.
 
-| Stage | Work | Exit condition |
-| --- | --- | --- |
-| P0 Foundation | Repository skeleton, Docker/PostgreSQL, schemas, synthetic fixtures, role/status constants and response types | Clean checkout starts locally, migrations apply, runtime roles cannot bypass RLS |
-| P1 Checkpoint slices | M1 login/protected page; M2 registration saved to database; M3 assigned parcel moved to Out for Delivery | Three small working demonstrations using the same database and session |
-| P2 Full functionality | All module functions and screens, public tracking, assignment/reassignment, final outcomes/photo and password/user administration | Integrated successful and Failed journeys both work |
-| P3 Security and recovery | Complete backend authorization, RLS, CSRF, rate limits, upload defenses, retention and failure handling | All required security cases pass with recorded evidence |
-| P4 AWS release | EC2 HTTPS deployment, private PostgreSQL, durable storage, backups, restore and smoke tests | All roles work on the live URL and data survives restart/redeploy |
-| P5 Final submission | Final evidence matrix, individual explanations, 30-minute rehearsal and unresolved-issue review | Each member can demonstrate and explain their own module and blocked attacks |
-
-P1 is the 22 October checkpoint target, not the whole-project definition of done. Source documents set the final submission at Week 14; no invented calendar date is assigned here. Later stages can overlap, but a module is not complete until its own acceptance criteria and the shared release gates pass.
-
-Write and run tests with each feature from P0 onward. Authentication, authorization, input validation, safe session handling and basic RLS are part of the first working slices; P3 expands/verifies them rather than postponing all security until later. No unfinished slice is exposed publicly without its required access and privacy controls.
+Write and run tests with each feature from PH1 onward. Authentication, authorization, input validation, safe session handling and basic RLS are part of the first working slices; PH4 expands and verifies them rather than postponing all security. No unfinished slice is exposed publicly without its required access and privacy controls.
 
 ## Whole-project completion criteria
 
-- [ ] All feature IDs in the three module plans have working UI and API evidence.
-- [ ] The single role matrix is enforced on direct requests, not only navigation.
-- [ ] RLS tests run under deployed runtime credentials and include connection reuse/rollback.
-- [ ] Successful and Failed workflows preserve current status, history and proof consistency.
-- [ ] User disablement blocks old sessions and unfinished work can be reassigned.
-- [ ] All security worksheet rows have actual results, safe evidence and owner names; each member covers more than five distinct input types.
-- [ ] Retention, incident handling, backups and restoration have documented and exercised procedures.
-- [ ] A clean checkout and cloud deployment are reproducible with migrations and supplied secret configuration.
-- [ ] HTTPS cloud demo works for Seller, Rider, Admin and public users; local-only delivery is not the planned finish.
+A criterion is checked only with a linked passing result. The group gates in the framework define the exact evidence.
+
+- [ ] G1 to G6 each passed and recorded by all three owners.
+- [ ] All feature IDs in the three module plans have working UI and API evidence (G3).
+- [ ] The single role matrix is enforced on direct requests, not only navigation (authorization matrix, M1-PH4-TC01).
+- [ ] RLS tests run under deployed runtime credentials and include connection reuse/rollback (OPS-08, INT-08).
+- [ ] Successful and Failed workflows preserve current status, history and proof consistency (INT-02, INT-03, INT-10).
+- [ ] User disablement blocks old sessions and unfinished work can be reassigned (INT-05).
+- [ ] All security worksheet rows have actual results, safe evidence and owner names; each member covers more than five distinct input types (G6).
+- [ ] Retention, incident handling, backups and restoration have documented and exercised procedures (INT-11, INT-12).
+- [ ] A clean checkout and cloud deployment are reproducible with migrations and supplied secret configuration (INT-12).
+- [ ] HTTPS cloud demo works for Seller, Rider, Admin and public users; local-only delivery is not the planned finish (G5a).
 - [ ] No real recipient data, usable test passwords or deployment secrets are committed.
-- [ ] Each member can explain their own code and security decisions in the final demonstration.
-- [ ] Unit/component, API/PostgreSQL and core browser suites pass the testing strategy gates, with operational restore/maintenance evidence before cloud release.
-- [ ] NASZ submits the lecturer's module allocation sheet by Week 5 with all full names/matric numbers and the starter-kit declaration if applicable; retain submission evidence and record status. Submission has not been verified in this task.
+- [ ] Each member can explain their own code and security decisions in the final demonstration (G6).
+- [ ] Unit/component, API/PostgreSQL and core browser suites pass the testing strategy gates, with operational restore/maintenance evidence before cloud release (G4, G5).
+- [ ] NASZ's lecturer allocation-sheet submission and the variation notice are recorded with real evidence or as unverified (EXT-01, EXT-02).
 
 ## Remaining decisions and external dependencies
 
-1. FastAPI and PostgreSQL replace the frameworks/databases explicitly named in the brief. The user selected them; record this variation with the lecturer rather than assuming acceptance has been granted.
-2. AWS account access, region, domain and instance budget need actual values before provisioning. No AWS resources have been created by this planning work.
-3. NASZ needs to apply the prepared PR-only branch protection with repository administration access. The connected account previously could not apply it.
-4. Full names and matric numbers are needed for the lecturer's allocation sheet and test document.
+Tracked in the [decision register](shared/decision-register.md). In summary:
 
-Proof read access, Failed-parcel retention, operational limits and reassignment rules are explicit design choices in the shared contract. They are the implementation baseline unless the group changes that contract through review; they are not claims that the lecturer specified those details.
+1. FastAPI and PostgreSQL replace the frameworks/databases explicitly named in the brief (D-01). The team selected them; lecturer acceptance is unverified (EXT-02).
+2. AWS account access, region, domain and instance budget need actual values before provisioning (EXT-04). No AWS resources have been created by this planning work.
+3. The prepared PR-only branch protection has not been applied (EXT-03); NASZ needs repository administration access.
+4. Full names and matric numbers are needed for the lecturer's allocation sheet and test document (EXT-05); allocation submission is unverified (EXT-01).
+5. Open design points: secrets location (D-10), proxy and TLS choice (D-11), runtime versions (D-21), incident contact and backup key custody (EXT-06, EXT-07).
+
+Proof read access, Failed-parcel retention, operational limits and reassignment rules are explicit design choices in the shared contract (D-04, D-06, D-18). They are the implementation baseline unless the group changes the contract through review; they are not claims that the lecturer specified those details.
 
 ## Requirement coverage
 
@@ -101,9 +81,9 @@ Proof read access, Failed-parcel retention, operational limits and reassignment 
 | Case study 4.1 | M1-F01 through M1-F05 |
 | Case study 4.2 | M2-F01 through M2-F04 |
 | Case study 4.3 | M3-F01 through M3-F05 |
-| Case study 5 access matrix | Shared authorization and API tables |
-| Case study 8 threats and 9 policies | Module security sections, RLS design, security worksheet and operational runbook |
-| Rubric deployment/integration | P4 and shared release gates |
-| Rubric security testing and demonstration | Per-module acceptance, evidence worksheet and P5 |
+| Case study 5 access matrix | Shared authorization and API tables; [traceability section A](shared/traceability.md#a-functional-requirements-case-study-sections-4-and-5) |
+| Case study 8 threats and 9 policies | Module security sections, RLS design, [traceability sections D and E](shared/traceability.md#d-policies-p1-to-p5), security worksheet and operational runbooks |
+| Rubric deployment/integration | PH5 and gate G5 |
+| Rubric security controls, testing and demonstration | Per-module acceptance, evidence worksheet, PH4 and PH6, [traceability sections B and C](shared/traceability.md#b-rubric-criteria) |
 
-Reference documents are included at the repository root: ParcelTrack_Lite_Case_Study.docx, Rubric_Project_STTCK3033_ParcelTrack_Lite (1).docx and ParcelTrack Lite Project Briefing.pptx. This plan covers their final-project scope; [checkpoint preparation](checkpoint-plan.md) covers tomorrow's reporting separately.
+Reference documents are included at the repository root: ParcelTrack_Lite_Case_Study.docx, Rubric_Project_STTCK3033_ParcelTrack_Lite (1).docx and ParcelTrack Lite Project Briefing.pptx. This plan covers their final-project scope; [checkpoint preparation](checkpoint-plan.md) covers the 22 October reporting separately.

@@ -4,7 +4,7 @@ Checkpoint date: 22 October 2026, Malaysia time.
 
 This pack prepares the five deliverables supplied by the team. It draws on the local project briefing, case study and marking rubric. The three working demos remain to be built. Plans and test expectations below are not evidence of implementation.
 
-The [complete project plan](project-plan.md) and [separate module folders](project-plan.md#plans-by-owner) define the full implementation scope. Tomorrow's checkpoint needs small working slices; it does not require completing all later-phase functionality described in those plans.
+The [complete project plan](project-plan.md) and [separate module folders](project-plan.md#plans-by-owner) define the full implementation scope as six phases (PH1-PH6). The checkpoint corresponds to the checkpoint-critical `(CP)` tasks of PH1 and the PH2 slices ([phase framework](shared/phase-framework.md), [first execution sequence](shared/execution-sequence.md)); it does not require completing the functionality planned for PH3 to PH6.
 
 ## 1 Module allocation and development stack
 
@@ -58,11 +58,11 @@ Keep recipient data on the Parcel record. A recipient does not need an account. 
 Suggested future source organization:
 
 ```text
-backend/        shared API application
-  accounts/     conceptual M1 package owned by NASZ
-  parcels/      conceptual M2 package owned by Zikri
-  delivery/     conceptual M3 package owned by Qee
-  migrations/   shared schema and RLS migrations
+backend/app/    shared API application (see the contract's code layout)
+  modules/auth/       conceptual M1 package owned by NASZ
+  modules/parcels/    conceptual M2 package owned by Zikri
+  modules/delivery/   conceptual M3 package owned by Qee
+backend/alembic/ shared schema and RLS migrations
 frontend/       React application with module feature folders
 infra/          Docker Compose and cloud configuration
 docs/           ERD, requirements and test records
@@ -82,7 +82,9 @@ For tomorrow, aim for a small integrated database-backed workflow. A screen draw
 | M2 | Seller registration form and own-parcel list | Create a parcel, obtain its tracking number and refresh to verify persistence | Invalid weight rejected; another Seller cannot retrieve the parcel |
 | M3 | Rider assigned-parcel page | Seed an assigned parcel and persist its change to Out for Delivery | Another Rider cannot update it; actor/time are recorded |
 
-Public tracking, Admin assignment/dashboard and proof upload belong to the complete project scope. Seeded assignments are acceptable for demonstrating an early slice; they do not count as implemented assignment functionality.
+The detailed tasks and tests for these slices are [M1-PH2](modules/module-1-auth/phases/PH2-checkpoint-slice.md), [M2-PH2](modules/module-2-parcels/phases/PH2-checkpoint-slice.md) and [M3-PH2](modules/module-3-delivery/phases/PH2-checkpoint-slice.md), with the group scenarios INT-CP-01 to INT-CP-03 in the [integration scenarios](shared/integration-tests.md#checkpoint-scenarios-end-of-ph2). Qee compiles the checkpoint evidence (M3-PH2-T08). Gate G2 defines what counts as passing; anything not exercised is reported as Planned.
+
+Public tracking, Admin assignment/dashboard and proof upload belong to the complete project scope. Seeded assignments are acceptable for demonstrating an early slice (temporary substitute TMP-02, retired in M3-PH3-T04); they do not count as implemented assignment functionality.
 
 ### Shared demo data
 
@@ -127,9 +129,9 @@ Document the proposed retention procedure and incident process even if their aut
 | --- | --- |
 | Briefing, case study and rubric | Read and mapped to this plan |
 | Git repository | Initialized locally with origin configured to the GitHub repository |
-| Team access | Three GitHub collaborators verified |
+| Team access | Reported as three GitHub collaborators verified in an earlier session; not re-verified here |
 | Module allocation | Confirmed by team |
-| Reference-file ignore rules | Created locally and verified |
+| Reference-file ignore rules | `.gitignore` ignores Office temporary files only; the three reference documents are tracked in the repository |
 | ERD, requirement matrix and demo sequence | Drafted locally in this pack |
 | Development stack | React, FastAPI, PostgreSQL/RLS, Docker and AWS selected; detailed implementation contracts drafted |
 | Application, database and module interfaces | Not built |
@@ -151,11 +153,11 @@ Check Git history and the published branch/PR for the revision being presented. 
 ### Execution order before the checkpoint
 
 1. Use the confirmed FastAPI stack and shared contract. NASZ completes/submits the lecturer's allocation sheet by Week 5, including full names/matric numbers and starter-kit declaration if applicable, and retains the receipt. Current submission status is unverified; do not assume tomorrow is the Week 5 deadline.
-2. Create the shared schema/migrations and seed synthetic accounts, parcels and Rider assignments.
-3. NASZ builds login/logout; Zikri builds registration/persistence; Qee builds assigned-parcel view and Out for Delivery update.
-4. Run the three checkpoint slices against the same database/session and record actual outcomes.
+2. Create the shared schema/migrations and seed synthetic accounts, parcels and Rider assignments (M2-PH1-T01 to T06, M1-PH1-T06, T07).
+3. NASZ builds login/logout (M1-PH2-T02 to T06); Zikri builds registration/persistence (M2-PH2-T01 to T04, T06); Qee builds assigned-parcel view and Out for Delivery update (M3-PH2-T02 to T04).
+4. Run the three checkpoint slices against the same database/session (INT-CP-01 to INT-CP-03) and record actual outcomes.
 5. Present the ERD, security requirements, full module plans and AWS architecture. Confirm AWS account access for subsequent deployment; if a live cloud slice is available, demonstrate it accurately.
-6. Capture real evidence and list unimplemented features explicitly. Continue through P2 to P5 of the full project plan after the checkpoint.
+6. Capture real evidence and list unimplemented features explicitly. Continue through PH3 to PH6 of the full project plan after the checkpoint.
 
 If time prevents a cloud demo, disclose that gap. A deployment plan does not satisfy a requirement for a live cloud application. The final rubric deducts five marks from deployment/integration for a local-only system.
 
@@ -165,8 +167,8 @@ If time prevents a cloud demo, disclose that gap. A deployment plan does not sat
 2. Proposed or confirmed stack, repository URL and cloud status.
 3. Initial ERD and shared data rules.
 4. NASZ demonstrates M1 and one rejected access attempt.
-5. Zikri demonstrates the P1 registration/persistence slice and ownership check; describes public tracking/privacy as planned until implemented.
-6. Qee demonstrates the P1 assigned-parcel/Out for Delivery slice; describes assignment/dashboard/upload controls as planned until implemented.
+5. Zikri demonstrates the PH2 registration/persistence slice and ownership check; describes public tracking/privacy as planned until implemented.
+6. Qee demonstrates the PH2 assigned-parcel/Out for Delivery slice (seeded assignment, disclosed); describes assignment/dashboard/upload controls as planned until implemented.
 7. Security requirements with actual test evidence where available.
 8. Completed work, current challenges and next steps.
 

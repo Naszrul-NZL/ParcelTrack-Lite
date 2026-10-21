@@ -14,10 +14,45 @@ This is the required test plan for the React/FastAPI/PostgreSQL application. App
 
 Security and regression cases run within these layers. The [51 security worksheet checks](../security-tests.md) and [integration scenarios](integration-and-aws.md#end-to-end-acceptance-scenarios) remain mandatory coverage, not a separate manual-only list.
 
+## Test case identifiers, families and phase schedule
+
+Every executable case in the module phase files has a unique ID `<module>-PH<n>-TC<nn>` and names its family. Gates and traceability refer to these IDs, never to counts. Each module's `test-plan.md` aggregates its cases and a generated index; [traceability](traceability.md) maps requirements and the 51 worksheet rows to them.
+
+| Family | Meaning |
+| --- | --- |
+| UT-A01 to UT-A05, UT-P01 to UT-P04, UT-D01 to UT-D05 | Python unit families listed below |
+| IT-A01 to IT-A04, IT-P01 to IT-P04, IT-D01 to IT-D04 | API/PostgreSQL integration families listed below |
+| RLS-01 to RLS-10 | Restricted-role and function-hardening checks (worksheet rows) |
+| CMP-A01 to CMP-A05 | M1 component tests: API client and session provider, login, register, password, admin users |
+| CMP-P01 to CMP-P04 | M2 component tests: registration form, Seller list, tracking page, detail page and search |
+| CMP-D01 to CMP-D03 | M3 component tests: Rider list, Admin parcels and dashboard, action panel and proof viewer |
+| E2E-A01 to E2E-A04 | M1 browser: role login, onboarding and disablement, regression, live URL |
+| E2E-P01 to E2E-P06 | M2 browser: Seller slice, tracking privacy, Seller journey, regression, privacy and injection corpora, live URL |
+| E2E-D01 to E2E-D04 | M3 browser: Rider slice on phone viewport, Delivered/Failed/disable-reassign journeys, interrupted network, live URL |
+| CT-01, CT-02, CT-03 | Contract checks: enum/constant parity, production refuses the test principal, OpenAPI and error-code conformance |
+| MIG-01, MIG-02, MIG-03 | Migrations: empty database, existing-volume idempotency, upgrade of the previous schema with data |
+| LINT-01 | Static check that every `SECURITY DEFINER` function follows the hardening template |
+| HAR-01, FIX-01 | Harness self-test (role assertion, isolation, owner-connection negative control); fixture loader safety and idempotency |
+| OPS-01, OPS-03 to OPS-09 | Operations: clean-checkout smoke; scheduled jobs and runner; backup lock; local restore drill; first boot and restart; AWS restore exercise; RLS under deployed credentials; capacity and timing measurements (OPS-02 is not used) |
+
+Layers start with the first feature they can test; later phases extend them.
+
+| Layer | Starts | Required by gate |
+| --- | --- | --- |
+| Python unit | PH1 | G1 |
+| React component | PH1 (client, provider), PH2 (screens) | G1, G2 |
+| API/PostgreSQL integration with runtime roles and role assertion | PH1 (migrations, roles), PH2 (endpoints) | G1, G2 |
+| Authorization-matrix harness | PH2 (rows for implemented endpoints) | G2; complete at G4 |
+| Browser journeys (Playwright) | PH2 (login, Seller slice, Rider slice) | G2, G3 |
+| Concurrency, fault injection, upload corpus, RLS suites | PH2 basics, PH3 feature level | G4 |
+| Migration upgrade, scheduled jobs, local backup/restore drill | PH1 (MIG-01/02), PH3 (runner), PH4 (drill, upgrade) | G4 |
+| Clean-checkout, first-boot, restart, AWS restore, deployed-credential RLS | PH1 (OPS-01), PH5 | G5 |
+
 ## Test organization and fixture contract
 
 ```text
 backend/tests/
+  harness/                   Qee: role-asserting connections, reset, clock, barriers
   unit/auth/                 NASZ
   unit/parcels/              Zikri
   unit/delivery/             Qee
@@ -26,9 +61,13 @@ backend/tests/
   integration/delivery/      assignment, outcomes and proof files
   integration/rls/           real roles, functions and pooled connections
   integration/cross_module/  INT scenarios and concurrent operations
+  integration/authz_matrix/  NASZ runner, rows contributed by each endpoint owner
 frontend/src/features/*/     colocated component tests owned by each member
-tests/e2e/                   browser journeys owned by feature leads
+tests/e2e/                   browser journeys owned by feature leads (Qee skeleton)
 tests/operations/            clean startup, restart, backup/restore and jobs
+tests/fixtures/files/        generated harmless upload fixtures (Qee)
+tests/fixtures/payloads/     SQL injection, XSS and Unicode corpora (Zikri)
+tools/check_plan_docs.py     documentation consistency checker
 ```
 
 Use disposable PostgreSQL with the same pinned major version/extensions as deployment. CI creates cluster roles using a separate bootstrap credential, applies actual Alembic revisions with migration credentials, then runs application requests as app_runtime or tracking_runtime. Assert the connected role and relevant grants inside the test fixture. Never run an RLS test as a superuser/table owner or replace PostgreSQL with SQLite.
@@ -68,7 +107,7 @@ Do not claim randomness is proven by generating a few unique values. Check use o
 
 For A01 through A20, parameterize expected access for anonymous, Seller A, Seller B, Rider A, Rider B, Admin, inactive and password-change-required identities. Include success where valid, wrong role, wrong ownership, expired/revoked session, missing/invalid CSRF on unsafe methods, malformed fields and unexpected sensitive fields. Do not expect every endpoint to permit every fixture; expected outcomes come from the contract. Check exact status/error shape, no unintended database/file changes and no extra sensitive response fields.
 
-For 404-protected parcel/proof routes, compare nonexistent IDs with inaccessible IDs. For authenticated list endpoints, assert filtering/count totals as well as individual rows. For A13 public tracking, include no-login access with a legitimate anonymous CSRF session and no direct table access through tracking_runtime.
+For 404-protected parcel/proof routes, compare nonexistent IDs with inaccessible IDs. For authenticated list endpoints, assert filtering/count totals as well as individual rows. For A13 public tracking, include no-login access without any session or CSRF token (same-origin check only), a foreign `Origin`, and no direct table access through tracking_runtime.
 
 ### Module integration suites
 
@@ -138,11 +177,24 @@ Inspect response bodies and DOM for public tracking after every status, not only
 | M3-F04 Dashboard | UT-D05 | IT-D04 | Five counts agree after INT-02/INT-03 |
 | M3-F05 Continuity | UT-D02/D04 | IT-D01/P04 | INT-05, INT-11 and INT-12 |
 
-Every security worksheet ID must also be mapped to an automated test name, or a clearly justified manual operational check with evidence. Keep this mapping alongside final results; a count of test functions alone is not coverage.
+Every security worksheet ID must also be mapped to an automated test name, or a clearly justified manual operational check with evidence. The mapping from the 51 worksheet rows, the features, the case-study requirements, rubric criteria, policies and threats to phases, tasks and test case IDs is [traceability.md](traceability.md); keep it alongside final results. A count of test functions alone is not coverage.
 
 ## CI and release gates
 
-Every PR runs backend lint/type checks, unit tests, integration tests with actual PostgreSQL migrations/roles, frontend type/lint/build checks, component tests and the core browser journeys. Split jobs for useful failure reporting, but test the same contract and supported versions. Publish sanitized test reports and coverage, retaining failure artifacts privately when they contain synthetic credentials or session information. Never upload real data or live secrets as test artifacts.
+Every PR runs the jobs below (names are recorded in M1-PH1-T11 so branch protection can require them later). Slower suites (scale plan checks, full browser matrix, operations drills, security-tool scans) run nightly or on demand until G3 and before every release.
+
+| Job | Introduced | Content |
+| --- | --- | --- |
+| `backend-lint-type`, `backend-unit`, `frontend-check`, `compose-smoke` | PH1 | Lint, type checks, unit and component tests, build, clean-checkout smoke |
+| `backend-migrations` | PH1 | Role bootstrap, upgrade to head, existing-volume idempotency (MIG-01, MIG-02) |
+| `backend-integration` | PH1 (harness self-test, RLS-01) | Real PostgreSQL with runtime roles; endpoint suites from PH2 |
+| `ci-contract` | PH1 | CT-01, CT-02, LINT-01, OpenAPI snapshot; CT-03 from PH3 |
+| `secret-scan` | PH1 | gitleaks over tree and history |
+| `dependency-audit` | PH1 report-only, blocking from PH4 | pip-audit, npm audit, Trivy and hadolint on images and Compose |
+| `authz-matrix`, `e2e-core` | PH2 | Authorization matrix; core Playwright journeys |
+| `security-tools` | PH4 | Bandit or Semgrep, ZAP baseline, sqlmap against the Compose stack (nightly) |
+
+Third-party GitHub Actions are pinned by commit SHA.
 
 Initial proposed coverage gates are backend 85% line/80% branch and frontend 80% line/75% branch. Exclude only generated/vendor code from metrics; migration execution remains mandatory. All role-matrix entries, legal/illegal transition edges, session expiry/revocation cases and public field allowlists need explicit tests regardless of aggregate coverage. Do not add low-value assertions merely to meet a percentage.
 
@@ -150,8 +202,30 @@ A PR cannot be declared ready with failing required tests, skipped required scen
 
 Release additionally requires an AWS smoke run, scheduled-job verification and a successful isolated restore exercise. No zero-defect guarantee is inferred from green tests. Completion means the specified behaviors and failure boundaries have repeatable evidence, with known limitations documented.
 
+## Security tooling
+
+The case study requires that each module be tested with suitable security tools before release. The planned set (D-39): Bandit or Semgrep for Python and eslint-plugin-security for TypeScript; pip-audit and npm audit; gitleaks (tree and history); Trivy and hadolint on images and Compose files; OWASP ZAP baseline and sqlmap against login, registration, user management, parcel search and detail, tracking and upload routes on the Compose stack in PH4 and on the live URL in PH5; nmap and testssl.sh against the live host. Each run records tool, version, target, date, summary of findings and triage owner; the outputs are cited from the security test document. Tools complement the authored suites and do not replace them.
+
+## Final security test document
+
+One document, organized by module, with the owner's name, assembled from the three module sections (each owner assembles their own; NASZ merges and exports it, H60). One row per executed test input:
+
+| Column | Content |
+| --- | --- |
+| Test ID | Worksheet ID (for example M2-04) and the test case ID that produced the result |
+| Rubric input type | The suggested input class from the rubric (for example SQL injection in search) |
+| Module and owner | M1/M2/M3 and the member's name |
+| Input | Exact input or action, with synthetic data only |
+| Expected result | From the worksheet |
+| Actual result | Observed result, never copied from the plan |
+| Pass or fail | Failed rows stay open with an issue reference |
+| Evidence | Safe screenshot, log or tool-output reference |
+| Version and environment | Commit, image digest, migration revision, URL or Compose, date and time |
+
+Each member needs more than five distinct input types; PH6 checks this per module.
+
 ## Evidence and current state
 
 For every executed scenario record owner, feature/security/integration ID, exact input, expected result, actual result, commit/image/migration version, environment, timestamp and safe artifact reference. Automated JUnit/coverage/browser reports support the final rubric document but do not replace the owner's explanation.
 
-Current state: all suites and gates in this document are planned. No application test has run because the implementation is not present. Document-link checks are separate from software test results.
+Current state: all suites and gates in this document are planned (phase files define the cases; none has run). No application test has run because the implementation is not present. Document-link checks are separate from software test results.
