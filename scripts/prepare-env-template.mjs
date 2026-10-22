@@ -1,0 +1,10 @@
+import fs from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+const provenance=JSON.parse(await fs.readFile('infra/supabase/UPSTREAM.json','utf8'));
+const response=await fetch('https://raw.githubusercontent.com/supabase/supabase/'+provenance.revision+'/docker/.env.example');
+if(!response.ok)throw new Error('Pinned upstream environment template unavailable.');
+const template=await response.text();
+const checksum=createHash('sha256').update(template).digest('hex');
+if(provenance.envTemplateSha256 && checksum!==provenance.envTemplateSha256)throw new Error('Upstream environment template checksum mismatch.');
+await fs.mkdir('.local',{recursive:true});await fs.writeFile('.local/upstream-env-template.txt',template,{mode:0o600});
+console.log('Pinned upstream environment template prepared privately.');

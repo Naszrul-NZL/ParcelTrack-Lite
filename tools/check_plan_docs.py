@@ -34,7 +34,7 @@ PHASE_FILES = {
     2: "PH2-checkpoint-slice.md",
     3: "PH3-complete-functionality.md",
     4: "PH4-hardening-regression.md",
-    5: "PH5-aws-operations.md",
+    5: "PH5-cloud-operations.md",
     6: "PH6-final-acceptance.md",
 }
 SECTIONS = [

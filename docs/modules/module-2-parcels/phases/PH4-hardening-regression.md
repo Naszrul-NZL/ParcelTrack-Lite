@@ -32,7 +32,7 @@ Independent now: T01, T02, T06, T08.
 | M2-PH4-T04 | Concurrency and rollback matrix for registration: 20 parallel identical requests; parallel distinct requests; forced tracking-token collisions with bounded retries (exhaustion gives a generic error and no partial rows); failpoints at each statement of `create_parcel`; commit then response loss followed by replay returns the original | No duplicate or partial parcel/history/audit rows; barriers not sleeps | TC04, TC05 | PH3 |
 | M2-PH4-T05 | Privacy regression for public tracking across all five statuses and anonymized records: response bodies and headers, rendered DOM, console, network, storage, referrer; server logs and proxy-style access logs searched for canary tracking tokens and recipient strings; error responses for malformed and unknown tokens | Only status/timestamps disclosed anywhere (INT-07) | TC06, TC16 | Naszrul headers (M1-PH4-T07) |
 | M2-PH4-T06 | Rate-limit boundaries for A13 and registration: threshold minus one, at, over; reset after window with controlled clock; two server processes share the counter; forged forwarding headers ignored; no database errors under burst | M2-07 passes under multi-process | TC07 | H21 |
-| M2-PH4-T07 | Payload corpora (`tests/fixtures/payloads/`) plus tools: Bandit or Semgrep on `modules/parcels`, sqlmap and OWASP ZAP baseline against A10 fields, A11 `q`, A12 id and A13 on the Compose stack (outputs stored for the test document): SQL injection, XSS (script, event handlers, SVG, attribute breakouts), oversized and Unicode strings (RTL, zero-width, combining marks, emoji), path-parameter abuse (`1 OR 1=1`, `../`, integer overflow); API assertions plus browser rendering in the Seller list, detail, tracking page and, with Syauqi/Naszrul, the Admin parcel list and audit panel | No 500s, no execution, no broadened results | TC08 | Syauqi M3-PH3-T09 |
+| M2-PH4-T07 | Payload corpora (`tests/fixtures/payloads/`) plus tools: Semgrep for TypeScript on `modules/parcels`, sqlmap and OWASP ZAP baseline against A10 fields, A11 `q`, A12 id and A13 on the Compose stack (outputs stored for the test document): SQL injection, XSS (script, event handlers, SVG, attribute breakouts), oversized and Unicode strings (RTL, zero-width, combining marks, emoji), path-parameter abuse (`1 OR 1=1`, `../`, integer overflow); API assertions plus browser rendering in the Seller list, detail, tracking page and, with Syauqi/Naszrul, the Admin parcel list and audit panel | No 500s, no execution, no broadened results | TC08 | Syauqi M3-PH3-T09 |
 | M2-PH4-T08 | Scale-data plan check (local): generate synthetic history of 30 000 parcels (required) and, as STRETCH, about 300 000 parcels and 1.2 million history rows (roughly one year at 800 parcels per day), run `EXPLAIN (ANALYZE, BUFFERS)` for Seller list/search, tracking lookup, detail, Admin parcel list, dashboard aggregate, retention candidate selection; add additive indexes through reviewed migrations if plans scan whole tables | Index-based plans for the queries listed; timings recorded, not guaranteed | TC09 | Syauqi queries |
 | M2-PH4-T09 | Upgrade test: tag the checkpoint schema, load synthetic data, upgrade to head, verify RLS, functions, sessions and smoke journey (MIG-03); repeat for each released schema | Upgrade passes with data | TC10 | PH3 |
 | M2-PH4-T10 | M2 browser regression and coverage gates: Playwright journeys (registration, interrupted network replay, search, detail, tracking all statuses, Seller isolation, logout cache clearing); backend and frontend coverage thresholds for parcels code with required scenario lists | Gates enforced in CI | TC11, TC14 | H10 |
@@ -40,7 +40,7 @@ Independent now: T01, T02, T06, T08.
 
 ## 5 Affected components
 
-`backend/tests/integration/{rls,parcels,cross_module}`, `backend/app/modules/parcels/jobs.py`, `tests/fixtures/payloads/`, `infra/db/grants.snapshot.json`, `tests/e2e/parcels/`, additive indexes via migration.
+`tests/integration/{rls,parcels,cross_module}`, `src/server/modules/parcels/jobs.ts`, `tests/fixtures/payloads/`, `infra/db/grants.snapshot.json`, `tests/e2e/parcels/`, additive indexes via migration.
 
 ## 6 Security requirements
 
@@ -93,4 +93,4 @@ INT-04, INT-07, INT-08, INT-09, INT-11 run together in CI with Syauqi's and Nasz
 
 ## 12 Deferred work
 
-Production role bootstrap, grant verification and RLS under deployed credentials, scheduled retention on AWS, scale on EC2, cloud privacy checks (PH5); final evidence (PH6).
+Production role bootstrap, grant verification and RLS under deployed credentials, scheduled retention on the chosen cloud host, scale on chosen cloud host, cloud privacy checks (PH5); final evidence (PH6).

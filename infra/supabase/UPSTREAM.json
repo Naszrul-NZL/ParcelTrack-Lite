@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/supabase/supabase",
+  "revision": "b8483fc454ed2d6fb2b3637fc5da928bc9b1ff6b",
+  "directory": "docker",
+  "files": 63,
+  "envTemplateSha256": "d27fb4516702358ac5965fb06d207736abeb3c26c7d949f19b90e88b25e694ef"
+}

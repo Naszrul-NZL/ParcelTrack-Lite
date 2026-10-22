@@ -4,7 +4,7 @@ STTCK3033 | Checkpoint presentation on 22 October 2026
 
 Team: Naszrul, Zikri and Syauqi. Final project submission: Week 14. The calendar date for Week 14 remains to be confirmed.
 
-ParcelTrack Lite supports the RapidExpress case study through Seller registration of parcels, Admin assignment, Rider delivery updates and public status tracking. At Week 5, we have a coherent implementation plan, an initial ERD, a shared repository and runnable frontend interfaces for all three modules. The prototype uses synthetic browser data. Real backend services, database security and AWS deployment remain planned.
+ParcelTrack Lite supports the RapidExpress case study through Seller registration of parcels, Admin assignment, Rider delivery updates and public status tracking. At Week 5, we have a coherent implementation plan, an initial ERD, a shared repository and runnable frontend interfaces for all three modules. The prototype uses synthetic browser data. Real backend services, database security and later cloud deployment remain planned.
 
 ### 1 Module allocation
 
@@ -20,13 +20,13 @@ Database contracts, migration coordination and integration are shared. Each memb
 
 | Layer | Selection |
 | --- | --- |
-| Frontend | React with TypeScript and Vite |
-| Backend | FastAPI, SQLAlchemy/psycopg and Alembic |
-| Data and security | PostgreSQL in Docker with row level security; Argon2id and server-side sessions planned |
-| Hosting | AWS selected; one EC2 instance running Docker Compose proposed |
+| Application | One full-stack Next.js App Router / TypeScript application |
+| Server tools | Shared Zod schemas, pg, node-pg-migrate and Sharp |
+| Data and security | Full local Supabase Docker: PostgreSQL/RLS and private Storage; Argon2id and custom sessions planned |
+| Environment | Local first; cloud hosting deferred until local acceptance |
 | Version control | GitHub repository with module plans and shared contracts |
 
-FastAPI/PostgreSQL are deliberate team alternatives to the combinations named in the source brief. Lecturer acceptance is not recorded. Hosting configuration and a live cloud URL have not been established.
+Next.js/PostgreSQL are deliberate team alternatives to the combinations named in the source brief. Lecturer acceptance is not recorded. The target uses the full local Supabase Docker stack. Cloud hosting and a live URL remain deferred; the existing React demo is not yet migrated.
 
 
 
@@ -40,7 +40,7 @@ Initial design. The editable diagram is also included on slide 4 of the presenta
 | --- | --- |
 | User to Parcel | One Seller owns many parcels. A parcel has zero or one current Rider. Role constraints require validation. |
 | Parcel to StatusHistory | One or more records per parcel, including Registered at creation. Each records status, actor and time. |
-| Parcel to DeliveryProof | Zero or one proof record; metadata refers to a private file. Final outcomes require proof under the proposed design. |
+| Parcel to DeliveryProof | Zero or one proof record; metadata refers to a private Supabase Storage object. Final outcomes require proof under the proposed design. |
 | AuditEvent references | Optional actor, target user and parcel links support account and parcel event records. |
 
 ### Shared data rules
@@ -49,7 +49,7 @@ The proposed lifecycle is Registered, Assigned, Out for Delivery, then Delivered
 
 Repository: https://github.com/Naszrul-NZL/ParcelTrack-Lite
 
-Planning baseline reviewed: commit 9dd50f9. Detailed plans live in docs/modules/ and shared contracts in docs/shared/. The new checkpoint prototype is in checkpoint-demo/.
+Planning baseline reviewed: commit 9dd50f9. Detailed plans live in docs/modules/ and shared contracts in docs/shared/. The historical React checkpoint prototype is in checkpoint-demo/. The revised local Next.js/Supabase baseline is documented in docs/nextjs-migration.md.
 
 
 
@@ -65,7 +65,7 @@ Enter a test username such as seller.a, rider.a or admin, using the presenter cr
 
 ### Implementation boundary
 
-Authentication is simulated in the browser. Newly entered account passwords and password changes exist only in the current page memory and reset on refresh; no real password should be used. No password is persisted to localStorage. The final project must implement Argon2id hashes, verified server-side sessions, CSRF protection, password change and session revocation, account disablement and safe audit logging.
+Authentication is simulated in the browser. Newly entered account passwords and password changes exist only in the current page memory and reset on refresh; no real password should be used. No password is persisted to localStorage. The final Next.js application must implement Argon2id hashes, verified server-side sessions, CSRF protection, password change and session revocation, account disablement and safe audit logging.
 
 This checkpoint demonstrates the interface and interaction states. Client-side navigation and filters do not prove access control.
 
@@ -141,23 +141,23 @@ The 12-month period above is the case-study policy. This report does not claim l
 | Planning | Allocation, stack, ERD, shared contracts, six phases per module, test plans and handoffs prepared |
 | Interfaces | Runnable React prototype across M1, M2 and M3, with one shared sample parcel journey |
 | Prototype verification | Build passes; 6 domain tests pass; browser smoke journey passes 19 checkpoints with no runtime errors |
-| Backend and database | FastAPI, actual migrations, sessions, RLS and real private file storage are planned |
-| Final verification and cloud | Full integration/security suite and AWS deployment have not run |
-| External items | Full allocation details, stack acceptance, AWS configuration and branch-protection application need evidence |
+| Backend and database | Next.js, actual migrations, sessions, RLS and real private file storage are planned |
+| Final verification and cloud | Full integration/security suite and later cloud deployment have not run |
+| External items | Full allocation details, stack acceptance, later cloud configuration and branch-protection application need evidence |
 
 ### Current challenges and response
 
-Shared users, parcels and statuses can diverge during parallel development. The team will use one system contract and ordered migrations. Browser simulations must be replaced by real APIs without weakening permissions. Each member will review and test agent-assisted implementation and be able to explain their module. AWS access and the selected stack variation should be settled early.
+Shared users, parcels and statuses can diverge during parallel development. The team will use one system contract and ordered migrations. Browser simulations must be replaced by real APIs without weakening permissions. Each member will review and test agent-assisted implementation and be able to explain their module. Local Supabase setup and the selected stack variation should be settled early.
 
 ### Proposed teaching-week schedule
 
 | Week | Milestone |
 | --- | --- |
-| 6 | PH1: shared FastAPI/PostgreSQL foundation, migrations and test harness |
+| 6 | PH1: Next.js and full local Supabase foundation, migrations and test harness |
 | 7 | PH2: real authenticated module slices on one local stack |
-| 8-9 | PH3: complete functions, retire substitutes and perform an early AWS smoke deployment |
+| 8-9 | PH3: complete local functions, retire substitutes and verify the production build |
 | 10-11 | PH4: security regression, failure cases and local recovery |
-| 12 | PH5: integrated AWS deployment, scheduling and operational checks |
+| 12 | PH5: later cloud deployment, scheduling and operational checks |
 | 13-14 | PH6: final evidence, rehearsal and Week 14 submission |
 
 This week mapping is a proposed schedule, not a completion claim. The final calendar date and milestone progress must be confirmed by the team.
@@ -178,7 +178,7 @@ Before rehearsal, press Alt+Shift+R and confirm Restore data. Initial test usern
 | Syauqi | Sign in as rider.a, start delivery, then Delivered with sample proof | Out for Delivery, then Delivered with history |
 | Zikri | Sign out, open Track a parcel and paste the token | The same parcel history, displaying only status/time |
 
-Suggested opening: This is our Week 5 frontend prototype using synthetic browser data. Backend integration, database security and AWS deployment are planned for the Week 14 project.
+Suggested opening: This is our Week 5 frontend prototype using synthetic browser data. Backend integration, database security and later cloud deployment are planned for the Week 14 project.
 
 If the live browser cannot run, use the presentation screenshots as a walkthrough and state the limitation. The separate demo-guide.md includes recovery steps, optional examples and likely questions.
 

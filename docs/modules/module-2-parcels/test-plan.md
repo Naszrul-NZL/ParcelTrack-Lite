@@ -58,8 +58,8 @@ Rubric input types for criterion 3: SQL injection in search (M2-PH3-TC03); XSS i
 
 | Phase | Jobs that must be green | Additional evidence |
 | --- | --- | --- |
-| PH1 | backend-lint-type, backend-unit, backend-migrations (bootstrap, 0001, 0003 with role assertions), LINT-01, CT-01, fixture check | G1 items 2, 3, 4, 5 |
-| PH2 | + backend-integration RLS cases (runtime roles), e2e-core Seller journey | Rows from M2-PH2-T07 executed |
+| PH1 | server-lint-type, server-unit, db-migrations (bootstrap, 0001, 0003 with role assertions), LINT-01, CT-01, fixture check | G1 items 2, 3, 4, 5 |
+| PH2 | + server-integration RLS cases (runtime roles), e2e-core Seller journey | Rows from M2-PH2-T07 executed |
 | PH3 | + tracking privacy browser test, CT-03 for A10-A13, retention boundary tests | INT-01, INT-07 |
 | PH4 | + grants-snapshot check, catalog hardening test, concurrency/fault suites, payload corpora, plan-shape check, upgrade test, coverage gate | M2-01 to M2-10 and RLS-01 to RLS-09 consolidated |
 | PH5 | + `verify_grants` and RLS subset under deployed credentials, retention first run, live tracking checks | Restore database leg |
@@ -136,15 +136,15 @@ Rubric input types for criterion 3: SQL injection in search (M2-PH3-TC03); XSS i
 | M2-PH4-TC15 | PH4 | Consolidated run | rubric 3 | [PH4-hardening-regression.md](phases/PH4-hardening-regression.md) |
 | M2-PH4-TC16 | PH4 | Integration | M2-F04 | [PH4-hardening-regression.md](phases/PH4-hardening-regression.md) |
 | M2-PH4-TC17 | PH4 | RLS and pooling | RLS-05 | [PH4-hardening-regression.md](phases/PH4-hardening-regression.md) |
-| M2-PH5-TC01 | PH5 | Operations (OPS-06) | REV-06, REV-07 | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M2-PH5-TC02 | PH5 | Operations (OPS-08) | RLS-09 | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M2-PH5-TC03 | PH5 | Operations | S-02, S-07 | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M2-PH5-TC04 | PH5 | Operations (OPS-08) | RLS-01..RLS-09 | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M2-PH5-TC05 | PH5 | Operations (OPS-03) | M2-10, INT-11 | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M2-PH5-TC06 | PH5 | Operations (OPS-07) | S-09, INT-12 | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M2-PH5-TC07 | PH5 | Operations (OPS-09) | capacity | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M2-PH5-TC08 | PH5 | Browser and operations (E2E-P06) | M2-06, M2-07 | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M2-PH5-TC09 | PH5 | Browser (E2E-P06) | rubric 1b | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
+| M2-PH5-TC01 | PH5 | Operations (OPS-06) | REV-06, REV-07 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M2-PH5-TC02 | PH5 | Operations (OPS-08) | RLS-09 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M2-PH5-TC03 | PH5 | Operations | S-02, S-07 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M2-PH5-TC04 | PH5 | Operations (OPS-08) | RLS-01..RLS-09 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M2-PH5-TC05 | PH5 | Operations (OPS-03) | M2-10, INT-11 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M2-PH5-TC06 | PH5 | Operations (OPS-07) | S-09, INT-12 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M2-PH5-TC07 | PH5 | Operations (OPS-09) | capacity | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M2-PH5-TC08 | PH5 | Browser and operations (E2E-P06) | M2-06, M2-07 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M2-PH5-TC09 | PH5 | Browser (E2E-P06) | rubric 1b | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
 | M2-PH6-TC01 | PH6 | Regression | G6.2 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |
 | M2-PH6-TC02 | PH6 | Evidence review | rubric 3 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |
 | M2-PH6-TC03 | PH6 | Rehearsal | rubric 4 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |

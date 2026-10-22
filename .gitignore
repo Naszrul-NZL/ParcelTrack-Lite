@@ -5,3 +5,24 @@
 checkpoint-demo/node_modules/
 checkpoint-demo/dist/
 deliverables/.build/
+
+# Local application, generated credentials, containers and test evidence
+node_modules/
+.next/
+out/
+coverage/
+test-results/
+playwright-report/
+.env
+.env.local
+.env.test.local
+.env.*.local
+infra/supabase/.env
+infra/supabase/.env.*
+!infra/supabase/.env.example
+infra/supabase/vendor/volumes/db/data/
+infra/supabase/vendor/volumes/storage/
+infra/supabase/vendor/volumes/pooler/.env
+.local/
+*.tsbuildinfo
+__pycache__/

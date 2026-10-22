@@ -17,8 +17,8 @@ Source: team allocation confirmed 21 October; case study section 4.
 ## Slide 3 Development stack and hosting
 
 Naszrul | About 40 seconds.
-We selected React for the interfaces, FastAPI for one shared Python backend, and PostgreSQL in Docker. SQLAlchemy and Alembic will support database access and migrations. AWS is our chosen hosting provider, with one EC2 instance running Docker Compose as the current proposal. The database will remain private, behind the application. These backend and cloud components are planned. The source brief names other framework and database combinations, so acceptance of FastAPI and PostgreSQL still needs confirmation.
-Source: docs/shared/decision-register.md D-01 to D-03 and EXT-02/04; source briefing slide 11 and case study section 6.
+We changed the future implementation to one full-stack Next.js and TypeScript application so pages and server logic share one project. PostgreSQL and private proof storage will run in the full Supabase Docker stack locally, including its standard services. We will use pg, ordered SQL migrations, shared Zod validation and the existing custom username/session design. The included Supabase Auth is not a second login authority. This is planned work; the demonstrated interface is still the browser-only React prototype. Cloud hosting comes later, after local integration. Lecturer acceptance of Next.js and PostgreSQL is not recorded.
+Source: docs/nextjs-migration.md; docs/local-development.md; docs/shared/system-contract.md; user direction on 22 October 2026.
 
 ## Slide 4 Initial entity relationship diagram
 
@@ -29,7 +29,7 @@ Source: docs/initial-erd.md and docs/shared/system-contract.md.
 ## Slide 5 M1 Login and User Management
 
 Naszrul | About 30 seconds before the live demo.
-This is the M1 interface. It uses a regular username and password form, generic failure messages and different landing pages for Sellers, Riders and Admins. Other screens show Seller registration, Rider management and password change. Test credentials are in the presenter guide, not on the product screens. Authentication is still simulated in the browser. Newly entered passwords exist only in page memory and reset on refresh. The final project will connect to FastAPI sessions, Argon2id hashing, CSRF protection and server authorization.
+This is the M1 interface. It uses a regular username and password form, generic failure messages and different landing pages for Sellers, Riders and Admins. Other screens show Seller registration, Rider management and password change. Test credentials are in the presenter guide, not on the product screens. Authentication is still simulated in the browser. Newly entered passwords exist only in page memory and reset on refresh. The final project will connect to Next.js server sessions, Argon2id hashing, CSRF protection and server authorization.
 Source: checkpoint-demo frontend; case study section 4.1. Screenshot captured from the current interface.
 
 ## Slide 6 M2 Parcel Registration and Tracking
@@ -59,14 +59,14 @@ Source: case study sections 5, 8 and 9; docs/security-tests.md.
 ## Slide 10 Completed work and current challenges
 
 Naszrul | About 45 seconds.
-We have confirmed ownership, selected our stack, published the initial ERD and prepared coherent module plans with test cases and handoffs. We now have runnable React interfaces for the checkpoint and a repeatable sample parcel journey. The prototype builds and its six domain tests and nineteen browser smoke checkpoints pass. These are not results for the final backend suite. Current challenges are keeping shared models consistent, obtaining stack acceptance and AWS access, and replacing browser simulations with verified server behaviour. Branch protection has been prepared but its application remains unverified.
+We have confirmed ownership, selected our stack, published the initial ERD and prepared coherent module plans with test cases and handoffs. We now have runnable React interfaces for the checkpoint and a repeatable sample parcel journey. The prototype builds and its six domain tests and nineteen browser smoke checkpoints pass. These are not results for the final backend suite. Current challenges are keeping shared models consistent, obtaining stack acceptance and local Supabase setup, and replacing browser simulations with verified server behaviour. Branch protection has been prepared but its application remains unverified.
 Source: repository planning commit 9dd50f9; local checkpoint prototype build and recorded frontend QA. Full planned test suite is not executed.
 
 ## Slide 11 Proposed route to Week 14
 
 Syauqi | About 40 seconds.
-This is our proposed schedule, not completed work. Week 6 establishes FastAPI, PostgreSQL roles, migrations and the test harness. Week 7 connects real authenticated module slices. Weeks 8 and 9 complete the functions and attempt an early AWS deployment. Weeks 10 through 12 focus on security regression, storage, recovery and the integrated cloud deployment. Week 13 prepares evidence and rehearsal, and Week 14 is final submission. We will confirm the Week 14 calendar date and update this schedule with actual progress. AI agents can assist implementation, while each member reviews, tests and understands their module.
-Source: team timeline (Week 5 now, Week 14 final); docs/shared/phase-framework.md. Week mapping is a proposed checkpoint schedule.
+This is the proposed schedule. Week 6 establishes one Next.js application and the full local Supabase Docker stack with application roles, migrations and a test harness. Week 7 connects real authenticated slices. Weeks 8 and 9 complete local functions and test the Next.js production build. Weeks 10 through 12 cover security and recovery, then cloud deployment after local acceptance and a hosting decision. Week 13 prepares evidence and rehearsal. Week 14 is final submission; its calendar date is unconfirmed. Each member implements, tests and explains their own module.
+Source: docs/shared/phase-framework.md and docs/local-development.md. These are proposed milestones, not completed work.
 
 ## Slide 12 Live demonstration
 

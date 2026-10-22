@@ -43,10 +43,10 @@ Test usernames: `seller.a`, `seller.b`, `rider.a`, `rider.b` and `admin`. Initia
 
 ## Likely questions
 
-**Is the project complete?** The planning and interface checkpoint package are ready. The real backend, PostgreSQL/RLS, server security, integrated test suite and AWS deployment remain planned for Week 14.
+**Is the project complete?** The planning and interface checkpoint package are ready. The real backend, PostgreSQL/RLS, server security, integrated test suite and cloud deployment remain planned for Week 14.
 
-**Why FastAPI and PostgreSQL?** The team selected one Python API and self-managed PostgreSQL in Docker, with database row isolation. The source brief lists other combinations, so lecturer acceptance of the variation remains to be confirmed.
+**Why Next.js and full Supabase Docker?** The future app uses one Next.js/TypeScript project and the full self-hosted Supabase Docker stack locally, with PostgreSQL/RLS and private Storage. The source brief lists other combinations, so lecturer acceptance of the variation remains to be confirmed.
 
 **What has actually been tested?** Six prototype domain tests and a recorded browser smoke journey with 19 checkpoints. These are frontend checks. The full unit, integration, RLS and cloud test cases in the project plans have not run.
 
-**What is the next development step?** Build the shared FastAPI/PostgreSQL foundation, then replace browser state with real authenticated APIs and prove one integrated parcel journey before expanding the remaining functions.
+**What is the next development step?** Build the shared Next.js Route Handlers/PostgreSQL foundation, then replace browser state with real authenticated APIs and prove one integrated parcel journey before expanding the remaining functions.

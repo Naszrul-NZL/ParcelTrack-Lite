@@ -2,7 +2,7 @@
 
 Maps each source requirement and feature to the phase where it first works, the tasks that build it and the test cases that prove it. Test case IDs are defined in the module phase files and repeated in each module's `test-plan.md`. A requirement is covered only when the listed tests have actually passed; this document lists planned coverage. Nothing has run.
 
-Phase shorthand: the first phase is where a partial version works; the final phase is where the requirement is complete and tested locally; AWS repeats follow in PH5 and the final record in PH6.
+Phase shorthand: the first phase is where a partial version works; the final phase is where the requirement is complete and tested locally; cloud repeats follow in PH5 and the final record in PH6.
 
 ## A Functional requirements (case study sections 4 and 5)
 

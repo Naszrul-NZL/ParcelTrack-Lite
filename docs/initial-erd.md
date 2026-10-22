@@ -109,7 +109,7 @@ The case study lists these states and roles but does not fully specify retries, 
 
 Public tracking must select only status and timestamp fields. Exclude recipient information, actor identity, internal user IDs and proof links from the entire public response, including hidden fields and embedded scripts.
 
-At 12 months after delivery, the project's P3 policy requires deletion or anonymization of recipient data. Clear personal fields and remove identifying proof images while keeping non-identifying history. The implementation baseline also applies 12 months after terminal_at for Failed parcels as an explicit design choice. Deny photo access before retryable file deletion: `anonymized_at` is the flag that makes proof endpoints return 404 immediately, and Syauqi's purge job then removes files and clears proof metadata. Follow the [backup retention/restore procedure](shared/integration-and-aws.md#backup-and-restore); after any restore, run retention again before reopening (D-17).
+At 12 months after delivery, the project's P3 policy requires deletion or anonymization of recipient data. Clear personal fields and remove identifying proof images while keeping non-identifying history. The implementation baseline also applies 12 months after terminal_at for Failed parcels as an explicit design choice. Deny photo access before retryable file deletion: `anonymized_at` is the flag that makes proof endpoints return 404 immediately, and Syauqi's purge job then removes files and clears proof metadata. Follow the [backup retention/restore procedure](shared/integration-and-deployment.md#backup-and-restore); after any restore, run retention again before reopening (D-17).
 
 ## Initial implementation decisions
 
@@ -121,7 +121,7 @@ At 12 months after delivery, the project's P3 policy requires deletion or anonym
 
 ## PostgreSQL row level security design
 
-The team selected PostgreSQL in Docker with RLS as the database direction. The entities above remain unchanged. Add policies and database privileges through versioned migrations; the following is design guidance, not implemented SQL.
+The team selected PostgreSQL in the full Supabase Docker stack with RLS as the database direction. The entities above remain unchanged. Add policies and database privileges through versioned migrations; the following is design guidance, not implemented SQL.
 
 | Application actor | Parcel read access | Allowed business operation |
 | --- | --- | --- |

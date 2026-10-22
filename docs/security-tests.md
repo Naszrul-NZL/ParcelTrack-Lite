@@ -1,6 +1,6 @@
 # ParcelTrack Lite security requirements and tests
 
-All requirements are planned. No application exists yet and no test in this worksheet has been executed. Replace Not run with the observed result and evidence after each execution. Each module has more than five proposed input types, matching the final rubric's highest testing band when completed, documented and passing.
+All requirements are planned. The full-stack application is not implemented yet and no test in this worksheet has been executed. Replace Not run with the observed result and evidence after each execution. Each module has more than five proposed input types, matching the final rubric's highest testing band when completed, documented and passing.
 
 Use the [separate module plans](project-plan.md#plans-by-owner) for full functional acceptance, the [shared contract](shared/system-contract.md) for exact behavior, and the [integration scenarios](shared/integration-tests.md) for cross-module acceptance. The column First executed gives the phase in which each row first gets an observed result; [traceability section F](shared/traceability.md#f-security-worksheet-rows-51-to-phases-and-test-cases) lists the planned test cases for every row, PH4 consolidates all rows on one commit and PH6 records the final results. The rows here are security tests, not the entire project's test scope.
 
@@ -87,7 +87,7 @@ These checks verify the selected database security design in addition to backend
 These are implementation choices, not exact limits supplied by the lecturer:
 
 - Tracking numbers: at least 128 random bits plus an optional fixed display prefix.
-- Proof photo: one JPG or PNG per parcel, proposed 5 MiB maximum and a documented decoded-pixel limit. Validate bytes/content, decode and re-encode into an allowed image format, strip unnecessary metadata, assign a generated filename and retain private storage.
+- Proof photo: one JPG or PNG per parcel, proposed 3 MiB maximum and a documented decoded-pixel limit. Validate bytes/content, decode and re-encode into an allowed image format, strip unnecessary metadata, assign a generated filename and retain private storage.
 - Login limit: select and document account and source-based thresholds, observation window and cooldown. Ensure the limiter works across application workers and does not reset on every request.
 - Public tracking limit: select and document per-source thresholds and window; avoid placing raw tracking tokens in general access logs.
 

@@ -1,6 +1,6 @@
 # Module 2 Parcel Registration and Public Tracking
 
-Owner: Zikri, GitHub Zikri809. Deliver backend parcel functionality, the shared database/RLS foundation and the React parcel/tracking feature. This folder is the full phased plan, not only the first checkpoint slice. Everything here is a reviewable plan; no application code or test has been written or run.
+Owner: Zikri, GitHub Zikri809. Deliver backend parcel functionality, the shared database/RLS foundation and the React parcel/tracking feature. This folder is the full phased plan, not only the first checkpoint slice. Phase 1 foundation code and local tests now exist; see [actual progress and open gates](../../phase-1-progress.md). Later workflows remain planned and owner reviews are pending.
 
 Use the [shared contract](../../shared/system-contract.md), [phase framework](../../shared/phase-framework.md), [dependency matrix](../../shared/dependency-matrix.md), [ERD](../../initial-erd.md) and [security worksheet](../../security-tests.md). Exact types, status values, validation, routes and permission rules are defined centrally. RLS/grant assertions use the actual restricted PostgreSQL roles; mocks cannot replace them.
 
@@ -8,11 +8,11 @@ Use the [shared contract](../../shared/system-contract.md), [phase framework](..
 
 | File | Purpose |
 | --- | --- |
-| [phases/PH1-foundation.md](phases/PH1-foundation.md) | Role bootstrap, Alembic base, `unit_of_work`, constants, migration 0003, fixtures, DTOs |
+| [phases/PH1-foundation.md](phases/PH1-foundation.md) | Role bootstrap, node-pg-migrate base, `unit_of_work`, constants, migration 0003, fixtures, DTOs |
 | [phases/PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) | `create_parcel`, A10/A11/A12 v1, Seller screens, RLS isolation tests |
 | [phases/PH3-complete-functionality.md](phases/PH3-complete-functionality.md) | Replay-safe creation, search, full detail with slots, public tracking, retention functions |
 | [phases/PH4-hardening-regression.md](phases/PH4-hardening-regression.md) | Complete RLS suites, grant snapshot, retention job, concurrency, privacy regression, scale checks |
-| [phases/PH5-aws-operations.md](phases/PH5-aws-operations.md) | Production DB bootstrap, RLS under deployed credentials, retention on schedule, cloud privacy |
+| [phases/PH5-cloud-operations.md](phases/PH5-cloud-operations.md) | Production DB bootstrap, RLS under deployed credentials, retention on schedule, cloud privacy |
 | [phases/PH6-final-acceptance.md](phases/PH6-final-acceptance.md) | Final regression, test document, demo, RLS evidence |
 | [test-plan.md](test-plan.md) | Test coverage by feature, requirement, phase and test case |
 
@@ -31,24 +31,24 @@ Tracking identifiers are generated on the server. Recipient accounts, parcel edi
 
 | Phase | Objective | Key tasks | Depends on | Exit |
 | --- | --- | --- | --- | --- |
-| PH1 | One database model nobody can bypass; shared definitions | T01-T02 roles and Alembic base (first on the group critical path), T03 `unit_of_work`, T04 constants, T05 complete 0003 with all policies, T06 fixtures | H01, later H03 | G1 |
+| PH1 | One database model nobody can bypass; shared definitions | T01-T02 roles and node-pg-migrate base (first on the group critical path), T03 `unit_of_work`, T04 constants, T05 complete 0003 with all policies, T06 fixtures | H01, later H03 | G1 |
 | PH2 | Seller creates and sees a real parcel under RLS | T01 policy tests, T02 `create_parcel` (0004), T03 A10, T04 A11, T05 UI, T06 A12 v1 | H03, H04, H20 | G2 |
 | PH3 | Complete M2 features | T01 replay, T02 search, T03-T07 detail/tracking, T08 retention functions | H21, H35 | G3 |
 | PH4 | Prove RLS, privacy, concurrency, retention | T01-T03 RLS/hardening, T03 job, T04-T08 suites | H33, H40 | G4 |
-| PH5 | Database and tracking on AWS | T01-T03 bootstrap/grants/RLS under deployed creds, T07 tracking over HTTPS | H50, H51, H53, H54 | G5 |
+| PH5 | Database and tracking on the chosen cloud host | T01-T03 bootstrap/grants/RLS under deployed creds, T07 tracking over HTTPS | H50, H51, H53, H54 | G5 |
 | PH6 | Final evidence and demonstration | T02 document, T04 demo | G5 | G6 |
 
 ## What M2 provides and consumes
 
 | Provides | To | Phase |
 | --- | --- | --- |
-| H02 roles/Alembic/hardening template and lint; H07 `unit_of_work`; H08 constants; H09 migration 0003; H11 fixtures; H12 DTOs | Naszrul, Syauqi | PH1 |
+| H02 roles/node-pg-migrate/hardening template and lint; H07 `unit_of_work`; H08 constants; H09 migration 0003; H11 fixtures; H12 DTOs | Naszrul, Syauqi | PH1 |
 | H22 `create_parcel`, A10, A12 v1; H25 parcel fixtures | Syauqi, group | PH2 |
 | H34 complete detail and slot contract; H36 retention functions | Syauqi, Naszrul | PH3 |
 | H40 retention job; matrix rows and grants snapshot | Syauqi, Naszrul | PH4 |
 | H52 grant verification and RLS runner | Naszrul, Syauqi | PH5 |
 
-Consumes: H03 (0002, `lock_active_actor`), H04/H20 (auth), H21 (rate limit, audit), H10 (harness), H35 (proof table and components), H33 (runner), H13 (lock design), H50-H54 (AWS stack). Substitutes: see the [handoff register](../../shared/dependency-matrix.md#handoff-register).
+Consumes: H03 (0002, `lock_active_actor`), H04/H20 (auth), H21 (rate limit, audit), H10 (harness), H35 (proof table and components), H33 (runner), H13 (lock design), H50-H54 (cloud stack). Substitutes: see the [handoff register](../../shared/dependency-matrix.md#handoff-register).
 
 ## Interfaces and routes
 
@@ -61,7 +61,7 @@ Search/filter changes reset pagination and stale results. A previous user's parc
 
 ## API and data ownership
 
-Own A10 through A13 in the [endpoint table](../../shared/system-contract.md#endpoint-ownership). Own parcel and parcel_status_history schema (migration 0003) plus safe summary/detail/public DTOs, the role bootstrap, the Alembic conventions, the RLS context helper, constants and the fixture loader. Syauqi authors assignment/delivery writes against these tables through the agreed functions; Zikri reviews shared schema changes. No module creates a second Parcel model or status-history table.
+Own A10 through A13 in the [endpoint table](../../shared/system-contract.md#endpoint-ownership). Own parcel and parcel_status_history schema (migration 0003) plus safe summary/detail/public DTOs, the role bootstrap, the node-pg-migrate conventions, the RLS context helper, constants and the fixture loader. Syauqi authors assignment/delivery writes against these tables through the agreed functions; Zikri reviews shared schema changes. No module creates a second Parcel model or status-history table.
 
 Zikri coordinates migration ordering but does not take ownership of other members' assessed code: Naszrul writes 0002, Syauqi writes 0005 to 0007, each reviewed for function hardening; 0003 is complete in PH1 and never edited.
 
@@ -83,7 +83,7 @@ Zikri coordinates migration ordering but does not take ownership of other member
 
 Registration cannot leave a parcel without Registered history. Public lookup must read committed history only. A changed status is displayed by querying the same database; no separate copied tracking database or manual update is introduced.
 
-Use Pydantic response models with explicit field allowlists. For public tracking, return exactly {history:[{status,changedAt}]}. The response must exclude private fields even if the React screen would not display them. A valid unknown token gives safe 404; malformed input gives 422; throttled requests give 429. Display server-returned timestamps in Malaysia time on the frontend.
+Use Zod response models with explicit field allowlists. For public tracking, return exactly {history:[{status,changedAt}]}. The response must exclude private fields even if the React screen would not display them. A valid unknown token gives safe 404; malformed input gives 422; throttled requests give 429. Display server-returned timestamps in Malaysia time on the frontend.
 
 Private detail calls use the same role/ownership policy for Seller, assigned Rider and Admin. Authorizing the parent parcel is required before reading history or proof metadata. Reassignment immediately removes the old Rider's access. After anonymization, private detail shows the retained history with recipient fields null and an explicit anonymized state; public tracking continues to work.
 
@@ -107,7 +107,7 @@ The checkpoint slice is M2-PH2: one registration form creates a real parcel and 
 
 Tick a box only with a linked passing result from the stated phase.
 
-- [ ] PH1 exit criteria met (G1): roles, Alembic base, `unit_of_work`, constants, 0003, fixtures, DTOs.
+- [ ] PH1 exit criteria met (G1): roles, node-pg-migrate base, `unit_of_work`, constants, 0003, fixtures, DTOs.
 - [ ] PH2 exit criteria met (G2): create and list own parcels under RLS; A12 v1; cross-Seller denial.
 - [ ] M2-F01 through M2-F04 have observable evidence and A10 through A13 pass conformance (G3).
 - [ ] Seller and public response privacy verified at API, browser and log levels (G4).
@@ -115,5 +115,5 @@ Tick a box only with a linked passing result from the stated phase.
 - [ ] RLS-01 to RLS-09, injection, XSS, validation, lookup limits and retention checks pass with the grants snapshot enforced (G4).
 - [ ] M2 unit/component and real-PostgreSQL/API suites meet the testing strategy gates, including concurrent creation/replay and retention boundaries.
 - [ ] M1 sessions and M3 history/proof updates work through the shared detail/tracking screens.
-- [ ] Database bootstrap, grants and retention verified on AWS (G5).
-- [ ] Zikri can demonstrate the module and explain its schema, RLS and security controls on AWS (G6).
+- [ ] Database bootstrap, grants and retention verified on the chosen cloud host (G5).
+- [ ] Zikri can demonstrate the module and explain its schema, RLS and security controls on the chosen cloud host (G6).

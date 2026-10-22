@@ -1,0 +1,317 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ParcelTrack Lite foundation",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "description": "Phase 1 liveness only; domain endpoints arrive in later phases.",
+        "responses": {
+          "200": {
+            "description": "Application is running."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Principal": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,17}$"
+          },
+          "username": {
+            "type": "string",
+            "pattern": "^[a-z0-9._-]{3,50}$"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "SELLER",
+              "RIDER",
+              "ADMIN"
+            ]
+          },
+          "mustChangePassword": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "displayName",
+          "role",
+          "mustChangePassword"
+        ],
+        "additionalProperties": false
+      },
+      "ParcelSummary": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,17}$"
+          },
+          "trackingNumber": {
+            "type": "string",
+            "pattern": "^PTL-[0-9A-F]{32}$"
+          },
+          "currentStatus": {
+            "type": "string",
+            "enum": [
+              "REGISTERED",
+              "ASSIGNED",
+              "OUT_FOR_DELIVERY",
+              "DELIVERED",
+              "FAILED"
+            ]
+          },
+          "weightKg": {
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]{3}$"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "version": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "trackingNumber",
+          "currentStatus",
+          "weightKg",
+          "createdAt",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "ParcelDetail": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,17}$"
+          },
+          "trackingNumber": {
+            "type": "string",
+            "pattern": "^PTL-[0-9A-F]{32}$"
+          },
+          "currentStatus": {
+            "type": "string",
+            "enum": [
+              "REGISTERED",
+              "ASSIGNED",
+              "OUT_FOR_DELIVERY",
+              "DELIVERED",
+              "FAILED"
+            ]
+          },
+          "weightKg": {
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]{3}$"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "version": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "recipient": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "phone": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "phone",
+              "address"
+            ],
+            "additionalProperties": false
+          },
+          "assignedRider": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]{0,17}$"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "displayName",
+                  "isActive"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "REGISTERED",
+                    "ASSIGNED",
+                    "OUT_FOR_DELIVERY",
+                    "DELIVERED",
+                    "FAILED"
+                  ]
+                },
+                "changedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "changedBy": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[1-9][0-9]{0,17}$"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "displayName"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "status",
+                "changedAt"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "hasProof": {
+            "type": "boolean"
+          },
+          "anonymized": {
+            "type": "boolean"
+          },
+          "terminalAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "trackingNumber",
+          "currentStatus",
+          "weightKg",
+          "createdAt",
+          "version",
+          "recipient",
+          "assignedRider",
+          "history",
+          "hasProof",
+          "anonymized",
+          "terminalAt"
+        ],
+        "additionalProperties": false
+      },
+      "PublicTracking": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "REGISTERED",
+                    "ASSIGNED",
+                    "OUT_FOR_DELIVERY",
+                    "DELIVERED",
+                    "FAILED"
+                  ]
+                },
+                "changedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                }
+              },
+              "required": [
+                "status",
+                "changedAt"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "history"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

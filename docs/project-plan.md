@@ -1,18 +1,18 @@
 # ParcelTrack Lite complete project plan
 
-Planning baseline agreed on 21 October 2026: React frontend, FastAPI backend, PostgreSQL with RLS, Docker Compose, and AWS hosting. This is an implementation plan. It does not claim application code, tests or deployment are complete. Verified repository state: documentation and reference files only.
+Planning baseline revised on 22 October 2026: one full-stack Next.js/TypeScript application, PostgreSQL and private Storage in the full self-hosted Supabase Docker stack, local first. Cloud deployment is deferred. All modules have started Phase 1; [local results and remaining work](phase-1-progress.md) distinguish foundation code from later workflows. Group gates remain open. The separate React/Vite prototype is historical checkpoint evidence.
 
 ## Plans by owner
 
 | Owner | Module plan (README, phases, test plan) | Scope |
 | --- | --- | --- |
-| Naszrul | [M1 Login and User Management](modules/module-1-auth/README.md): [phases](modules/module-1-auth/phases/PH1-foundation.md), [test plan](modules/module-1-auth/test-plan.md) | Accounts, sessions, permissions, password change, user administration, maintenance runner, AWS stack |
+| Naszrul | [M1 Login and User Management](modules/module-1-auth/README.md): [phases](modules/module-1-auth/phases/PH1-foundation.md), [test plan](modules/module-1-auth/test-plan.md) | Accounts, sessions, permissions, password change, user administration, maintenance runner, local infrastructure and later release |
 | Zikri | [M2 Parcel Registration and Public Tracking](modules/module-2-parcels/README.md): [phases](modules/module-2-parcels/phases/PH1-foundation.md), [test plan](modules/module-2-parcels/test-plan.md) | Database roles and RLS foundation, parcel creation, seller access/search, privacy-preserving tracking, retention |
 | Syauqi | [M3 Delivery Update and Admin Dashboard](modules/module-3-delivery/README.md): [phases](modules/module-3-delivery/phases/PH1-foundation.md), [test plan](modules/module-3-delivery/test-plan.md) | Test harness, assignment, delivery outcomes, proof handling, dashboard, backup and restore |
 
 Each owner delivers their module's backend, React screens, migrations, security tests and demonstration. The group delivers one integrated application, not three applications. Each module folder contains one detailed Markdown file per phase (PH1 to PH6) with tasks, dependencies, deliverables, tests and exit criteria.
 
-Start here: [shared architecture and index](shared/README.md), [phase framework and group gates](shared/phase-framework.md), [dependency matrix](shared/dependency-matrix.md), [first execution sequence](shared/execution-sequence.md). The [shared system contract](shared/system-contract.md) is authoritative for API paths, payloads, status values, permissions and transaction rules. The [integration and AWS plan](shared/integration-and-aws.md) defines deployment, backup and incident operations. [Initial ERD](initial-erd.md) and the [security test worksheet](security-tests.md) support these plans. The [testing strategy](shared/testing-strategy.md), [integration scenarios](shared/integration-tests.md), [workflow trace](shared/workflow-trace.md) and [traceability](shared/traceability.md) define and map the evidence. The [decision register](shared/decision-register.md) separates source requirements, confirmed decisions, proposals and external dependencies. [Independent review resolutions](review-resolutions.md) record gaps found and addressed before implementation.
+Start here: [shared architecture and index](shared/README.md), [phase framework and group gates](shared/phase-framework.md), [dependency matrix](shared/dependency-matrix.md), [first execution sequence](shared/execution-sequence.md). The [shared system contract](shared/system-contract.md) is authoritative for API paths, payloads, status values, permissions and transaction rules. The [integration and deployment plan](shared/integration-and-deployment.md) defines deployment, backup and incident operations. [Initial ERD](initial-erd.md) and the [security test worksheet](security-tests.md) support these plans. The [testing strategy](shared/testing-strategy.md), [integration scenarios](shared/integration-tests.md), [workflow trace](shared/workflow-trace.md) and [traceability](shared/traceability.md) define and map the evidence. The [decision register](shared/decision-register.md) separates source requirements, confirmed decisions, proposals and external dependencies. [Independent review resolutions](review-resolutions.md) record gaps found and addressed before implementation.
 
 ## Product boundary
 
@@ -22,7 +22,7 @@ Payments, courier integrations, maps/GPS, notifications, a mobile app, account r
 
 ## Architecture
 
-One React frontend, one FastAPI application with M1/M2/M3 packages, one PostgreSQL database, private proof storage and a maintenance runner, on one EC2 instance behind an HTTPS proxy. See the [shared architecture](shared/README.md#single-architecture) and the contract for the code layout and privilege model.
+One Next.js application owns M1/M2/M3 pages, Route Handlers and server services. The full Supabase Docker stack runs locally with PostgreSQL, a private Storage bucket and its standard supporting services; a separate private TypeScript runner handles jobs. Cloud hosting is decided after local integration. See the [shared architecture](shared/README.md#single-architecture) and the contract for the code layout and privilege model.
 
 ## Delivery phases
 
@@ -30,11 +30,11 @@ Every module plan uses the same six phases and identifiers. The earlier labels P
 
 | Phase | Work | Group gate |
 | --- | --- | --- |
-| PH1 Foundation and shared contracts | Repository skeleton, Compose/PostgreSQL, role bootstrap, migrations 0001-0003, harness, fixtures, constants, DTOs, auth interface, contract v3 | G1: clean checkout starts, runtime roles cannot bypass RLS, CI green |
+| PH1 Foundation and shared contracts | Next.js skeleton, full local Supabase Compose, app-role bootstrap, migrations 0001-0003, harness, fixtures, constants, DTOs, auth interface, contract v3 | G1: clean checkout starts, runtime roles cannot bypass RLS, CI green |
 | PH2 Initial working checkpoint slice | M1 real login/logout; M2 parcel registered and listed under RLS; M3 assigned parcel moved to Out for Delivery; security baseline active | G2: INT-CP-01 to INT-CP-03 |
 | PH3 Complete module functionality | All module functions and screens, public tracking, assignment/reassignment, final outcomes/photo, password and user administration | G3: successful and Failed journeys, no temporary substitutes |
 | PH4 Security, failure handling and regression | Full authorization matrix, RLS suites, races, fault injection, upload corpus, retention job, local backup/restore, CI gates | G4: all worksheet rows pass locally |
-| PH5 Integrated AWS deployment and operations | EC2 HTTPS deployment, private PostgreSQL, durable storage, backups, scheduled jobs, cloud journeys, restore procedure | G5a: all roles on the live URL, restart and rollback proven; G5b: extended operations |
+| PH5 Integrated cloud deployment and operations | Later chosen cloud host: HTTPS, full Supabase Docker persistence, private administration, backups/jobs and repeated journeys | G5a: all roles on the live URL, restart and rollback proven; G5b: extended operations |
 | PH6 Final acceptance, evidence and demonstration | Release-candidate regression, security test document, rehearsals, individual explanations | G6: documented evidence and demonstration readiness |
 
 Details, entry and exit criteria, and the per-member milestone matrix are in the [phase framework](shared/phase-framework.md). PH2 is the 22 October checkpoint target, not the whole-project definition of done. Source documents set the final submission at Week 14; no invented calendar date is assigned here. Phases can overlap only under the framework's overlap rule; a module is not complete until its own exit criteria and the group gates pass.
@@ -66,11 +66,11 @@ A criterion is checked only with a linked passing result. The group gates in the
 
 Tracked in the [decision register](shared/decision-register.md). In summary:
 
-1. FastAPI and PostgreSQL replace the frameworks/databases explicitly named in the brief (D-01). The team selected them; lecturer acceptance is unverified (EXT-02).
-2. AWS account access, region, domain and instance budget need actual values before provisioning (EXT-04). No AWS resources have been created by this planning work.
+1. Full-stack Next.js and PostgreSQL replace the frameworks/databases explicitly named in the brief (D-01). The team selected them; lecturer acceptance is unverified (EXT-02).
+2. Local Next.js with full Supabase Docker is the immediate target. Cloud provider, full-stack host, sizing, budget, domain/TLS and backup destination remain deferred under EXT-04; no resources are provisioned by this work.
 3. The prepared PR-only branch protection has not been applied (EXT-03); Naszrul needs repository administration access.
 4. Full names and matric numbers are needed for the lecturer's allocation sheet and test document (EXT-05); allocation submission is unverified (EXT-01).
-5. Open design points: secrets location (D-10), proxy and TLS choice (D-11), runtime versions (D-21), incident contact and backup key custody (EXT-06, EXT-07).
+5. Open design points: secrets location (D-10), local gateway exposure and later TLS choice (D-11), runtime versions (D-21), incident contact and backup key custody (EXT-06, EXT-07).
 
 Proof read access, Failed-parcel retention, operational limits and reassignment rules are explicit design choices in the shared contract (D-04, D-06, D-18). They are the implementation baseline unless the group changes the contract through review; they are not claims that the lecturer specified those details.
 

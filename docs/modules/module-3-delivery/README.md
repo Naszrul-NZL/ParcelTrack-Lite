@@ -1,6 +1,6 @@
 # Module 3 Delivery Update and Admin Dashboard
 
-Owner: Syauqi, GitHub Qee110. Deliver backend delivery operations, the shared test harness, private proof storage, backup/restore coordination and React delivery/Admin screens. This folder is the full phased plan after the checkpoint as well. Everything here is a reviewable plan; no application code or test has been written or run.
+Owner: Syauqi, GitHub Qee110. Deliver backend delivery operations, the shared test harness, private proof storage, backup/restore coordination and React delivery/Admin screens. This folder is the full phased plan after the checkpoint as well. Phase 1 foundation code and local tests now exist; see [actual progress and open gates](../../phase-1-progress.md). Later workflows remain planned and owner reviews are pending.
 
 Follow the [shared contract](../../shared/system-contract.md), [phase framework](../../shared/phase-framework.md), [dependency matrix](../../shared/dependency-matrix.md), [ERD](../../initial-erd.md) and [security worksheet](../../security-tests.md). Use the shared state/permission rules and DTOs rather than duplicating them here. Transaction/file failure cases require actual PostgreSQL and private filesystem integration.
 
@@ -12,7 +12,7 @@ Follow the [shared contract](../../shared/system-contract.md), [phase framework]
 | [phases/PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) | Rider list, Start delivery with actor/time, seeded assignment (TMP-02), checkpoint evidence |
 | [phases/PH3-complete-functionality.md](phases/PH3-complete-functionality.md) | Proof table, assignment/reassignment, Delivered/Failed with proof, dashboard, screens |
 | [phases/PH4-hardening-regression.md](phases/PH4-hardening-regression.md) | Fault injection, reconciliation, purge, concurrency, upload corpus, backup lock and local restore drill |
-| [phases/PH5-aws-operations.md](phases/PH5-aws-operations.md) | EBS, S3 backups, timers, AWS restore exercise, Android/4G checks |
+| [phases/PH5-cloud-operations.md](phases/PH5-cloud-operations.md) | persistent Docker, off-host backups, timers, cloud restore exercise, Android/4G checks |
 | [phases/PH6-final-acceptance.md](phases/PH6-final-acceptance.md) | Final regression, test document, demo, runbooks |
 | [test-plan.md](test-plan.md) | Test coverage by feature, requirement, phase and test case |
 
@@ -36,7 +36,7 @@ Admin can assign/read but cannot submit Rider delivery updates. Delivered/Failed
 | PH2 | Rider starts delivery on a seeded parcel | T02 function, T03 A17 v1, T04 A16, T05 UI, T08 checkpoint evidence | H03, H20, H25 | G2 |
 | PH3 | All five features | T01 `delivery_proof` 0006 then 0007 (first), T03 assign, T05-T07 proof, T08 dashboard, T09-T10 UI | H30, H31, H34 | G3 |
 | PH4 | Consistency under faults, races, hostile uploads; backup lock and drill | T01-T04 faults/reconcile/purge, T05 concurrency, T06 corpus, T07 backup | H33, H40, H42 | G4 |
-| PH5 | Durable AWS storage, backups, restore | T01-T04 volumes/S3/timers/restore, T05 persistence, T06 4G | H50, H52 | G5 |
+| PH5 | Durable cloud storage, backups, restore | T01-T04 volumes/private off-host backup/timers/restore, T05 persistence, T06 4G | H50, H52 | G5 |
 | PH6 | Final evidence and demonstration | T02 document, T04 demo, T06 runbooks | G5 | G6 |
 
 ## What M3 provides and consumes
@@ -88,7 +88,7 @@ M3 history and proof-metadata reads follow the parent parcel's RLS. Final writes
 - Disabling a Rider never waits for their deliveries to finish. Admin reassigns unfinished parcels through M3; final parcels cannot be reassigned.
 - Starting delivery rejects a proof file. Final outcomes require exactly one valid image; multiple files or conflicting status fields are rejected.
 - Validate/prepare a file before holding a long database lock. Begin the transaction and call lock_delivery_target to recheck account/session, assignment/state/version and acquire the lock under domain_writer privileges. Publish the file privately, then invoke update_delivery_status on the same transaction/connection and commit. Clean prepared files on confirmed authorization/rollback rejection; unknown commit outcomes are reconciled before deletion.
-- PostgreSQL and filesystem changes are not one transaction. Follow the shared staged-file/commit/compensation/reaper protocol and test each failure point (M3-PH4-T01). Unknown-commit cleanup first waits on the same parcel lock through the maintenance helper, then rechecks committed references; an empty early SELECT must never cause deletion of a file whose original transaction can still commit.
+- PostgreSQL and Storage API operations are not one transaction. Follow the shared temporary-stage/Storage-upload/SQL-commit/compensation/reconciliation protocol and test each failure point (M3-PH4-T01). Unknown-commit cleanup first waits on the same parcel lock through the maintenance helper, then rechecks committed references; an empty early SELECT must never cause deletion of a file whose original transaction can still commit.
 - Private proof reads require an authorized DB check before file streaming. On already-open streams, disablement cannot retract bytes already sent; no new reads or finalizations may start after the disabling transaction wins. Files are never served by the public reverse proxy.
 
 ## Security and policies
@@ -116,7 +116,7 @@ Tick a box only with a linked passing result from the stated phase.
 - [ ] M3-F01 through M3-F05 and A14 through A19 work through UI and direct requests; TMP-02 and TMP-05 retired (G3).
 - [ ] Both terminal outcomes have exactly one valid proof and coherent history/current status.
 - [ ] Role, assignment, transition, upload, concurrency and RLS checks (including RLS-03, RLS-10) have passing evidence (G4).
-- [ ] M3 unit/component and PostgreSQL/filesystem suites meet the testing strategy, including controlled locking, unknown commit outcomes and fault recovery.
+- [ ] M3 unit/component and PostgreSQL/Storage API suites meet the testing strategy, including controlled locking, unknown commit outcomes and fault recovery.
 - [ ] Rider disablement/reassignment and private-photo retention work across modules.
-- [ ] Local backup/restore drill passed (G4); AWS restart/redeploy and tested restoration preserve data and files (G5).
+- [ ] Local backup/restore drill passed (G4); cloud restart/redeploy and tested restoration preserve data and files (G5).
 - [ ] Syauqi can demonstrate the module and explain the controls and failure handling personally (G6).
