@@ -1,0 +1,49 @@
+name: Foundation checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  app-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.14.0'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/prepare-env-template.mjs
+      - run: npm run local:init
+      - run: npm run check
+      - run: npm run build
+      - run: npm run security:local
+      - run: npm audit --audit-level=high
+      - run: python tools/check_plan_docs.py
+  server-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      PTL_PROFILE: test
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.14.0'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/prepare-env-template.mjs
+      - run: npm run local:init
+      - run: npm run local:up
+      - run: npm run db:bootstrap
+      - run: npm run db:migrate
+      - run: npm run db:migrate
+      - run: npm run db:fixtures
+      - run: npm run db:fixtures
+      - run: npm run db:verify
+      - run: npm run storage:init
+      - run: npm run test:integration
+      - if: always()
+        run: npm run local:down

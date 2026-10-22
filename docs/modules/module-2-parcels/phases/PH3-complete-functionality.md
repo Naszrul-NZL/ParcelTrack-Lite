@@ -44,7 +44,7 @@ Independent now: T01, T02, T04, T08 (database and services).
 ## 5 Affected components
 
 - Database: `create_parcel` replay logic, `lookup_tracking`, `list_retention_candidates`, `anonymize_parcel`, policies for `lookup_fn_owner` and `maintenance_fn_owner`.
-- Backend: `modules/parcels/{service.py,repository.py,tracking.py,retention.py,routes.py}`, tracking pool wiring.
+- Backend: `modules/parcels/{service.py,repository.py,tracking.py,retention.py,routes.ts}`, tracking pool wiring.
 - Frontend: `features/parcels/{SellerParcelListPage,ParcelDetailPage,TrackPage}.tsx`, slot types.
 
 ## 6 Security requirements

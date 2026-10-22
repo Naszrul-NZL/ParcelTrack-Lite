@@ -1,18 +1,18 @@
 # Automated testing strategy
 
-This is the required test plan for the React/FastAPI/PostgreSQL application. Application code and executable suites do not exist yet. Every test described here is planned, not passed. Owners implement tests with their features and retain evidence against the [system contract](system-contract.md).
+This is the required test plan for the Next.js/TypeScript/Supabase PostgreSQL application. The new Next.js/full-Supabase app and its executable suites do not exist yet; the separate checkpoint demo has frontend-only tests. Every test described here is planned, not passed. Owners implement tests with their features and retain evidence against the [system contract](system-contract.md).
 
 ## Test layers and tools
 
-| Layer | Proposed tools | What it proves | What it does not prove |
+| Layer | Tools | What it proves | What it does not prove |
 | --- | --- | --- | --- |
-| Python unit | pytest, parametrization, controlled clock and targeted mocks | Validation, transition/permission decisions, session calculations, response redaction and failure decisions in isolation | Real SQL, RLS grants, HTTP cookies or file/database recovery |
-| React unit/component | Vitest, React Testing Library, user-event and mocked API transport | Form behavior, validation display, session/cache transitions and role-specific interactions | Actual backend authorization, database privacy or deployment |
-| API/database integration | pytest with FastAPI TestClient, real PostgreSQL and real runtime-role pools | Complete requests, cookies/CSRF, migrations, functions, RLS, transactions and shared throttling | Actual browser routing, proxy TLS or AWS access rules |
-| Browser integration | Playwright against React, FastAPI and PostgreSQL together | User journeys, network payload privacy, refresh/logout behavior, mobile-width forms and component integration | Backup recoverability or all database-policy branches |
-| Deployment/recovery | Compose smoke scripts and an isolated AWS/restore exercise | First boot, migration/role provisioning, HTTPS, persistence, scheduled jobs and matching backup restoration | Availability guarantees that have not been measured |
+| TypeScript server unit | Vitest, table-driven cases, controlled clocks and targeted doubles | Rules, validation, permissions, sessions and recovery decisions | Real SQL/RLS, HTTP or durable Storage |
+| React component | Vitest, React Testing Library, user-event and mocked transport | Forms, session/cache changes, pending/errors and role interactions | Actual server authorization |
+| HTTP/database/Storage integration | Actual Next.js HTTP server, Vitest client and disposable full Supabase Compose | Route Handlers, cookies/CSRF, server services, real roles/RLS and private object API | Cloud HTTPS/networking |
+| Browser integration | Playwright against the local Next.js production build and full Supabase | Client and Server Component navigation, role journeys, public privacy, phone layout and no-cache behavior | Recovery/capacity without dedicated operational checks |
+| Deployment/recovery | Local full-stack scripts and isolated matching app-data/Storage restore; later PH5 cloud repetition | Reproducible setup, migrations, persistence, jobs, backup consistency and later HTTPS | Unmeasured availability/load guarantees |
 
-Security and regression cases run within these layers. The [51 security worksheet checks](../security-tests.md) and [integration scenarios](integration-and-aws.md#end-to-end-acceptance-scenarios) remain mandatory coverage, not a separate manual-only list.
+The [security worksheet](../security-tests.md) and [integration scenarios](integration-tests.md) remain required. Include a direct Supabase gateway access attempt proving app schema and private proof objects cannot bypass Next.js. Bundled Supabase Auth is not the application's login/session source.
 
 ## Test case identifiers, families and phase schedule
 
@@ -20,7 +20,7 @@ Every executable case in the module phase files has a unique ID `<module>-PH<n>-
 
 | Family | Meaning |
 | --- | --- |
-| UT-A01 to UT-A05, UT-P01 to UT-P04, UT-D01 to UT-D05 | Python unit families listed below |
+| UT-A01 to UT-A05, UT-P01 to UT-P04, UT-D01 to UT-D05 | TypeScript server unit families listed below |
 | IT-A01 to IT-A04, IT-P01 to IT-P04, IT-D01 to IT-D04 | API/PostgreSQL integration families listed below |
 | RLS-01 to RLS-10 | Restricted-role and function-hardening checks (worksheet rows) |
 | CMP-A01 to CMP-A05 | M1 component tests: API client and session provider, login, register, password, admin users |
@@ -33,50 +33,39 @@ Every executable case in the module phase files has a unique ID `<module>-PH<n>-
 | MIG-01, MIG-02, MIG-03 | Migrations: empty database, existing-volume idempotency, upgrade of the previous schema with data |
 | LINT-01 | Static check that every `SECURITY DEFINER` function follows the hardening template |
 | HAR-01, FIX-01 | Harness self-test (role assertion, isolation, owner-connection negative control); fixture loader safety and idempotency |
-| OPS-01, OPS-03 to OPS-09 | Operations: clean-checkout smoke; scheduled jobs and runner; backup lock; local restore drill; first boot and restart; AWS restore exercise; RLS under deployed credentials; capacity and timing measurements (OPS-02 is not used) |
+| OPS-01, OPS-03 to OPS-09 | Operations: clean-checkout smoke; scheduled jobs and runner; backup lock; local restore drill; first boot and restart; cloud restore exercise; RLS under deployed credentials; capacity and timing measurements (OPS-02 is not used) |
 
 Layers start with the first feature they can test; later phases extend them.
 
 | Layer | Starts | Required by gate |
 | --- | --- | --- |
-| Python unit | PH1 | G1 |
+| TypeScript server unit | PH1 | G1 |
 | React component | PH1 (client, provider), PH2 (screens) | G1, G2 |
 | API/PostgreSQL integration with runtime roles and role assertion | PH1 (migrations, roles), PH2 (endpoints) | G1, G2 |
 | Authorization-matrix harness | PH2 (rows for implemented endpoints) | G2; complete at G4 |
 | Browser journeys (Playwright) | PH2 (login, Seller slice, Rider slice) | G2, G3 |
 | Concurrency, fault injection, upload corpus, RLS suites | PH2 basics, PH3 feature level | G4 |
 | Migration upgrade, scheduled jobs, local backup/restore drill | PH1 (MIG-01/02), PH3 (runner), PH4 (drill, upgrade) | G4 |
-| Clean-checkout, first-boot, restart, AWS restore, deployed-credential RLS | PH1 (OPS-01), PH5 | G5 |
+| Clean-checkout, first-boot, restart, cloud restore, deployed-credential RLS | PH1 (OPS-01), PH5 | G5 |
 
 ## Test organization and fixture contract
 
 ```text
-backend/tests/
-  harness/                   Syauqi: role-asserting connections, reset, clock, barriers
-  unit/auth/                 Naszrul
-  unit/parcels/              Zikri
-  unit/delivery/             Syauqi
-  integration/auth/          actual API/session/account behavior
-  integration/parcels/       registration, reads, tracking and retention
-  integration/delivery/      assignment, outcomes and proof files
-  integration/rls/           real roles, functions and pooled connections
-  integration/cross_module/  INT scenarios and concurrent operations
-  integration/authz_matrix/  Naszrul runner, rows contributed by each endpoint owner
-frontend/src/features/*/     colocated component tests owned by each member
-tests/e2e/                   browser journeys owned by feature leads (Syauqi skeleton)
-tests/operations/            clean startup, restart, backup/restore and jobs
-tests/fixtures/files/        generated harmless upload fixtures (Syauqi)
-tests/fixtures/payloads/     SQL injection, XSS and Unicode corpora (Zikri)
-tools/check_plan_docs.py     documentation consistency checker
+tests/harness/               role-asserting pg clients, local Next.js server and isolated Supabase stack
+tests/unit/{auth,parcels,delivery}/
+tests/integration/{auth,parcels,delivery,rls,cross_module,authz_matrix}/
+src/features/*/              colocated component tests
+tests/e2e/                   Playwright journeys
+tests/operations/            setup, migrations, persistence, matching backup/restore and jobs
+tests/fixtures/{files,payloads}/
+tools/check_plan_docs.py     existing Python documentation checker only
 ```
 
-Use disposable PostgreSQL with the same pinned major version/extensions as deployment. CI creates cluster roles using a separate bootstrap credential, applies actual Alembic revisions with migration credentials, then runs application requests as app_runtime or tracking_runtime. Assert the connected role and relevant grants inside the test fixture. Never run an RLS test as a superuser/table owner or replace PostgreSQL with SQLite.
+Use a disposable full Supabase Compose project with pinned versions matching development. It has unique project name, ports, credentials and DB/Storage volumes. Wait for vendor service readiness, bootstrap application roles and apply actual node-pg-migrate revisions. HTTP requests use app_runtime/tracking_runtime; assert role/grants. Owner connections are only for bootstrap, migrations or test seeding, never RLS proof. Do not replace PostgreSQL with SQLite or mock away the Storage adapter in integration acceptance.
 
-Prepare one Admin, two Sellers, two Riders, an inactive account and a must-change-password Rider. Include Registered, Assigned, Out for Delivery, Delivered, Failed and anonymized parcels; two ownership groups; zero-count and non-zero-count dashboards; and harmless valid/invalid file fixtures. Supply disposable credentials through test configuration, never a real account's password.
+Fixtures include one Admin, two Sellers, two Riders, inactive/must-change accounts, every status, anonymized and multiple ownership groups, harmless image corpora and zero/nonzero dashboards. Supply ephemeral passwords privately. Keep application accounts in app schema under the custom username/session contract; do not seed vendor auth.users as an alternate login.
 
-Tests start from known data and do not depend on execution order. API requests commit independently, so wrapping the outer test in one rolled-back transaction is insufficient isolation. Reset fixture data through dedicated test-only provisioning credentials, or use a fresh test database per suite/job. Reset sessions, counters, files and audit data too. Cross-process tests run against the same intended database; parallel independent suites get separate databases and private directories. Do not enable parallel database tests until isolation is demonstrated.
-
-Use temporary private filesystem directories, controlled clocks and explicit barriers for concurrency. No long sleeps to wait for expiry or races. Mock external AWS failures where useful for unit tests, but perform an isolated real backup/restore exercise before release. Test dependency overrides are restricted to tests and must not be switchable through a production request/header.
+Requests commit independently; an outer rollback does not isolate them. Reset only disposable application data and private test bucket objects through a guarded fixture credential. Never reset development volumes or vendor schemas. Independent parallel suites get separate full stacks; race tests intentionally share one database and use barriers. Demonstrate isolation before enabling parallel suites. Temporary local files serve only bounded staging/unit doubles; real proof persistence uses the Storage API. Test principal/failpoint injection lives only in test imports and cannot be enabled through production requests or flags.
 
 ## Backend unit coverage
 
@@ -138,7 +127,7 @@ Reuse one physical pooled connection across Seller A, Seller B and anonymous tra
 
 Use separate sessions/connections with barriers to force overlap: same username registration, same parcel request key, tracking collision, same-version assignment/status update, reassignment versus finalization, disablement/password change versus login/write, and retention versus photo retrieval. Assert database/file invariants and safe responses for both winners and losers. Deadlock/serialization retries are bounded and must not duplicate history/audit/photo data.
 
-Inject faults through controlled test doubles around the real transaction/filesystem boundary, not by mocking away the entire service. For commit-acknowledgment uncertainty, reconciliation first acquires the same parcel lock through the maintenance helper so the original transaction must have finished, then checks committed references in a fresh READ COMMITTED statement while retaining that lock. A plain SELECT returning no visible reference before the original transaction finishes is not permission to delete. Preserve files on lock timeout/database unavailability. IT-D03 must delay the original transaction, observe an initially invisible proof row, let that transaction commit, and prove cleanup preserves the now-referenced file.
+Inject faults through controlled test doubles around the real transaction/Storage API boundary, not by mocking away the entire service. For commit-acknowledgment uncertainty, reconciliation first acquires the same parcel lock through the maintenance helper so the original transaction must have finished, then checks committed references in a fresh READ COMMITTED statement while retaining that lock. A plain SELECT returning no visible reference before the original transaction finishes is not permission to delete. Preserve files on lock timeout/database unavailability. IT-D03 must delay the original transaction, observe an initially invisible proof row, let that transaction commit, and prove cleanup preserves the now-referenced file.
 
 ## React component and browser tests
 
@@ -150,13 +139,14 @@ Inspect response bodies and DOM for public tracking after every status, not only
 
 ## Operations and migration tests
 
-- Empty-volume first boot: start PostgreSQL, wait for readiness, bootstrap roles, run Alembic, provision synthetic users through authorized fixture tooling, start backend/proxy and exercise login/registration/status updates.
-- Existing-volume restart: bootstrap/provisioning must be safe and not overwrite passwords or duplicate accounts; migrations do not run from every worker. Verify protected-role grants have not drifted.
-- Upgrade the last released schema with representative synthetic data, then verify RLS/functions/session compatibility and application smoke tests. Generated migrations are excluded from unit coverage metrics but always executed here.
-- Verify HTTP-to-HTTPS behavior, secure cookie/CSRF handling, proxy trust, API/SPA routing, private database/application ports and private image storage on AWS.
-- Kill/restart/redeploy backend and database containers without removing volumes, then check rows/history/photos and expected session behavior.
-- Run matching database/photo backup and restore in a separate environment. Verify counts, sample photos, grants, no expired personal data returned and no old session replay. Record observed recovery results.
-- Exercise each scheduled job twice and after interruption, concurrent-run lock, storage failure, expired session/counter cleanup and alert/log output. Daily retention scheduling is required before final release.
+- Fresh local setup starts full Supabase Docker, preserves vendor schema/role ownership, applies app bootstrap/migrations once and starts both Next.js dev and production modes.
+- Existing-volume restart preserves accounts/passwords, parcels, object keys and proof bytes. No request, build or worker startup auto-migrates.
+- Upgrade the previous app schema with synthetic data and verify runtime grants, RLS, functions and session compatibility.
+- Check loopback-only gateway/Studio/DB/pooler ports; app schema unavailable through Data API/GraphQL/Realtime; private proof bucket inaccessible anonymously.
+- Exercise actual Route Handlers and Server Component navigation with no shared caching, server-only import boundaries and nonce CSP/hydration. Verify production cookies/HTTPS on the chosen PH5 host later.
+- Restore the matching app-schema dump and Storage API object manifest/bytes into a separate full stack. Verify counts/history/hashes/grants, purge sessions, reconcile account changes or quarantine, and rerun retention before reopening.
+- Run private TypeScript jobs twice and after interruption; prove overlap locks, bounded cleanup, storage-failure handling and named failure notification. Daily scheduling must have actual evidence.
+- Record Next.js build/commit, app revision and full Supabase Compose/image versions. Local acceptance does not claim cloud deployment or measured source-scale capacity.
 
 ## Feature-to-test traceability
 
@@ -185,14 +175,14 @@ Every PR runs the jobs below (names are recorded in M1-PH1-T11 so branch protect
 
 | Job | Introduced | Content |
 | --- | --- | --- |
-| `backend-lint-type`, `backend-unit`, `frontend-check`, `compose-smoke` | PH1 | Lint, type checks, unit and component tests, build, clean-checkout smoke |
-| `backend-migrations` | PH1 | Role bootstrap, upgrade to head, existing-volume idempotency (MIG-01, MIG-02) |
-| `backend-integration` | PH1 (harness self-test, RLS-01) | Real PostgreSQL with runtime roles; endpoint suites from PH2 |
+| `server-lint-type`, `server-unit`, `app-check`, `local-stack-smoke` | PH1 | Lint, type checks, unit and component tests, build, clean-checkout smoke |
+| `db-migrations` | PH1 | Role bootstrap, upgrade to head, existing-volume idempotency (MIG-01, MIG-02) |
+| `server-integration` | PH1 (harness self-test, RLS-01) | Real PostgreSQL with runtime roles; endpoint suites from PH2 |
 | `ci-contract` | PH1 | CT-01, CT-02, LINT-01, OpenAPI snapshot; CT-03 from PH3 |
 | `secret-scan` | PH1 | gitleaks over tree and history |
-| `dependency-audit` | PH1 report-only, blocking from PH4 | pip-audit, npm audit, Trivy and hadolint on images and Compose |
+| `dependency-audit` | PH1 report-only, blocking from PH4 | npm audit, Trivy and hadolint on images and Compose |
 | `authz-matrix`, `e2e-core` | PH2 | Authorization matrix; core Playwright journeys |
-| `security-tools` | PH4 | Bandit or Semgrep, ZAP baseline, sqlmap against the Compose stack (nightly) |
+| `security-tools` | PH4 | Semgrep for TypeScript, ZAP baseline, sqlmap against the Compose stack (nightly) |
 
 Third-party GitHub Actions are pinned by commit SHA.
 
@@ -200,11 +190,11 @@ Initial proposed coverage gates are backend 85% line/80% branch and frontend 80%
 
 A PR cannot be declared ready with failing required tests, skipped required scenarios, flaky reruns masking a defect or untriaged high/critical reachable dependency findings. A failing test report must identify the owner and reproduction. Fix the underlying issue, then rerun the affected suite and related integration journeys. Record full-suite results before release. Enforcing CI on GitHub remains a separate branch-protection configuration task after check names exist.
 
-Release additionally requires an AWS smoke run, scheduled-job verification and a successful isolated restore exercise. No zero-defect guarantee is inferred from green tests. Completion means the specified behaviors and failure boundaries have repeatable evidence, with known limitations documented.
+Local G4 requires local production-build, job and isolated restore evidence; final PH5 release additionally repeats applicable checks on the actual cloud host. Cloud-only stretch drills retain their stated tier. No zero-defect guarantee is inferred from green tests. Completion means the specified behaviors and failure boundaries have repeatable evidence, with known limitations documented.
 
 ## Security tooling
 
-The case study requires that each module be tested with suitable security tools before release. The planned set (D-39): Bandit or Semgrep for Python and eslint-plugin-security for TypeScript; pip-audit and npm audit; gitleaks (tree and history); Trivy and hadolint on images and Compose files; OWASP ZAP baseline and sqlmap against login, registration, user management, parcel search and detail, tracking and upload routes on the Compose stack in PH4 and on the live URL in PH5; nmap and testssl.sh against the live host. Each run records tool, version, target, date, summary of findings and triage owner; the outputs are cited from the security test document. Tools complement the authored suites and do not replace them.
+Use TypeScript ESLint/Semgrep, npm audit and gitleaks (tree/history), with Trivy/hadolint for the full pinned Docker infrastructure. Run ZAP baseline and sqlmap against the local Next.js routes with real Supabase and synthetic data, then repeat authorized app-scoped checks on the chosen cloud URL in PH5. Test private Supabase API/Studio exposure separately without scanning unrelated shared provider infrastructure. Each run records tool/version, target, date, findings and triage. Automated scans supplement authored role, RLS, upload and recovery tests.
 
 ## Final security test document
 
@@ -220,12 +210,12 @@ One document, organized by module, with the owner's name, assembled from the thr
 | Actual result | Observed result, never copied from the plan |
 | Pass or fail | Failed rows stay open with an issue reference |
 | Evidence | Safe screenshot, log or tool-output reference |
-| Version and environment | Commit, image digest, migration revision, URL or Compose, date and time |
+| Version and environment | Commit, release identifier, migration revision, URL or Compose, date and time |
 
 Each member needs more than five distinct input types; PH6 checks this per module.
 
 ## Evidence and current state
 
-For every executed scenario record owner, feature/security/integration ID, exact input, expected result, actual result, commit/image/migration version, environment, timestamp and safe artifact reference. Automated JUnit/coverage/browser reports support the final rubric document but do not replace the owner's explanation.
+For every executed scenario record owner, feature/security/integration ID, exact input, expected result, actual result, commit/release/migration version, environment, timestamp and safe artifact reference. Automated JUnit/coverage/browser reports support the final rubric document but do not replace the owner's explanation.
 
-Current state: all suites and gates in this document are planned (phase files define the cases; none has run). No application test has run because the implementation is not present. Document-link checks are separate from software test results.
+Current state: all suites and gates in this document are planned (phase files define the cases; none has run). No Next.js/backend/RLS test has run because that implementation is not present. Historical checkpoint frontend results do not satisfy these gates. Document-link checks are separate from software test results.

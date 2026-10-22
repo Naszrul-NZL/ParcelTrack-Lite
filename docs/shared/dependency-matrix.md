@@ -43,7 +43,7 @@ Example of a concrete dependency: Zikri's protected parcel-registration endpoint
 | H09 | Zikri | Naszrul, Syauqi | M2-PH1-T05 | M3-PH1-T07; M3-PH2-T02 | M2-PH1-TC06 | Draft SQL on branch |
 | H10 | Syauqi | Naszrul, Zikri | M3-PH1-T01, T02 | M1-PH2-T09, T12; M2-PH2-T09; M3-PH2-T07 | M3-PH1-TC01, TC05 | Ad-hoc fixtures, not carried to G2 |
 | H11 | Zikri | Naszrul, Syauqi | M2-PH1-T06 | M1-PH2-T01; M3-PH2-T01 | M2-PH1-TC07 | Provisioner SQL seed, uncommitted passwords |
-| H12 | Zikri | Syauqi | M2-PH1-T07 | M3-PH2-T04 | M2-PH1-TC08 | Local DTOs forbidden; generated TypeScript types stay empty until routes exist |
+| H12 | Zikri | Syauqi | M2-PH1-T07 | M3-PH2-T04 | M2-PH1-TC08 | Local DTOs forbidden; inferred TypeScript types stay empty until routes exist |
 | H13 | Syauqi | Naszrul, Zikri | M3-PH1-T04, T06, T08 | M1-PH3-T10; M2-PH4-T03 | M3-PH1-TC04, TC06, TC08 | No-op lock interface in runner |
 | H14 | Naszrul | Zikri, Syauqi | M1-PH1-T10 | M2-PH1-T06; M1-PH2-T01 | M1-PH1-TC04 | Precomputed test hashes (uncommitted) |
 | H20 | Naszrul | Zikri, Syauqi | M1-PH2-T02 to T06, T09 | M2-PH2-T03, T09; M3-PH2-T03, T07 | M1-PH2-TC01, TC06, TC16 and INT-CP-01 | TMP-01, TMP-04 |
@@ -81,7 +81,7 @@ Example of a concrete dependency: Zikri's protected parcel-registration endpoint
 
 | ID | What | Introduced by | Allowed in | Must be retired by | Proof of retirement |
 | --- | --- | --- | --- | --- | --- |
-| TMP-01 | Test principal injected through `dependency_overrides` in the test app factory (no header or cookie switch; production factory has none) | M1-PH1-T08 | PH1 to early PH2 | M1-PH2-T09 | M1-PH2-TC16 (static guard) and permanently M1-PH1-TC07 (production refuses) |
+| TMP-01 | Test principal injected through `test-only dependency injection` in the test-only handler/service harness (no header or cookie switch; production import graph has none) | M1-PH1-T08 | PH1 to early PH2 | M1-PH2-T09 | M1-PH2-TC16 (static guard) and permanently M1-PH1-TC07 (production refuses) |
 | TMP-02 | Seeded ASSIGNED parcels inserted by the test provisioner instead of real assignment | M2-PH2-T08, M3-PH2-T01 | PH2 | M3-PH3-T04 | M3-PH3-TC17 |
 | TMP-03 | Frontend MSW mock handlers for unfinished endpoints, included only in dev/test bundles | M1-PH1-T09 | PH1 to PH3 | Each owner for their own screens: M1-PH3-T09 (auth), M2-PH3-T07 (parcels and tracking), M3-PH3-T09 and T10 (delivery); checked together before G3 | Browser journeys M1-PH3-TC17 and M3-PH3-TC14 run without mocks; production bundle excludes mocks (build assertion) |
 | TMP-04 | Provisioner inserts a real session row so slice tests can authenticate before A03 exists | M3-PH1-T01 | early PH2 | M1-PH2-T09 | M1-PH2-TC16 |
@@ -113,10 +113,10 @@ flowchart LR
     N5["PH3 T01-T02 A07, A09 (H30, H31)"]
     N6["PH3 T10 runner (H33)"]
     N7["PH4 T05 ops commands (H42)"]
-    N8["PH5 T01-T04 AWS stack (H50)"]
+    N8["PH5 T01-T04 cloud stack (H50)"]
   end
   subgraph ZIKRI[Zikri M2]
-    Z1["PH1 T01-T02 roles, Alembic (H02)"]
+    Z1["PH1 T01-T02 roles, node-pg-migrate (H02)"]
     Z2["PH1 T03 unit_of_work (H07)"]
     Z3["PH1/2 0003 parcels (H09)"]
     Z4["PH1 T06 fixtures (H11)"]
@@ -180,7 +180,7 @@ The diagram shows the longest chains only; the register above is exhaustive. The
 | Maintenance runner (M1) runs jobs owned by M2 and M3 | Runner defines the job interface and registry in PH3 (H33); jobs register in PH4 |
 | Retention (M2) and photo purge (M3) | `anonymized_at` is the hand-off flag produced by H36 (PH3); the purge job needs only H36; the retention job H40 and purge job H46 meet in the end-to-end test INT-11 |
 | First boot (M1-PH5-T04) needs Zikri's grant verification while Zikri's cloud run needs the first-boot stack | H52 is split: scripts are authored locally in PH4 (M2-PH4-T01); only their execution (M2-PH5-T01, T03) waits for H50 |
-| Capacity measurement on EC2 | M2-PH5-T06 measures first with no dependency on M3; M3-PH5-T07 then samples on the same dataset |
+| Capacity measurement on chosen cloud host | M2-PH5-T06 measures first with no dependency on M3; M3-PH5-T07 then samples on the same dataset |
 | Restore verification needs all three owners' commands | Registers H42 (sessions and account reconciliation), H52 (grants), H54 (environment); M1-PH4-TC11 simulates the restore itself, so it does not depend on H44 |
 | Test harness (M3) tests code written by all | Harness has no application dependencies beyond roles/migrations; app-specific helpers (`login_as`) are added by Naszrul on top (M1-PH2-T09) |
 
@@ -191,8 +191,8 @@ Within PH1 the only chain is H01 -> H02 -> H03 -> H09 -> H11; ordering of handof
 | Asset | Producer | Reviewer(s) | Rule |
 | --- | --- | --- | --- |
 | `docs/shared/system-contract.md` | whoever changes it | both others | Same PR updates affected phase files and tests |
-| `backend/app/core/*` | Naszrul (settings, errors, principal), Zikri (`db.py`, `constants.py`) | all | CODEOWNERS routes reviews |
-| `backend/alembic/versions/*` | author of each revision | Zikri (head and hardening) | Single head; no edits to applied revisions |
+| `src/server/core/*` | Naszrul (settings, errors, principal), Zikri (`db.ts`, `constants.ts`) | all | CODEOWNERS routes reviews |
+| `db/migrations/*` | author of each revision | Zikri (head and hardening) | Single head; no edits to applied revisions |
 | `infra/db/grants.snapshot.json` | Zikri | Naszrul, Syauqi | Any privilege change needs all three approvals |
 | `tests/harness`, `tests/e2e` skeleton | Syauqi | all | Owners add their own specs |
 | Authorization matrix rows | each endpoint owner | Naszrul (runner) | Missing row fails CI |

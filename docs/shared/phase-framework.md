@@ -1,10 +1,10 @@
 # Phase framework, milestone matrix and group gates
 
-Status: reviewable plan. Nothing here is implemented or tested. Verified repository state when this framework was written: documentation and reference files only; no `backend/`, `frontend/`, `infra/`, CI workflow, tests or running application exist, and the PR-only branch protection in `.github/branch-protection.json` has not been applied.
+Status: local-first Next.js/full-Supabase Phase 1 is in progress, 22 October 2026. Source, full Compose and foundation suites now exist; see [actual local evidence](../phase-1-progress.md). No group gate is signed off. Branch protection remains unverified.
 
 Every module plan uses the six phases below with identical identifiers: `PH1` to `PH6`. Phase files live at `docs/modules/<module>/phases/PH<n>-<name>.md`. This framework replaces the earlier `P0`-`P5` stage labels, which collided with the case-study policies P1-P5 (for example "P3" meant both "security stage" and "personal data policy"). Policy references keep `P1`-`P5`; delivery stages are only `PH1`-`PH6`.
 
-Related shared documents: [dependency matrix and handoffs](dependency-matrix.md), [integration scenarios](integration-tests.md), [workflow trace](workflow-trace.md), [traceability](traceability.md), [first execution sequence](execution-sequence.md), [decision register](decision-register.md), [system contract](system-contract.md), [testing strategy](testing-strategy.md) and [integration/AWS operations](integration-and-aws.md).
+Related shared documents: [dependency matrix and handoffs](dependency-matrix.md), [integration scenarios](integration-tests.md), [workflow trace](workflow-trace.md), [traceability](traceability.md), [first execution sequence](execution-sequence.md), [decision register](decision-register.md), [system contract](system-contract.md), [testing strategy](testing-strategy.md) and [integration/deployment operations](integration-and-deployment.md).
 
 ## Identifier conventions
 
@@ -35,7 +35,7 @@ A task row names the behavior, the contract it implements, how completion is val
 | PH2 | Initial working checkpoint slice | A thin real vertical slice per module over the same database and session, with the security baseline already active | G1 checkpoint-critical subset (marked CP) | G2 |
 | PH3 | Complete module functionality | Every case-study function working through UI and direct API in one local integrated stack; all temporary substitutes retired | G2 | G3 |
 | PH4 | Security, failure handling and regression coverage | Expand and prove controls; failure injection, races, retention, local backup/restore; regression suites enforced in CI | G3 | G4 |
-| PH5 | Integrated AWS deployment and operational readiness | HTTPS deployment on AWS, durable storage, scheduled jobs, backups, restore exercise, cloud smoke and journeys | G4 and EXT-04 resolved | G5 |
+| PH5 | Integrated cloud deployment and operational readiness | Later HTTPS deployment on the chosen cloud host, durable storage, scheduled jobs, backups, restore exercise, cloud smoke and journeys | G4 and EXT-04 resolved | G5 |
 | PH6 | Final acceptance, evidence and demonstration | Final regression on the release candidate, complete security test document, rehearsal and individual explanation | G5 | G6 |
 
 ### Refinements to the suggested framework, with evidence
@@ -44,17 +44,17 @@ The suggested six-phase sequence is kept. These refinements are adopted because 
 
 | Refinement | Evidence | Where applied |
 | --- | --- | --- |
-| Label the checkpoint-critical subset of PH1 with `(CP)` | The team's checkpoint is 22 October 2026 and no code exists; a complete foundation cannot precede the slices | PH1 task tables, [first execution sequence](execution-sequence.md) |
+| Label the checkpoint-critical subset of PH1 with `(CP)` | The team's checkpoint is 22 October 2026 and the full-stack implementation is not built; a complete foundation cannot precede the slices | PH1 task tables, [first execution sequence](execution-sequence.md) |
 | Security baseline ladder: controls arrive with the first feature that needs them (see below) | Brief: "check access on the server for every request"; rubric 2a scores controls on the module's functions, not at the end | Every PH2 file; PH4 only expands and verifies |
 | Authorization-matrix harness starts in PH2, completes in PH4 | The testing strategy's A01-A20 matrix is otherwise a late, single-owner artifact | M1-PH2-T12, M1-PH4-T01 |
 | A12 (shared private detail) is delivered as v1 in PH2 | M2's slice must show another Seller cannot fetch a parcel, and M3's Rider screen links to it | M2-PH2-T06, H22 |
-| Early AWS smoke deploy in PH3, conditional on EXT-04 | Rubric 1b is 10 marks (deducts 5 if local only); first contact with AWS during PH5 would put the largest single-criterion risk at the end | M1-PH3-T12 |
-| Local backup/restore drill and the maintenance-runner exist before AWS (PH4) | Restore, retention and session-purge behavior must be correct before it is rehearsed on infrastructure | M3-PH4-T07, M1-PH3-T10 |
+| Local production-build walking skeleton in PH3 | User requested local first; prove one app with full Supabase before hosting | M1-PH3-T12 |
+| Local backup/restore drill and the maintenance-runner exist before cloud (PH4) | Restore, retention and session-purge behavior must be correct before it is rehearsed on infrastructure | M3-PH4-T07, M1-PH3-T10 |
 | Contract v3 amendments are a PH1 deliverable | Review found gaps (audit/parcel foreign-key ordering, upload reconciliation key, error-code registry, idempotency fingerprint keying, backup coordination mechanism) that block independent work | [system contract v3 amendments](system-contract.md#contract-v3-amendments), M1-PH1-T12, M2-PH1-T09, M3-PH1-T09 |
-| Priority tiers (MUST, SHOULD, STRETCH) with a cut line | Review found about 190 tasks and 248 test cases for three people; the rubric requires functions, key controls, listed inputs, a cloud deployment, a test document and a demo, not every hardening extra | [Priority tiers](#priority-tiers-and-cut-line) |
-| G2 split into a local checkpoint exit and the full PH2 exit | Today is the day before the checkpoint and no code exists; the full PH2 exit requires CI | [Checkpoint execution rules](#checkpoint-execution-rules) |
-| G5 split into a rubric-critical minimum (G5a) and extended operations (G5b) | Rubric 1b needs a working cloud deployment, not a restore exercise | [G5](#g5-aws-and-operations-end-of-ph5) |
-| Walking-skeleton cloud deployment early in PH3, not conditional | A late first contact with AWS risks the 10-mark criterion | M1-PH3-T12 |
+| Priority tiers (MUST, SHOULD, STRETCH) with a cut line | Review found the detailed task/test set for three people; the rubric requires functions, key controls, listed inputs, a cloud deployment, a test document and a demo, not every hardening extra | [Priority tiers](#priority-tiers-and-cut-line) |
+| G2 split into a local checkpoint exit and the full PH2 exit | The checkpoint prototype exists but the full-stack slices remain planned; the full PH2 exit requires CI | [Checkpoint execution rules](#checkpoint-execution-rules) |
+| G5 split into a rubric-critical minimum (G5a) and extended operations (G5b) | Rubric 1b needs a working cloud deployment, not a restore exercise | [G5](#g5-cloud-and-operations-end-of-ph5) |
+| Cloud execution deferred until local G4 and EXT-04 | No local gate depends on a cloud account; the final source cloud criterion remains unchanged | M1-PH5-T01 |
 
 ## Milestone matrix: who delivers what in each phase
 
@@ -62,11 +62,11 @@ The suggested six-phase sequence is kept. These refinements are adopted because 
 
 | Phase | Naszrul (M1) | Zikri (M2) | Syauqi (M3) |
 | --- | --- | --- | --- |
-| PH1 | Repo skeleton, locked dependencies, dev Compose stack (CP); settings/secrets rules (CP); error envelope, request ID, log redaction, security headers (CP); migration 0002 auth_core plus `lock_active_actor` and `get_login_snapshot` (CP); Argon2id password service (CP); auth dependency interface and TMP-01 (CP); React API client, session provider skeleton, generated types; CI skeleton; CODEOWNERS | DB role bootstrap (CP); Alembic conventions, migration 0001, hardened-function template and lint (CP); `unit_of_work` RLS context helper (CP); constants and parity test (CP); migration 0003 parcels draft (CP); fixture dataset and loader (CP); DTO models | Test harness and Playwright skeleton (CP minimal); harmless file fixtures; pure state-machine and assignment modules with unit tests (CP); `ProofStore` interface; image-library decision; backup/maintenance lock design; migration 0005/0006/0007 drafts |
+| PH1 | Repo skeleton, locked dependencies, local full Supabase Compose and Next.js (CP); settings/secrets rules (CP); error envelope, request ID, log redaction, security headers (CP); migration 0002 auth_core plus `lock_active_actor` and `get_login_snapshot` (CP); Argon2id password service (CP); auth dependency interface and TMP-01 (CP); React API client, session provider skeleton, inferred shared types; CI skeleton; CODEOWNERS | DB role bootstrap (CP); node-pg-migrate conventions, migration 0001, hardened-function template and lint (CP); `unit_of_work` RLS context helper (CP); constants and parity test (CP); migration 0003 parcels draft (CP); fixture dataset and loader (CP); DTO models | Test harness and Playwright skeleton (CP minimal); harmless file fixtures; pure state-machine and assignment modules with unit tests (CP); `ProofStore` interface; image-library decision; backup/maintenance lock design; migration 0005/0006/0007 drafts |
 | PH2 | Real session: A01, A03, A04, A05; CSRF; rate-limit service v1; audit service v1; `require_*` dependencies; login/landing/logout screens; retire TMP-01; authorization-matrix harness | Verify 0003 policies; revision 0004 `create_parcel`; A10 v1; A11 v1; A12 v1; registration and list screens; RLS isolation tests | Seeded assignment fixture (TMP-02); `update_delivery_status` (start delivery only); A16; A17 v1; Rider mobile list and Start delivery action; Rider isolation tests |
-| PH3 | A02 register; A06 password change; must-change gate; A07; A08; A09; A20; admin and account screens; maintenance-runner skeleton; walking-skeleton AWS deployment (disposable) | Replay-safe A10; A11 search/filter; A12 complete with slots; A13 and `lookup_tracking`; tracking screen; detail screen; retention selection function; full fixtures | Migrations 0006 proof and 0007 final functions; A14, A15 with `assign_parcel`; A16 full; A17 full with proof pipeline; A18; A19; admin and rider screens; proof viewer and action panel; retire TMP-02 |
+| PH3 | A02 register; A06 password change; must-change gate; A07; A08; A09; A20; admin and account screens; maintenance-runner skeleton; local production-build walking skeleton with full Supabase | Replay-safe A10; A11 search/filter; A12 complete with slots; A13 and `lookup_tracking`; tracking screen; detail screen; retention selection function; full fixtures | Migrations 0006 proof and 0007 final functions; A14, A15 with `assign_parcel`; A16 full; A17 full with proof pipeline; A18; A19; admin and rider screens; proof viewer and action panel; retire TMP-02 |
 | PH4 | Full authorization matrix; CSRF/session/race suites; failure-audit independence; incident and session-purge commands; runner jobs; security headers; log canary scan; M1 browser regression | RLS suites RLS-01 to RLS-09 and grants snapshot; retention job; concurrency (replay, collision, rollback); privacy regression across all states; rate-limit boundaries; injection/XSS corpus; scale-data EXPLAIN | Fault-injection matrix; orphan/unknown-commit reconciliation; proof purge job; concurrency (reassign vs finalize, duplicate final); upload attack corpus; local backup lock and restore drill; dashboard consistency; mobile interrupted-network journey |
-| PH5 | EC2, security groups, TLS proxy, production Compose, secrets, first-boot sequence, Admin provisioning, Argon2 benchmark, cookie/CSRF/host verification, release/rollback, cloud journeys for auth, incident drill | Production DB bootstrap and grant verification, RLS under deployed credentials, retention scheduling verification, post-restore RLS check, scale queries on EC2, public-tracking checks over HTTPS | EBS layout, S3 backup and lifecycle, scheduler timers, restore exercise, restart/redeploy persistence, Android/4G upload test, orphan reaper on cloud |
+| PH5 | Chosen cloud host, private administration, TLS, full Supabase Compose, secrets, first-boot sequence, Admin provisioning, Argon2 benchmark, cookie/CSRF/host verification, release/rollback, cloud journeys for auth, incident drill | Production DB bootstrap and grant verification, RLS under deployed credentials, retention scheduling verification, post-restore RLS check, scale queries on chosen cloud host, public-tracking checks over HTTPS | durable Supabase volume layout, private off-host backup and lifecycle, scheduler timers, restore exercise, restart/redeploy persistence, Android/4G upload test, orphan reaper on the chosen cloud host |
 | PH6 | Final M1 regression, M1 section of the security test document, demo and code walkthrough, allocation-sheet evidence | Same for M2 | Same for M3 |
 
 ## Security baseline ladder
@@ -86,8 +86,8 @@ Security and tests begin with the first implemented feature. Later phases expand
 | Rate limiting | PH2 login and CSRF bootstrap | PH3 registration, tracking, password-change attempts | PH4 boundary and multi-worker; PH5 behind proxy |
 | Audit and safe logging | PH2 (login, logout, create_parcel, start delivery) | PH3 all events | PH4 canary scan |
 | Upload defenses | PH3 (first upload feature, with full validation) | PH3 | PH4 attack corpus and faults |
-| Retention | PH3 selection function | PH4 job and file purge | PH5 scheduled on AWS |
-| Backup/restore without reviving sessions | PH1 lock design | PH4 local drill | PH5 AWS exercise |
+| Retention | PH3 selection function | PH4 job and file purge | PH5 scheduled on the chosen cloud host |
+| Backup/restore without reviving sessions | PH1 lock design | PH4 local drill | PH5 cloud exercise |
 
 No endpoint is exposed on a shared or cloud environment before its required access and privacy controls exist.
 
@@ -99,7 +99,7 @@ No endpoint is exposed on a shared or cloud environment before its required acce
 | Authentication | Seeded accounts, real server-side sessions | Registration, Rider creation, password change, disablement, incident commands |
 | Parcels | Create, list own, detail | Replay safety, search, public tracking, retention |
 | Delivery | Seeded Assigned parcel to Out for Delivery | Assignment, reassignment, Delivered and Failed with proof, dashboard |
-| Hosting | Local Compose; cloud only if available and then disclosed | HTTPS on AWS |
+| Hosting | Local Compose; cloud only if available and then disclosed | HTTPS on the chosen cloud host |
 | Evidence | Partial worksheet rows; honest "Planned" for the rest | Every row with actual result |
 
 The checkpoint plan stays [separate](../checkpoint-plan.md); a passing checkpoint proves nothing about later phases.
@@ -112,7 +112,7 @@ Each task and test belongs to one tier. Unless listed below a task is MUST. Gate
 | --- | --- | --- |
 | MUST | Required by the case study or rubric: the listed functions, each module's key security controls, the suggested test inputs, the policies, a cloud deployment with HTTPS and all roles online, the security test document, the live demonstration | All tasks not named below |
 | SHOULD | Strengthens required controls, specified in the contract but not demanded by the sources | A20 audit viewer details (M1-PH3-T07), A21 reset and credential expiry (M1-PH3-T04 extension), account journal and restore reconciliation (M1-PH4-T05), backup lock and maintenance gate (M1-PH3-T10, M3-PH4-T07), local restore drill (M3-PH4-TC07), non-terminal retention (M2-PH3-T08 extension), grants snapshot and function branch table (M2-PH4-T01, T02), upgrade test (M2-PH4-T09), coverage thresholds, branch protection (M1-PH5-T10), restart persistence and documented restore procedure (M3-PH5-T05) |
-| STRETCH | Valuable, but not needed for the rubric | Randomized race interleavings beyond five forced orderings (M1-PH4-TC07), fault points beyond FP1, FP4, FP5, FP7, FP9 (M3-PH4-T01), scale dataset above 30 000 parcels (M2-PH4-T08, M2-PH5-T06), real Android on 4G (emulation is acceptable) and capacity sampling (M3-PH5-T06, T07), the isolated AWS restore exercise with S3 and offline key (M3-PH5-T04), orphan reaper scheduling on cloud (M3-PH5-T09), `testssl.sh` depth and nightly matrix runs |
+| STRETCH | Valuable, but not needed for the rubric | Randomized race interleavings beyond five forced orderings (M1-PH4-TC07), fault points beyond FP1, FP4, FP5, FP7, FP9 (M3-PH4-T01), scale dataset above 30 000 parcels (M2-PH4-T08, M2-PH5-T06), real Android on 4G (emulation is acceptable) and capacity sampling (M3-PH5-T06, T07), the isolated cloud restore exercise with private off-host backup and offline key (M3-PH5-T04), orphan reaper scheduling on the chosen cloud host (M3-PH5-T09), `testssl.sh` depth and nightly matrix runs |
 
 If time runs short the cut line is: finish MUST, report SHOULD as partial with the gap named, and drop STRETCH. A tier never lowers a security control that a MUST task depends on.
 
@@ -132,7 +132,7 @@ A gate passes only on repeatable evidence for the listed behaviors, permissions 
 
 ### G1: Foundation (end of PH1)
 
-1. Clean checkout builds and `docker compose up` starts PostgreSQL, backend and frontend; health reports ready; PostgreSQL port is not published beyond localhost (OPS-01).
+1. Clean checkout builds and the documented local setup starts full Supabase Compose and one Next.js app; health reports ready; PostgreSQL port is not published beyond localhost (OPS-01).
 2. Role bootstrap and migrations 0001-0003 apply to an empty volume, then re-apply idempotently to an existing volume without changing passwords (MIG-01, MIG-02, M2-PH1-TC01).
 3. Runtime roles are asserted at connection time: not superuser, no BYPASSRLS, no CREATE, no owner membership; the account tables and `audit_event` are protected from runtime DML as specified (RLS-01, M1-PH1-TC14).
 4. Contract v3 reviewed by all three; enums, DB checks and TypeScript constants agree (CT-01); production startup refuses test-only hooks (CT-02); function-hardening lint is active (LINT-01).
@@ -155,7 +155,7 @@ A gate passes only on repeatable evidence for the listed behaviors, permissions 
 3. TMP-01 to TMP-05 are retired; TMP-06 stays test-only and guarded; no test-only principal or seed shortcut remains in the product code path.
 4. Contract v3.x is frozen except via a reviewed change; endpoint, DTO and error-code conformance tests pass (CT-03).
 5. Feature-level security rows for each endpoint have actual results.
-6. The walking-skeleton cloud deployment (M1-PH3-T12) has run, or EXT-04 is escalated as the blocker for G5a with the consequence (5 marks lost from rubric 1b) recorded.
+6. The local production-build walking skeleton (M1-PH3-T12) has run against full Supabase. EXT-04 remains a later PH5 decision; record the final cloud-assessment consequence if unresolved then.
 
 ### G4: Hardened (end of PH4)
 
@@ -166,22 +166,22 @@ A gate passes only on repeatable evidence for the listed behaviors, permissions 
 5. Backend and frontend coverage gates are met, with required scenario lists (role matrix, transition edges, expiry/revocation, public allowlists) explicitly present; the security tools named in D-39 have run with results recorded.
 6. No untriaged high or critical reachable dependency finding; no skipped required scenario; no flaky-rerun masking. A manual claim-versus-test review of the traceability rows has been done.
 
-### G5: AWS and operations (end of PH5)
+### G5: Cloud and operations (end of PH5)
 
 **G5a (rubric-critical minimum, MUST):**
 
-1. Empty-volume first boot on EC2 followed by existing-volume restart (INT-12 first-boot and restart legs, OPS-06).
+1. Full-Supabase first setup on the chosen cloud host followed by existing-volume restart (INT-12 first-boot and restart legs, OPS-06).
 2. HTTPS, secure cookie, CSRF, allowed hosts, private database/application ports, private proof storage verified on the live stack (S-02).
 3. The G5 scenarios run on the live URL for all four user types; RLS checks run under the deployed runtime credentials (OPS-08).
 4. Restart/redeploy preserves rows and photos (S-07).
-5. A failed release can be rolled back by image digest (M1-PH5-TC03).
+5. A failed release can be rolled back by release identifier (M1-PH5-TC03).
 6. Measured response times and memory on the chosen instance are recorded; no capacity claim is made beyond measurements.
 
 **G5b (extended operations, SHOULD/STRETCH):**
 
 7. Scheduled retention, session cleanup and (STRETCH) orphan reconciliation run safely twice and after interruption; failure recipient recorded (OPS-03).
-8. Isolated restore exercise passes: counts, history, sample photos, grants, accounts reconciled, no old session valid, expired data re-anonymized (OPS-07; STRETCH on AWS, SHOULD locally).
-9. S3 lifecycle, IMDSv2 and host-hardening checks pass.
+8. Isolated restore exercise passes: counts, history, sample photos, grants, accounts reconciled, no old session valid, expired data re-anonymized (OPS-07; STRETCH on the chosen cloud host, SHOULD locally).
+9. Chosen host security, private backup expiry/credentials and Supabase administrative exposure checks pass.
 
 ### G6: Final acceptance (end of PH6)
 
@@ -189,7 +189,7 @@ A gate passes only on repeatable evidence for the listed behaviors, permissions 
 2. Full regression suite on the release candidate passes; known limitations are documented; open failures are listed, not converted.
 3. Each member has rehearsed their approximately 10 minutes of the 30-minute demonstration (rubric key controls first) and can explain their own code.
 4. Allocation-sheet evidence (EXT-01), lecturer variation record (EXT-02) and branch-protection status (EXT-03) are recorded as they actually stand.
-5. Release tag, image digests and migration revision are recorded.
+5. Release tag, release identifiers and migration revision are recorded.
 
 ## Module completion
 
@@ -205,7 +205,7 @@ Update only with evidence references. No phase has started.
 
 | Phase | M1 Naszrul | M2 Zikri | M3 Syauqi | Group gate |
 | --- | --- | --- | --- | --- |
-| PH1 | Planned | Planned | Planned | G1 not passed |
+| PH1 | In progress locally | In progress locally | In progress locally | G1 review/remaining checks pending |
 | PH2 | Planned | Planned | Planned | G2 not passed |
 | PH3 | Planned | Planned | Planned | G3 not passed |
 | PH4 | Planned | Planned | Planned | G4 not passed |

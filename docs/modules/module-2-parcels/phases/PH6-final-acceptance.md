@@ -4,11 +4,11 @@ Owner: Zikri. Phase PH6 of [phase framework](../../../shared/phase-framework.md)
 
 ## 1 Objective
 
-Zikri can demonstrate M2 live on the AWS deployment in about 10 minutes, including failed attacks, explain the schema, RLS and parcel code personally, and has a complete M2 section of the security test document with input, expected result, actual result and owner, from the release candidate.
+Zikri can demonstrate M2 live on the cloud deployment in about 10 minutes, including failed attacks, explain the schema, RLS and parcel code personally, and has a complete M2 section of the security test document with input, expected result, actual result and owner, from the release candidate.
 
 ## 2 Entry criteria
 
-- G5 passed; release-candidate commit, image digests and migration revision recorded.
+- G5 passed; release-candidate commit, release identifiers and migration revision recorded.
 - No open high-severity defect in M2 or shared database controls.
 
 ## 3 Dependencies
@@ -46,7 +46,7 @@ Evidence integrity; synthetic data in all artifacts; credentials used in the dem
 | --- | --- | --- | --- | --- |
 | M2-PH6-TC01 | Regression | Complete M2 suites on release candidate | All pass; failures recorded | G6.2 |
 | M2-PH6-TC02 | Evidence review | Every M2 and RLS row has input, expected, actual, owner, version | No blank or Planned result | rubric 3 |
-| M2-PH6-TC03 | Rehearsal | Live M2 demo on cloud, timed | About 10 minutes; failed attacks shown | rubric 4 |
+| M2-PH6-TC03 | Rehearsal | Live M2 demo on the chosen cloud host, timed | About 10 minutes; failed attacks shown | rubric 4 |
 | M2-PH6-TC04 | Peer Q&A | 10 questions on schema, RLS, tracking, retention | Answers without reading code | rubric 4 |
 | M2-PH6-TC05 | Evidence review | Retention procedure and sample run | Matches policy P3 and the contract | P3 |
 | M2-PH6-TC06 | Scan | Secret and personal-data scan over repository and fixtures | Clean | P4 |

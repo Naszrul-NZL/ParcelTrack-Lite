@@ -1,0 +1,2 @@
+import { defineConfig,devices } from '@playwright/test';
+export default defineConfig({testDir:'tests/e2e',fullyParallel:false,use:{baseURL:process.env.PTL_BASE_URL??'http://localhost:3000',trace:'retain-on-failure',launchOptions:process.env.PTL_CHROME_PATH?{executablePath:process.env.PTL_CHROME_PATH}:{}},projects:[{name:'desktop',use:{...devices['Desktop Chrome']}},{name:'phone',use:{...devices['Pixel 7']}}],reporter:[['list']],outputDir:'test-results'});

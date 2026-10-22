@@ -1,14 +1,14 @@
 # Module 3 test plan
 
-Owner: Syauqi. Coverage plan for M3, the shared test harness and backup/restore, linked to phases, tasks and requirements. Every test below is planned; none has run. A phase cannot pass because its screens render: state, permission and file/database consistency cases must show their expected outcomes with evidence. Test case (TC) definitions live in the phase files; the index at the end is generated from them by `tools/check_plan_docs.py`.
+Owner: Syauqi. Coverage plan for M3, the shared test harness and backup/restore, linked to phases, tasks and requirements. Every test below is planned; none has run. A phase cannot pass because its screens render: state, permission and object/database consistency cases must show their expected outcomes with evidence. Test case (TC) definitions live in the phase files; the index at the end is generated from them by `tools/check_plan_docs.py`.
 
 Related: [testing strategy](../../shared/testing-strategy.md), [integration scenarios](../../shared/integration-tests.md), [traceability](../../shared/traceability.md), [security worksheet](../../security-tests.md).
 
 ## Rules
 
 1. Tests are written with the feature in the same PR; hostile upload fixtures exist from PH1.
-2. Integration tests use real PostgreSQL with runtime roles and a real private filesystem; file or transaction faults are injected around the real boundaries, not by mocking the service away.
-3. For every fault case assert HTTP result, parcel row, history, proof row, and final and staging directories.
+2. Integration tests use real PostgreSQL with runtime roles and a real private Supabase Storage bucket; file or transaction faults are injected around the real boundaries, not by mocking the service away.
+3. For every fault case assert HTTP result, parcel row, history, proof row, and private object bucket and temporary staging state.
 4. Concurrency uses barriers, never sleeps. A failed required test stays open.
 5. Evidence per executed case: owner, TC and worksheet ID, input, expected, actual, commit, image, migration revision, environment, timestamp, safe artifact reference. Fixtures contain no personal data or real photos.
 
@@ -49,7 +49,7 @@ Rubric input types for criterion 3: `.php` and `shell.php.jpg` upload (M3-PH3-TC
 | Family | Phases | Content |
 | --- | --- | --- |
 | UT-D01 to UT-D05 | PH1 to PH3 | State machine, assignment, proof input, recovery decisions, dashboard |
-| IT-D01 to IT-D04 | PH2 to PH4 | Assignment, finalization, file/database faults, dashboard and photo |
+| IT-D01 to IT-D04 | PH2 to PH4 | Assignment, finalization, object/database faults, dashboard and photo |
 | CMP-D01 to CMP-D03 | PH2 to PH3 | Rider list, admin screens, action panel and proof viewer |
 | E2E-D01 to E2E-D04 | PH2 to PH5 | Rider slice, Delivered/Failed journeys, interrupted network, live URL |
 | HAR-01; OPS-03 to OPS-09; MIG-01; FIX-01 contribution | PH1 to PH5 | Harness, jobs, backup lock, restore, persistence, capacity |
@@ -58,8 +58,8 @@ Rubric input types for criterion 3: `.php` and `shell.php.jpg` upload (M3-PH3-TC
 
 | Phase | Jobs that must be green | Additional evidence |
 | --- | --- | --- |
-| PH1 | backend-unit (rules, ProofStore), harness self-test, file fixtures regenerate, drafts apply on scratch DB | G1 items 3, 5 |
-| PH2 | + backend-integration (Rider cases), e2e-core phone project, authz-matrix rows A16/A17 | Rows from M3-PH2-T06; checkpoint evidence file |
+| PH1 | server-unit (rules, ProofStore), harness self-test, file fixtures regenerate, drafts apply on scratch DB | G1 items 3, 5 |
+| PH2 | + server-integration (Rider cases), e2e-core phone project, authz-matrix rows A16/A17 | Rows from M3-PH2-T06; checkpoint evidence file |
 | PH3 | + upload corpus smoke, fault compensation basic, dashboard consistency, CT-03 for A14-A19, E2E INT-02/03/05 | TMP-02 and TMP-05 gone |
 | PH4 | + fault-injection matrix, reconciliation and purge jobs, concurrency suites, full corpus, backup lock tests, coverage gate | M3-01 to M3-10, RLS-03, RLS-10 consolidated; local restore drill |
 | PH5 | + restore exercise, restart/redeploy, timers, 4G upload | Restore record with timings |
@@ -73,7 +73,7 @@ Rubric input types for criterion 3: `.php` and `shell.php.jpg` upload (M3-PH3-TC
 | M3-PH1-TC01 | PH1 | Harness (HAR-01) | S-03, REV-09 | [PH1-foundation.md](phases/PH1-foundation.md) |
 | M3-PH1-TC02 | PH1 | Unit (UT-D01) | M3-06, M3-09 | [PH1-foundation.md](phases/PH1-foundation.md) |
 | M3-PH1-TC03 | PH1 | Unit (UT-D02) | M3-F01, M3-F05 | [PH1-foundation.md](phases/PH1-foundation.md) |
-| M3-PH1-TC04 | PH1 | Unit (UT-D03/D04) | M3-05 | [PH1-foundation.md](phases/PH1-foundation.md) |
+| M3-PH1-TC04 | PH1 | Unit and Storage integration (UT-D03/D04) | M3-05 | [PH1-foundation.md](phases/PH1-foundation.md) |
 | M3-PH1-TC05 | PH1 | Spike (UT-D03) | M3-03, M3-04 | [PH1-foundation.md](phases/PH1-foundation.md) |
 | M3-PH1-TC06 | PH1 | Integration (OPS-04 prototype) | REV-08 | [PH1-foundation.md](phases/PH1-foundation.md) |
 | M3-PH1-TC07 | PH1 | Migration (MIG-01) | M3-F03 | [PH1-foundation.md](phases/PH1-foundation.md) |
@@ -130,15 +130,15 @@ Rubric input types for criterion 3: `.php` and `shell.php.jpg` upload (M3-PH3-TC
 | M3-PH4-TC14 | PH4 | Operations (OPS-03) | REV-08, REV-13 | [PH4-hardening-regression.md](phases/PH4-hardening-regression.md) |
 | M3-PH4-TC15 | PH4 | Integration (OPS-04) | REV-08 | [PH4-hardening-regression.md](phases/PH4-hardening-regression.md) |
 | M3-PH4-TC16 | PH4 | Operations (OPS-04) | REV-08, D-15 | [PH4-hardening-regression.md](phases/PH4-hardening-regression.md) |
-| M3-PH5-TC01 | PH5 | Operations | S-07, M3-05 | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M3-PH5-TC02 | PH5 | Operations | P3 backup interpretation | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M3-PH5-TC03 | PH5 | Operations (OPS-03) | REV-08 | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M3-PH5-TC04 | PH5 | Operations (OPS-07) | S-09, INT-12 | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M3-PH5-TC05 | PH5 | Operations (OPS-06) | S-07 | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M3-PH5-TC06 | PH5 | Operations / device | M3-F03 | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M3-PH5-TC07 | PH5 | Operations (OPS-09) | capacity | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M3-PH5-TC08 | PH5 | Browser (E2E-D04) | rubric 1b | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
-| M3-PH5-TC09 | PH5 | Operations | M2-10, REV-13 | [PH5-aws-operations.md](phases/PH5-aws-operations.md) |
+| M3-PH5-TC01 | PH5 | Operations | S-07, M3-05 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M3-PH5-TC02 | PH5 | Operations | P3 backup interpretation | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M3-PH5-TC03 | PH5 | Operations (OPS-03) | REV-08 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M3-PH5-TC04 | PH5 | Operations (OPS-07) | S-09, INT-12 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M3-PH5-TC05 | PH5 | Operations (OPS-06) | S-07 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M3-PH5-TC06 | PH5 | Operations / device | M3-F03 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M3-PH5-TC07 | PH5 | Operations (OPS-09) | capacity | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M3-PH5-TC08 | PH5 | Browser (E2E-D04) | rubric 1b | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M3-PH5-TC09 | PH5 | Operations | M2-10, REV-13 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
 | M3-PH6-TC01 | PH6 | Regression | G6.2 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |
 | M3-PH6-TC02 | PH6 | Evidence review | rubric 3 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |
 | M3-PH6-TC03 | PH6 | Rehearsal | rubric 4 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |

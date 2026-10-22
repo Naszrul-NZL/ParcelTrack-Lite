@@ -2,7 +2,7 @@
 
 Checkpoint date: 22 October 2026, Malaysia time.
 
-This pack prepares the five deliverables supplied by the team. It draws on the local project briefing, case study and marking rubric. The three working demos remain to be built. Plans and test expectations below are not evidence of implementation.
+This pack prepares the five deliverables supplied by the team. It draws on the local project briefing, case study and marking rubric. A separate runnable browser-only prototype now covers the three interfaces; real server/database integration remains to be built. Plans and test expectations below are not evidence of implementation.
 
 The [complete project plan](project-plan.md) and [separate module folders](project-plan.md#plans-by-owner) define the full implementation scope as six phases (PH1-PH6). The checkpoint corresponds to the checkpoint-critical `(CP)` tasks of PH1 and the PH2 slices ([phase framework](shared/phase-framework.md), [first execution sequence](shared/execution-sequence.md)); it does not require completing the functionality planned for PH3 to PH6.
 
@@ -20,71 +20,26 @@ Database design, shared layout and integration belong to all three members. Each
 
 ### Stack decisions and recommendation
 
-| Layer | Proposal | Reason |
+The current implementation baseline supersedes the 21 October separate API plan. It was changed by user instruction on 22 October 2026 to one application stack and local full Supabase Docker.
+
+| Layer | Selection | Reason |
 | --- | --- | --- |
-| Backend | FastAPI, confirmed | One Python API application shared by all modules |
-| Frontend | React, confirmed preference; TypeScript and Vite proposed | Provides the team's preferred interface stack |
-| Database | PostgreSQL in Docker with RLS, selected direction | Supports database-enforced row isolation alongside application permissions |
-| Database access and migrations | SQLAlchemy with psycopg and Alembic | Shares transactions and tracks schema/RLS revisions |
-| Password storage | Argon2id through a maintained password library | Matches the rubric's hashing requirement |
-| Hosting | AWS confirmed; Docker Compose on one EC2 instance proposed | Runs the application and self-managed PostgreSQL together with persistent storage |
-| Version control | Existing GitHub repository | Keeps module contributions and integration changes reviewable |
+| Application | Next.js App Router with TypeScript/React | Pages, Route Handlers and server services in one project |
+| Shared contracts | Strict Zod schemas and inferred TypeScript types | One validation/type source; server validation remains mandatory |
+| Database | PostgreSQL inside full official Supabase Docker stack | Existing relational model, transactions and RLS retained |
+| Database access/migrations | pg and node-pg-migrate with reviewed SQL | One checked-out client per transaction and ordered schema/grant revisions |
+| Proof storage | Private local Supabase Storage bucket via server-only adapter | Full validation, per-parcel authorization and durable object storage |
+| Application identity | Username accounts, Argon2id and opaque server-side sessions | Preserve existing security contract; bundled Supabase Auth is not a second login authority |
+| Immediate environment | Local Next.js plus full Supabase Compose, loopback-only admin/gateway ports | No cloud account, managed Free project or separate Python API needed |
+| Later deployment | PH5 cloud host/provider decision remains open | Local-first does not remove the source cloud-assessment requirement |
 
-The team chose React, FastAPI and self-managed PostgreSQL with RLS in discussion on 21 October 2026. Use server-side sessions with an HttpOnly cookie and explicit CSRF protection, serving React and the API through the same cloud origin. The [shared system contract](shared/system-contract.md) defines session behavior, APIs, authorization and limits. None of these components has been installed or implemented by this planning task.
+The [local development plan](local-development.md) gives the PH1 setup sequence and [system contract](shared/system-contract.md) defines the future source tree and security model. The full Supabase stack includes its default gateway, Studio, Auth, PostgREST, Storage, Realtime, pooler and supporting services; do not silently reduce it to a standalone PostgreSQL container. Application tables live in non-exposed schema app and are accessed only by restricted server roles. Use synthetic data and private generated credentials.
 
-The brief names Flask/Django for Python and MySQL/SQLite databases. Record FastAPI/PostgreSQL as deliberate team alternatives and raise that difference with the lecturer. This pack does not claim lecturer approval.
+Next.js/PostgreSQL differ from the combinations in the lecturer's source brief; acceptance remains unrecorded under EXT-02. Cloud hosting is deferred until the local integrated system is proven. The existing React/Vite checkpoint demo still uses browser-only data and keeps its historical frontend verification; updating these plans does not implement the migration.
 
-RLS is an additional data-access boundary. Sellers may read only their own parcels, Riders only assigned parcels, and Admins all parcels. Write permissions must remain specific to the operation: Admin assignment does not grant Rider status-update permission. Public tracking needs a dedicated restricted query path exposing only status and timestamps. See [RLS design and connection rules](initial-erd.md#postgresql-row-level-security-design).
+### Proposed cloud deployment
 
-The team selected AWS as its hosting provider on 21 October 2026. The proposed service is one EC2 instance running Docker Compose. Account access, region, instance size, budget, domain and live URL have not been established in this task. Do not put secrets into Git or rely on temporary application storage for the database or proof images.
-
-### Proposed AWS deployment
-
-- An HTTPS reverse proxy serves the built React application and forwards /api requests to the backend. Only the proxy publishes public application ports.
-- PostgreSQL stays on the internal Docker network, with no public port 5432. Keep backend application ports private too. Allow HTTPS publicly and HTTP only for redirection/certificate setup as needed; restrict any SSH access to authorized administrator IPs. See [AWS security-group guidance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules-reference.html).
-- Use encrypted EBS-backed storage for persistent database and private proof-photo volumes. Check DeleteOnTermination settings explicitly; data survival after instance termination depends on those settings. See [EBS persistence and encryption](https://docs.aws.amazon.com/ebs/latest/userguide/EBSFeatures.html).
-- Maintain separate database/proof backups and test restoration. Docker named volumes do not protect against deletion of the underlying disk or account-level incidents.
-
-AWS is confirmed, but these resources have not been provisioned. EC2 is the current architecture proposal; AWS hosting does not require adopting a managed database service.
-
-## 2 Initial ERD and project repository
-
-Repository: [Naszrul-NZL/ParcelTrack-Lite](https://github.com/Naszrul-NZL/ParcelTrack-Lite).
-
-The initial design is in [initial-erd.md](initial-erd.md). It contains five application entities: User, Parcel, ParcelStatusHistory, DeliveryProof and AuditEvent. Framework session and rate-limit storage will be additional infrastructure tables or services, outside this conceptual ERD.
-
-Keep recipient data on the Parcel record. A recipient does not need an account. Public tracking must query a restricted status-history representation, so recipient fields and proof images never enter its HTML or response data.
-
-Suggested future source organization:
-
-```text
-backend/app/    shared API application (see the contract's code layout)
-  modules/auth/       conceptual M1 package owned by Naszrul
-  modules/parcels/    conceptual M2 package owned by Zikri
-  modules/delivery/   conceptual M3 package owned by Syauqi
-backend/alembic/ shared schema and RLS migrations
-frontend/       React application with module feature folders
-infra/          Docker Compose and cloud configuration
-docs/           ERD, requirements and test records
-```
-
-These application folders do not exist yet. Backend package paths will follow the selected framework. Agree on User and Parcel models before independent module development. Assign one integrator to order shared schema and RLS migrations; every member commits migrations for their own changes and resolves conflicts before merging.
-
-Use small commits attributed to the person doing the work. Include setup instructions, migrations and synthetic demo-data creation in the repository. If using the lecturer's starter kit, declare it and preserve an untouched dated copy or baseline as the brief requires. No starter kit has been identified in the current repository.
-
-## 3 One interface and working demo per module
-
-For tomorrow, aim for a small integrated database-backed workflow. A screen drawing or a button that only changes browser text does not establish a working module. Each demo must save or retrieve real application data and enforce permissions on the server.
-
-| Module | Primary interface | Minimum working demonstration | Visible security evidence |
-| --- | --- | --- | --- |
-| M1 | Login page and protected landing page | Log in with a seeded account, refresh the protected page and log out | Wrong password fails; logged-out session cannot reopen protected content |
-| M2 | Seller registration form and own-parcel list | Create a parcel, obtain its tracking number and refresh to verify persistence | Invalid weight rejected; another Seller cannot retrieve the parcel |
-| M3 | Rider assigned-parcel page | Seed an assigned parcel and persist its change to Out for Delivery | Another Rider cannot update it; actor/time are recorded |
-
-The detailed tasks and tests for these slices are [M1-PH2](modules/module-1-auth/phases/PH2-checkpoint-slice.md), [M2-PH2](modules/module-2-parcels/phases/PH2-checkpoint-slice.md) and [M3-PH2](modules/module-3-delivery/phases/PH2-checkpoint-slice.md), with the group scenarios INT-CP-01 to INT-CP-03 in the [integration scenarios](shared/integration-tests.md#checkpoint-scenarios-end-of-ph2). Syauqi compiles the checkpoint evidence (M3-PH2-T08). Gate G2 defines what counts as passing; anything not exercised is reported as Planned.
-
-Public tracking, Admin assignment/dashboard and proof upload belong to the complete project scope. Seeded assignments are acceptable for demonstrating an early slice (temporary substitute TMP-02, retired in M3-PH3-T04); they do not count as implemented assignment functionality.
+Implement and verify the full stack locally first using the [local setup plan](local-development.md). Preserve PostgreSQL and Storage volumes, loopback-only administration and restricted application roles. Cloud execution is deferred until PH5 and EXT-04. Do not select a provider, open public ports or provision resources merely from this document. A later cloud host must run the Supabase Docker services or make an explicitly reviewed architecture change; Vercel alone cannot run them. The source's cloud/full-marks criterion remains unchanged.
 
 ### Shared demo data
 
@@ -133,10 +88,10 @@ Document the proposed retention procedure and incident process even if their aut
 | Module allocation | Confirmed by team |
 | Reference-file ignore rules | `.gitignore` ignores Office temporary files only; the three reference documents are tracked in the repository |
 | ERD, requirement matrix and demo sequence | Drafted locally in this pack |
-| Development stack | React, FastAPI, PostgreSQL/RLS, Docker and AWS selected; detailed implementation contracts drafted |
+| Development stack | full-stack Next.js, PostgreSQL/RLS, Docker and cloud selected; detailed implementation contracts drafted |
 | Application, database and module interfaces | Not built |
 | Security test execution | Not run; no application exists |
-| Cloud deployment | AWS selected; EC2 architecture proposed; no resources configured or live URL |
+| Cloud deployment | Local-first instruction confirmed; later cloud host/provider unresolved; no live URL |
 
 Check Git history and the published branch/PR for the revision being presented. This pack describes planning progress; it does not claim implementation or deployment completion.
 
@@ -144,19 +99,19 @@ Check Git history and the published branch/PR for the revision being presented. 
 
 | Challenge | Response |
 | --- | --- |
-| No demo code and checkpoint is tomorrow | Prioritize one working path per module and integrate early |
+| Browser-only demo exists; real Next.js/Supabase integration remains | Prioritize one working path per module and integrate early |
 | Modules depend on the same users, parcels and statuses | Agree on the ERD, role values and status transition rules first |
 | Role checks can be confused with parcel ownership | Test both a wrong role and a different user with the same role |
 | Uploads and public tracking can expose personal data | Use private proof storage and a minimal public response |
-| AWS account access and deployment details are not yet established | Confirm access and deployment configuration early; verify persistence after restart |
+| cloud account access and deployment details are not yet established | Build locally first; decide hosting before PH5; verify persistence and backup locally |
 
 ### Execution order before the checkpoint
 
-1. Use the confirmed FastAPI stack and shared contract. Naszrul completes/submits the lecturer's allocation sheet by Week 5, including full names/matric numbers and starter-kit declaration if applicable, and retains the receipt. Current submission status is unverified; do not assume tomorrow is the Week 5 deadline.
+1. Use the confirmed full-stack Next.js/local-Supabase baseline and shared contract. Naszrul completes/submits the lecturer's allocation sheet by Week 5, including full names/matric numbers and starter-kit declaration if applicable, and retains the receipt. Current submission status is unverified; do not assume tomorrow is the Week 5 deadline.
 2. Create the shared schema/migrations and seed synthetic accounts, parcels and Rider assignments (M2-PH1-T01 to T06, M1-PH1-T06, T07).
 3. Naszrul builds login/logout (M1-PH2-T02 to T06); Zikri builds registration/persistence (M2-PH2-T01 to T04, T06); Syauqi builds assigned-parcel view and Out for Delivery update (M3-PH2-T02 to T04).
 4. Run the three checkpoint slices against the same database/session (INT-CP-01 to INT-CP-03) and record actual outcomes.
-5. Present the ERD, security requirements, full module plans and AWS architecture. Confirm AWS account access for subsequent deployment; if a live cloud slice is available, demonstrate it accurately.
+5. Present the ERD, security requirements, module plans and local Next.js/full-Supabase architecture. Prove local integration first and record later cloud decisions without claiming deployment.
 6. Capture real evidence and list unimplemented features explicitly. Continue through PH3 to PH6 of the full project plan after the checkpoint.
 
 If time prevents a cloud demo, disclose that gap. A deployment plan does not satisfy a requirement for a live cloud application. The final rubric deducts five marks from deployment/integration for a local-only system.
@@ -179,4 +134,4 @@ Until the application exists, describe slides 4 to 6 as planned demonstrations. 
 - ParcelTrack Lite Project Briefing.pptx: slides 6 to 13 cover modules, ownership, access, security, stack, deployment and submission.
 - ParcelTrack_Lite_Case_Study.docx: sections 4 to 10 define functionality, roles, environment, threats, policies and final submission.
 - Rubric_Project_STTCK3033_ParcelTrack_Lite (1).docx: section 2 lists module controls and test inputs; section 3 sets assessment bands.
-- The team's five checkpoint items and module allocation were supplied in this chat. Treat them as the requirements for tomorrow; the source documents describe the wider project.
+- The team's five checkpoint items and module allocation were supplied in this chat. Treat them as the checkpoint requirements; the source documents describe the wider project.

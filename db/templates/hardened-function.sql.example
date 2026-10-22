@@ -1,0 +1,12 @@
+-- Replace every placeholder; define owner policies and column grants separately.
+CREATE FUNCTION app.example_operation() RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,app,pg_temp AS $$
+BEGIN
+  -- Check the transaction actor, take account locks before parcel locks,
+  -- validate operation-specific permissions and expectedVersion.
+  NULL;
+END;
+$$;
+ALTER FUNCTION app.example_operation() OWNER TO domain_writer;
+REVOKE ALL ON FUNCTION app.example_operation() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app.example_operation() TO app_runtime;

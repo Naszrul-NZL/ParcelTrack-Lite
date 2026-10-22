@@ -16,6 +16,10 @@ Initial test usernames are `seller.a`, `seller.b`, `rider.a`, `rider.b` and `adm
 
 ## Scope statement
 
-The demo is a working browser interface prototype using React and synthetic browser data. It does not implement FastAPI, PostgreSQL/RLS, real sessions, private server storage or AWS hosting. Its client-side filters and validation demonstrate intended behaviour and cannot prove security. The full implementation plans remain in `docs/modules/`; their real backend gates have not passed.
+The demo is a working browser interface prototype using React and synthetic browser data. It does not implement Next.js Route Handlers, PostgreSQL/RLS, real sessions, private server storage or cloud hosting. Its client-side filters and validation demonstrate intended behaviour and cannot prove security. The full implementation plans remain in `docs/modules/`; their real backend gates have not passed.
 
 The report uses the team's supplied names Naszrul, Zikri and Syauqi. The lecturer's separate allocation sheet still needs each member's full name and matric number. Stack acceptance and branch protection remain pending unless the team supplies newer evidence.
+
+## Revised implementation baseline
+
+Updated on 22 October 2026: one full-stack Next.js/TypeScript application with full local Supabase Docker; cloud hosting is deferred. The interface demo and screenshots remain the historical browser-only React prototype. Revised presentation/report text describes planned work, not a completed application migration. See [the migration record](../../docs/nextjs-migration.md) and [local setup plan](../../docs/local-development.md). Lecturer source documents remain unchanged.

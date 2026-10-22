@@ -1,0 +1,12 @@
+# Shared foundation changes need the team; module paths keep assessed ownership.
+* @Naszrul-NZL @Zikri809 @Qee110
+/src/features/auth/ @Naszrul-NZL
+/src/server/modules/auth/ @Naszrul-NZL
+/src/features/parcels/ @Zikri809
+/src/server/modules/parcels/ @Zikri809
+/src/features/delivery/ @Qee110
+/src/server/modules/delivery/ @Qee110
+/db/sql/0001* @Zikri809
+/db/sql/0002* @Naszrul-NZL
+/db/sql/0003* @Zikri809
+/db/drafts/ @Qee110

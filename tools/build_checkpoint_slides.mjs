@@ -1,10 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import os from 'node:os';
 import {pathToFileURL} from 'node:url';
 const ROOT=process.cwd();
-const RUNTIME='C:/Users/mohdz/.cache/codex-runtimes/codex-primary-runtime/dependencies';
+const RUNTIME=process.env.CODEX_WORKSPACE_DEPENDENCIES ?? path.join(os.homedir(),'.cache/codex-runtimes/codex-primary-runtime/dependencies');
 process.env.RUNTIME_NODE_MODULES=RUNTIME+'/node/node_modules';
-const SKILL='C:/Users/mohdz/.codex/plugins/cache/openai-primary-runtime/presentations/26.1020.11127/skills/presentations';
+const SKILL=process.env.PRESENTATIONS_SKILL_DIR ?? path.join(os.homedir(),'.codex/plugins/cache/openai-primary-runtime/presentations/26.1020.11127/skills/presentations');
 const {Presentation,PresentationFile}=await import(pathToFileURL(RUNTIME+'/node/node_modules/@oai/artifact-tool/dist/artifact_tool.mjs').href);
 const {finalizePresentation}=await import(pathToFileURL(SKILL+'/container_tools/artifact_tool_utils.mjs').href);
 const input=JSON.parse(await fs.readFile(path.join(ROOT,'tools/checkpoint-content.json'),'utf8'));
@@ -36,13 +37,13 @@ for(const [i,content] of input.slides.entries()){
       table(s,[['Owner','Module','Main responsibility'],['Naszrul','M1','Login and User Management'],['Zikri','M2','Parcel Registration and Public Tracking'],['Syauqi','M3','Delivery Update and Admin Dashboard']],[150,150,840],185,340);
       text(s,'Shared data model, API contracts, integration and test evidence',75,570,1110,65,27,C.muted);
     }else if(content.kind==='stack'){
-      const a=box(s,'React + TypeScript','Seller, Rider, Admin\nand public interfaces',75,200,270,170);
-      const b=box(s,'FastAPI','Shared authenticated APIs\nSQLAlchemy + Alembic',505,200,285,170);
-      const c=box(s,'PostgreSQL','Private database\nRow level security',945,200,265,170);
+      const a=box(s,'Next.js pages','Seller, Rider, Admin\nand public interfaces',75,200,270,170);
+      const b=box(s,'Next.js server','Shared TypeScript services\nZod + pg + SQL migrations',505,200,285,170);
+      const c=box(s,'Supabase Docker','PostgreSQL + private Storage\nFull local service stack',945,200,265,170);
       connect(s,a,b);connect(s,b,c);
-      text(s,'Planned deployment: Docker Compose on AWS EC2 with HTTPS',75,440,1120,64,30,C.navy,true);
+      text(s,'Local first: one Next.js app and full Supabase Docker',75,440,1120,64,30,C.navy,true);
       text(s,'Prototype today: React and synthetic browser data',75,530,1110,50,28,C.muted);
-      text(s,'FastAPI/PostgreSQL variation: lecturer acceptance unverified',75,600,1110,45,24,C.orange);
+      text(s,'Next.js/PostgreSQL: lecturer acceptance unverified',75,600,1110,45,24,C.orange);
     }else if(content.kind==='erd'){
       const u=box(s,'User','id (PK) / role\nusername / password_hash\nis_active / session_version',65,180,270,185);
       const p=box(s,'Parcel','id (PK) / tracking_number\nseller_id / assigned_rider_id\nrecipient fields / weight\ncurrent_status / version',490,180,295,235);
@@ -64,9 +65,9 @@ for(const [i,content] of input.slides.entries()){
       text(s,'Server controls are planned. Prototype checks do not prove security.',75,620,1100,45,25,C.orange);
     }else if(content.kind==='progress'){
       rowText(s,content.body,175,98,28);
-      text(s,'Challenges: shared contracts, stack acceptance and AWS access',75,600,1110,45,25,C.orange);
+      text(s,'Open: lecturer acceptance and the Week 14 calendar date',75,600,1110,45,25,C.orange);
     }else if(content.kind==='roadmap'){
-      table(s,[['Teaching week','Proposed milestone'],['6','PH1: shared foundation and test harness'],['7','PH2: real authenticated module slices'],['8-9','PH3: full functionality and early AWS smoke'],['10-12','PH4-PH5: security regression and AWS operations'],['13-14','PH6: evidence, rehearsal and final submission']],[210,930],170,430);
+      table(s,[['Teaching week','Proposed milestone'],['6','PH1: shared foundation and test harness'],['7','PH2: real authenticated module slices'],['8-9','PH3: full local functionality and production build'],['10-12','PH4-PH5: local security/recovery, then cloud'],['13-14','PH6: evidence, rehearsal and final submission']],[210,930],170,430);
       text(s,'Proposed schedule. Confirm the Week 14 calendar date.',75,630,1100,35,24,C.muted);
     }else if(content.kind==='demo'){
       rowText(s,content.body,170,79,28);

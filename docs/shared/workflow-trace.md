@@ -1,16 +1,16 @@
 # Whole-project workflow trace
 
-Each end-to-end workflow is traced through the phase plans. "First partial" is the earliest phase in which part of the workflow works; "complete and tested" is the phase at which the workflow works completely and its tests (including failure and race cases) pass locally; "on AWS" is where it is verified on the live stack. Planned only; nothing is implemented. See [integration scenarios](integration-tests.md) for the exact tests.
+Each end-to-end workflow is traced through the phase plans. "First partial" is the earliest phase in which part of the workflow works; "complete and tested" is the phase at which the workflow works completely and its tests (including failure and race cases) pass locally; "on the chosen cloud host" is where it is verified on the live stack. Planned only; nothing is implemented. See [integration scenarios](integration-tests.md) for the exact tests.
 
 ## Summary
 
-| # | Workflow | First partial | Complete and tested (local) | On AWS | Scenarios |
+| # | Workflow | First partial | Complete and tested (local) | On cloud | Scenarios |
 | --- | --- | --- | --- | --- | --- |
 | W1 | Seller registration and login, parcel registration, Admin assignment, Rider update and proof, public tracking, dashboard | PH2 (seeded login, parcel creation, seeded assignment, start delivery) | PH3 functionally complete (G3); PH4 hardened and tested (G4) | PH5 (G5) | INT-01, INT-02, INT-04, INT-07 |
 | W2 | Failed delivery | PH3 | PH4 | PH5 | INT-03, INT-10 |
 | W3 | Rider disablement, old-session rejection, reassignment of unfinished parcels | PH2 (stale session version rejected) | PH4 (races with in-flight writes) | PH5 | INT-05 |
 | W4 | Password change or logout, session invalidation | PH2 (logout) | PH4 (multi-device, races, expiry) | PH5 | INT-06 |
-| W5 | Retention, removal of recipient and photo data, preserved non-identifying history | PH3 (functions, photo denial after anonymization) | PH4 (scheduled job, purge, interruption) | PH5 (scheduled on AWS) | INT-11 |
+| W5 | Retention, removal of recipient and photo data, preserved non-identifying history | PH3 (functions, photo denial after anonymization) | PH4 (scheduled job, purge, interruption) | PH5 (scheduled on the chosen cloud host) | INT-11 |
 | W6 | Backup and restore, consistent database and photos, no revived sessions | PH1 (lock design) and PH4 (local drill) | PH4 local drill; complete only after PH5 | PH5 (G5) | INT-12 |
 
 ## W1 Registration to dashboard
@@ -33,7 +33,7 @@ Continuity checks: history rows written by Zikri's `create_parcel` and Syauqi's 
 
 ## W2 Failed delivery
 
-PH3: `FAILED` branch of `update_delivery_status` with one validated proof; `terminal_at` set, `delivered_at` null (M3-PH3-T06; M3-PH3-TC05). PH4: file/database fault matrix, concurrent DELIVERED vs FAILED, and retention interplay (M3-PH4-TC01, TC05). Public tracking shows the Failed status with timestamp only (M2-PH3-TC07). Retention applies 12 months after `terminal_at` (D-06) and is exercised in W5. PH5: repeated on the live URL (M3-PH5-TC08).
+PH3: `FAILED` branch of `update_delivery_status` with one validated proof; `terminal_at` set, `delivered_at` null (M3-PH3-T06; M3-PH3-TC05). PH4: object/database fault matrix, concurrent DELIVERED vs FAILED, and retention interplay (M3-PH4-TC01, TC05). Public tracking shows the Failed status with timestamp only (M2-PH3-TC07). Retention applies 12 months after `terminal_at` (D-06) and is exercised in W5. PH5: repeated on the live URL (M3-PH5-TC08).
 
 ## W3 Disablement, rejection, reassignment
 
@@ -62,7 +62,7 @@ PH3: `FAILED` branch of `update_delivery_status` with one validated proof; `term
 | Photo access denied once `anonymized_at` is set | PH3 | PH4 | M3-PH3-T07; M3-PH3-TC08 |
 | Scheduled job, purge of files, metadata clear, interruption | PH4 | PH4 | M2-PH4-T03; M3-PH4-T04; M2-PH4-TC12, TC13; M3-PH4-TC04 |
 | Tracking history and dashboard counts preserved | PH4 | PH4 | M2-PH4-TC16; M2-PH4-TC13 (the PH3 functions are checked on tracking only; dashboard counts after anonymization are first asserted in PH4) |
-| Scheduled on AWS, rerun after restore | PH5 | PH5 | M2-PH5-T04, T05; M3-PH5-T03; M2-PH5-TC05, TC06 |
+| Scheduled on the chosen cloud host, rerun after restore | PH5 | PH5 | M2-PH5-T04, T05; M3-PH5-T03; M2-PH5-TC05, TC06 |
 
 ## W6 Backup and restore
 
@@ -71,7 +71,7 @@ PH3: `FAILED` branch of `update_delivery_status` with one validated proof; `term
 | Coordination lock designed, prototype proved | PH1 | PH4 (implemented) | M3-PH1-T06; M3-PH1-TC06; M3-PH4-T07; M3-PH4-TC15 |
 | Local backup and isolated restore drill | PH4 | PH4 | M3-PH4-T07; M3-PH4-TC07 |
 | Sessions purged, locks re-applied, retention rerun, revoked cookie rejected | PH4 | PH5 | M1-PH4-T05 (journal reconciliation, quarantine); M1-PH4-TC11 (includes a web-path disablement and a password change after the snapshot); M1-PH5-T08; M1-PH5-TC07 |
-| S3 backup, EBS persistence, AWS restore exercise | PH5 | PH5 | M3-PH5-T01, T02, T04, T05; M3-PH5-TC01, TC02, TC04, TC05 |
+| private off-host backup, persistent Docker persistence, cloud restore exercise | PH5 | PH5 | M3-PH5-T01, T02, T04, T05; M3-PH5-TC01, TC02, TC04, TC05 |
 | Grants and RLS equal snapshot after restore | PH4 | PH5 | M2-PH4-T01; M2-PH5-T05; M2-PH5-TC06 |
 
-The restore workflow is only "complete" after the AWS exercise: the local drill proves the procedure and consistency checks, not durable cloud backups or IAM controls.
+The local restore workflow completes at G4 with actual matching app-data/Storage evidence. PH5 adds durable off-host backup and deployed-host checks. The isolated cloud restore drill retains its STRETCH tier; it does not retroactively block local completion.
