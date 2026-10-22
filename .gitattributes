@@ -1,3 +1,5 @@
 *.pdf binary
 *.pptx binary
 *.zip binary
+infra/supabase/vendor/** text eol=lf
+docs/api/openapi.json text eol=lf

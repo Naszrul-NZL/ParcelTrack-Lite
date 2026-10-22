@@ -40,6 +40,8 @@ The full stack includes PostgreSQL, private Storage, gateway, Studio, Auth, Post
 
 Every published port binds to loopback. Studio requires the generated private dashboard login. The app schema is outside exposed Data API schemas, with no schema access for `anon`, `authenticated` or `service_role`.
 
+The generated Compose file sets Supavisor's open-file soft and hard limits to 100,000, as required by its startup script. This avoids startup failures on hosts with a lower Docker default, including GitHub runners. Failed starts report the pooler's recent logs with generated credentials redacted. Git attributes preserve LF line endings for Linux container mounts and the generated API snapshot on Windows checkouts.
+
 `npm run local:status` shows service health; `local:down` stops the selected project without removing volumes; `local:up` starts it again. Do not delete volumes as a startup procedure. On a small laptop run one full stack at a time. The custom Node adapter backs `dev` and `start`: it binds to loopback, validates Host, and replaces client-IP forwarding headers using the actual socket. Do not bypass it with a public `next dev` listener.
 
 ## Synthetic data

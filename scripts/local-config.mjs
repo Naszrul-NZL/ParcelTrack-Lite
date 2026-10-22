@@ -46,6 +46,7 @@ for(const [name,service] of Object.entries(compose.services)) {
 compose.services['api-gw'].ports=['127.0.0.1:'+gateway+':8000'];
 compose.services.db.ports=['127.0.0.1:'+port+':5432'];
 compose.services.supavisor.ports=test?['127.0.0.1:54331:5432','127.0.0.1:54332:6543']:['127.0.0.1:54329:5432','127.0.0.1:54330:6543'];
+compose.services.supavisor.ulimits={...compose.services.supavisor.ulimits,nofile:{soft:100000,hard:100000}};
 compose.services.db.volumes=compose.services.db.volumes.map(v=>v.startsWith('./volumes/db/data:')?'app-postgres-data:/var/lib/postgresql/data':v);
 compose.services.storage.volumes=compose.services.storage.volumes.map(v=>v.startsWith('./volumes/storage:')?'app-storage-data:/var/lib/storage':v);
 compose.services.storage.environment.FILE_SIZE_LIMIT=3*1024*1024;
