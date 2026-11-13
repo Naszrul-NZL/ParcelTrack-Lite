@@ -1,6 +1,6 @@
 # Requirement to phase, task and test traceability
 
-Maps each source requirement and feature to the phase where it first works, the tasks that build it and the test cases that prove it. Test case IDs are defined in the module phase files and repeated in each module's `test-plan.md`. A requirement is covered only when the listed tests have actually passed; this document lists planned coverage. Nothing has run.
+Maps each source requirement and feature to the phase where it first works, the tasks that build it and the test cases that prove it. Test case IDs are defined in the module phase files and repeated in each module's `test-plan.md`. A requirement is covered only when the listed tests have actually passed; this document lists planned coverage. See [implementation status](../implementation-status.md) for executed foundation checks; no whole-app acceptance is inferred.
 
 Phase shorthand: the first phase is where a partial version works; the final phase is where the requirement is complete and tested locally; cloud repeats follow in PH5 and the final record in PH6.
 
@@ -37,6 +37,8 @@ Phase shorthand: the first phase is where a partial version works; the final pha
 | Manage user accounts | Admin only | A07-A09, A20 | M1-PH3-TC09, TC11, TC12 |
 | Dashboard | Admin only | A18 | M3-PH3-TC09 |
 | Read proof photo | Seller own, Rider assigned, Admin (D-04) | A19 | M3-PH3-TC08 |
+
+The proposed Admin password-reset extension A21 (D-32, SHOULD) belongs to M1-F05 and M1-PH3-T04, with M1-PH3-TC23 proving reset/expiry/target restrictions. It is included in M1-PH3-T13 conformance and M1-PH4-T01 authorization coverage. This is a team design choice, not an additional source requirement.
 
 ## B Rubric criteria
 

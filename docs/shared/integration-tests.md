@@ -1,16 +1,16 @@
 # Integration scenarios and group test gates
 
-This file is the single definition of the cross-module scenarios. It replaces the table that was in the [integration plan](integration-and-deployment.md). All scenarios start **Not run**; no test code exists. Each scenario lists the first phase where it works partially, the phase where it becomes complete and tested locally, the phase where it is repeated on the chosen cloud host, and the exact test cases that supply the evidence. A scenario is satisfied only when those tests pass; passing screens alone do not count.
+This file is the single definition of the cross-module scenarios. It replaces the table that was in the [integration plan](integration-and-deployment.md). The whole-app scenarios below remain **Not run** until their exact outcomes are evidenced. Foundation suites exist separately; see [implementation status](../implementation-status.md). Each scenario lists the first phase where it works partially, the phase where it becomes complete and tested locally, the phase where it is repeated on the chosen cloud host, and the exact test cases that supply the evidence. A scenario is satisfied only when those tests pass; passing screens alone do not count.
 
 Integration tests run on Docker Compose with the same images intended for deployment, against real PostgreSQL with restricted runtime roles, using synthetic fixtures ([testing strategy](testing-strategy.md)). Browser tests use separate contexts for each identity. A failed required scenario stays open and blocks the gate.
 
-## Checkpoint scenarios (end of PH2)
+## Initial working slices (end of PH2)
 
 | ID | Scenario | Required outcome | Lead | Evidence (test cases) | Gate |
 | --- | --- | --- | --- | --- | --- |
-| INT-CP-01 | Seeded Seller A and Rider A use real sessions on one database: Seller registers a parcel, refreshes and sees it; Rider A starts delivery on a seeded Assigned parcel; the change persists with Rider A and a server time | Parcel row, one REGISTERED history row, token shown; OUT_FOR_DELIVERY history row with actor and time; both persist after refresh | Syauqi compiles; Naszrul, Zikri, Syauqi | M1-PH2-TC15, M2-PH2-TC01, M2-PH2-TC14, M3-PH2-TC09, M3-PH2-TC01 | G2 |
-| INT-CP-02 | Negative checks on the same stack | Wrong password and SQL-injection username fail generically; Seller B cannot fetch Seller A's parcel; Rider B cannot update Rider A's parcel; Seller cannot call a Rider or Admin endpoint; mutation without CSRF is rejected | Syauqi compiles | M1-PH2-TC03, M1-PH2-TC04, M1-PH2-TC07, M1-PH2-TC08, M2-PH2-TC10, M3-PH2-TC02, M3-PH2-TC07 | G2 |
-| INT-CP-03 | Security baseline rows executed with actual results and disclosed gaps | Worksheet rows named in M1-PH2-T11, M2-PH2-T07 and M3-PH2-T06 show observed results; every other row stays Planned | Syauqi compiles | M3-PH2-T08 compilation, task evidence | G2 |
+| INT-13 | Seeded Seller A and Rider A use real sessions on one database: Seller registers a parcel, refreshes and sees it; Rider A starts delivery on a seeded Assigned parcel; the change persists with Rider A and a server time | Parcel row, one REGISTERED history row, token shown; OUT_FOR_DELIVERY history row with actor and time; both persist after refresh | Syauqi compiles; Naszrul, Zikri, Syauqi | M1-PH2-TC15, M2-PH2-TC01, M2-PH2-TC14, M3-PH2-TC09, M3-PH2-TC01 | G2 |
+| INT-14 | Negative checks on the same stack | Wrong password and SQL-injection username fail generically; Seller B cannot fetch Seller A's parcel; Rider B cannot update Rider A's parcel; Seller cannot call a Rider or Admin endpoint; mutation without CSRF is rejected | Syauqi compiles | M1-PH2-TC03, M1-PH2-TC04, M1-PH2-TC07, M1-PH2-TC08, M2-PH2-TC10, M3-PH2-TC02, M3-PH2-TC07 | G2 |
+| INT-15 | Security baseline rows executed with actual results and disclosed gaps | Worksheet rows named in M1-PH2-T11, M2-PH2-T07 and M3-PH2-T06 show observed results; every other row stays Planned | Syauqi compiles | M3-PH2-T08 compilation, task evidence | G2 |
 
 ## Project scenarios
 
@@ -35,12 +35,12 @@ This table is the single list of scenarios per gate; the phase framework links h
 
 | Gate | Scenarios that must pass |
 | --- | --- |
-| G2 | INT-CP-01, INT-CP-02, INT-CP-03 |
+| G2 | INT-13, INT-14, INT-15 |
 | G3 | INT-01, INT-02, INT-03, INT-05 (functional path), INT-06 (login, logout and password-change legs), INT-07 (API and DOM), early INT-04 legs |
 | G4 | INT-04, INT-05 (races), INT-06 (races, expiry), INT-07 (including logs), INT-08, INT-09, INT-10, INT-11, local half of INT-12 |
 | G5a (MUST) | INT-01, INT-02, INT-03, INT-05, INT-06, INT-07, INT-08 on the live URL; INT-12 first-boot and restart legs |
-| G5b (SHOULD, STRETCH) | INT-11 on schedule, safe online legs of INT-10, INT-12 restore leg |
-| G6 | All scenarios re-run on the release candidate; recorded in the security test document |
+| G5b (SHOULD, STRETCH) | INT-11 on schedule, safe online legs of INT-10, required local INT-12 restore evidence retained; cloud repetition optional (STRETCH) |
+| G6 | All required scenario legs re-run on the release candidate in their applicable environment; optional cloud restore/other STRETCH legs are reported separately and do not block G6 |
 
 ## Scenario ownership and CI
 

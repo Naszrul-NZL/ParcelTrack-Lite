@@ -1,6 +1,6 @@
 # Module 3 test plan
 
-Owner: Syauqi. Coverage plan for M3, the shared test harness and backup/restore, linked to phases, tasks and requirements. Every test below is planned; none has run. A phase cannot pass because its screens render: state, permission and object/database consistency cases must show their expected outcomes with evidence. Test case (TC) definitions live in the phase files; the index at the end is generated from them by `tools/check_plan_docs.py`.
+Owner: Syauqi. Coverage plan for M3, the shared test harness and backup/restore, linked to phases, tasks and requirements. This is the planned coverage matrix; [implementation status](../../implementation-status.md) records executable results. Mark a case passed only when its exact inputs and outcomes have evidence. A phase cannot pass because its screens render: state, permission and object/database consistency cases must show their expected outcomes with evidence. Test case (TC) definitions live in the phase files; the index at the end is generated from them by `tools/check_plan_docs.py`.
 
 Related: [testing strategy](../../shared/testing-strategy.md), [integration scenarios](../../shared/integration-tests.md), [traceability](../../shared/traceability.md), [security worksheet](../../security-tests.md).
 
@@ -59,7 +59,7 @@ Rubric input types for criterion 3: `.php` and `shell.php.jpg` upload (M3-PH3-TC
 | Phase | Jobs that must be green | Additional evidence |
 | --- | --- | --- |
 | PH1 | server-unit (rules, ProofStore), harness self-test, file fixtures regenerate, drafts apply on scratch DB | G1 items 3, 5 |
-| PH2 | + server-integration (Rider cases), e2e-core phone project, authz-matrix rows A16/A17 | Rows from M3-PH2-T06; checkpoint evidence file |
+| PH2 | + server-integration (Rider cases), e2e-core phone project, authz-matrix rows A16/A17 | Rows from M3-PH2-T06; integration evidence file |
 | PH3 | + upload corpus smoke, fault compensation basic, dashboard consistency, CT-03 for A14-A19, E2E INT-02/03/05 | TMP-02 and TMP-05 gone |
 | PH4 | + fault-injection matrix, reconciliation and purge jobs, concurrency suites, full corpus, backup lock tests, coverage gate | M3-01 to M3-10, RLS-03, RLS-10 consolidated; local restore drill |
 | PH5 | + restore exercise, restart/redeploy, timers, 4G upload | Restore record with timings |
@@ -78,21 +78,21 @@ Rubric input types for criterion 3: `.php` and `shell.php.jpg` upload (M3-PH3-TC
 | M3-PH1-TC06 | PH1 | Integration (OPS-04 prototype) | REV-08 | [PH1-foundation.md](phases/PH1-foundation.md) |
 | M3-PH1-TC07 | PH1 | Migration (MIG-01) | M3-F03 | [PH1-foundation.md](phases/PH1-foundation.md) |
 | M3-PH1-TC08 | PH1 | Review | REV-13 | [PH1-foundation.md](phases/PH1-foundation.md) |
-| M3-PH2-TC01 | PH2 | Integration (IT-D01) | M3-07, M3-F03 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC02 | PH2 | Integration (IT-D01) | M3-01, M3-09 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC03 | PH2 | Integration (UT-D01 link) | M3-06 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC04 | PH2 | Integration (IT-D01) | M3-F03 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC05 | PH2 | RLS (RLS-03) | RLS-03, M3-01 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC06 | PH2 | Integration (IT-D04 link) | M3-F02 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC07 | PH2 | Integration (S-01) | S-01 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC08 | PH2 | Component (CMP-D01) | M3-F02 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC09 | PH2 | Browser (E2E-D01) | INT-CP-01, INT-CP-02 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC10 | PH2 | Integration (IT-A01 matrix) | authz matrix | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC11 | PH2 | Fixture (FIX-01) | TMP-02 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC12 | PH2 | Contract and integration | CT-01 extension | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC13 | PH2 | Integration (IT-A04 link) | S-05, P5 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC14 | PH2 | Integration (IT-A03 link) | M1-09 link | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M3-PH2-TC15 | PH2 | Static and integration | M3 parameterized queries, P4 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
+| M3-PH2-TC01 | PH2 | Integration (IT-D01) | M3-07, M3-F03 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC02 | PH2 | Integration (IT-D01) | M3-01, M3-09 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC03 | PH2 | Integration (UT-D01 link) | M3-06 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC04 | PH2 | Integration (IT-D01) | M3-F03 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC05 | PH2 | RLS (RLS-03) | RLS-03, M3-01 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC06 | PH2 | Integration (IT-D04 link) | M3-F02 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC07 | PH2 | Integration (S-01) | S-01 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC08 | PH2 | Component (CMP-D01) | M3-F02 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC09 | PH2 | Browser (E2E-D01) | INT-13, INT-14 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC10 | PH2 | Integration (IT-A01 matrix) | authz matrix | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC11 | PH2 | Fixture (FIX-01) | TMP-02 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC12 | PH2 | Contract and integration | CT-01 extension | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC13 | PH2 | Integration (IT-A04 link) | S-05, P5 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC14 | PH2 | Integration (IT-A03 link) | M1-09 link | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M3-PH2-TC15 | PH2 | Static and integration | M3 parameterized queries, P4 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
 | M3-PH3-TC01 | PH3 | Integration (IT-D01) | M3-F01 | [PH3-complete-functionality.md](phases/PH3-complete-functionality.md) |
 | M3-PH3-TC02 | PH3 | Integration (IT-D01) | M3-02, M3-F01 | [PH3-complete-functionality.md](phases/PH3-complete-functionality.md) |
 | M3-PH3-TC03 | PH3 | Integration (IT-D01) | M3-F05, INT-05 | [PH3-complete-functionality.md](phases/PH3-complete-functionality.md) |
@@ -133,7 +133,7 @@ Rubric input types for criterion 3: `.php` and `shell.php.jpg` upload (M3-PH3-TC
 | M3-PH5-TC01 | PH5 | Operations | S-07, M3-05 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
 | M3-PH5-TC02 | PH5 | Operations | P3 backup interpretation | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
 | M3-PH5-TC03 | PH5 | Operations (OPS-03) | REV-08 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
-| M3-PH5-TC04 | PH5 | Operations (OPS-07) | S-09, INT-12 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
+| M3-PH5-TC04 | PH5 | Operations (OPS-07, STRETCH cloud) | S-09, INT-12 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
 | M3-PH5-TC05 | PH5 | Operations (OPS-06) | S-07 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
 | M3-PH5-TC06 | PH5 | Operations / device | M3-F03 | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |
 | M3-PH5-TC07 | PH5 | Operations (OPS-09) | capacity | [PH5-cloud-operations.md](phases/PH5-cloud-operations.md) |

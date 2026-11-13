@@ -17,18 +17,18 @@ All M3 functions work through the React UI and direct API on real PostgreSQL and
 | --- | --- | --- | --- |
 | A07 active Rider directory (`role=RIDER&isActive=true`) | Naszrul M1-PH3-T01 | H30 | **TMP-05** static Rider list in the assignment dialog |
 | A09 disablement for continuity tests | Naszrul M1-PH3-T02 | H31 | Disable by direct database update in tests; real path before G3 |
-| Complete A12 with slot contract for `RiderActionPanel` and `ProofViewer` | Zikri M2-PH3-T03, T07 | H34 | Own temporary page wrapper in `features/delivery`, removed once slots exist |
+| Slot props/types for `RiderActionPanel` and `ProofViewer` (H34); completed detail wiring follows as H39 | Zikri M2-PH3-T03 (types first), T07 (wiring later) | H34 | Own temporary page wrapper in `src/features/delivery`, removed when H39 exists |
 | Maintenance runner skeleton | Naszrul M1-PH3-T10 | H33 | Direct function tests; job wiring in PH4 |
 | Rate-limit/audit services | Naszrul M1-PH2 | H21 | none |
-| Fixture loader extension points | Zikri M2-PH3-T09 | H11, H38 | Syauqi-owned proof profile files |
+| Fixture loader extension points | Zikri M2-PH1-T06 | H11 | Syauqi-owned proof profile files; publish them as H38 for M2-PH3-T09 |
 
-First task in the phase: T01 (merge `delivery_proof`), because Zikri's `hasProof` and fixtures depend on it.
+First task in the phase: T01 verifies the existing 0004 proof schema and adds 0007 finalization functions. M2 can publish slot types and query `hasProof` against the existing schema without waiting for new tables.
 
 ## 4 Ordered tasks
 
 | ID | Task | Contract and validation | Evidence | Needs |
 | --- | --- | --- | --- | --- |
-| M3-PH3-T01 | Merge in two steps, first thing in the phase: `0006_delivery_proof` (table `delivery_proof` with unique `parcel_id`, unique `storage_key` with format CHECK, media type JPEG/PNG, size 1 byte to 3 MiB, uploader; forced RLS following the parent parcel for Seller own / Rider assigned / Admin all; inserts only through `domain_writer` functions; Zikri reviews the policy SQL) so `hasProof` and fixtures unblock immediately, then `0007_delivery_final` (`assign_parcel(parcel_id, rider_id, expected_version)`, final-outcome branch of `update_delivery_status`, `lock_delivery_target(parcel_id, expected_version)` which locks and rechecks the active Rider account/session version, then assignment, OUT_FOR_DELIVERY state and version, and the reconcile helper skeleton); all hardened per template | LINT-01 and catalog checks pass; `app_runtime` still has no direct DML or row-lock privilege | TC11 | H09, H02 |
+| M3-PH3-T01 | Verify the schema already implemented by `0004_integrated_erd` (table `delivery_proof` with unique `parcel_id`, unique `storage_key` with format CHECK, media type JPEG/PNG, size 1 byte to 3 MiB, uploader; forced RLS following the parent parcel for Seller own / Rider assigned / Admin all; inserts only through `domain_writer` functions; Zikri reviews the policy SQL) then merge `0007_delivery_final` (`assign_parcel(parcel_id, rider_id, expected_version)`, final-outcome branch of `update_delivery_status`, `lock_delivery_target(parcel_id, expected_version)` which locks and rechecks the active Rider account/session version, then assignment, OUT_FOR_DELIVERY state and version, and the reconcile helper skeleton); all hardened per template | LINT-01 and catalog checks pass; `app_runtime` still has no direct DML or row-lock privilege | TC11 | H09, H02 |
 | M3-PH3-T02 | A14 `GET /admin/parcels`: Admin only; filters `status`, `riderId`, `needsReassignment` (unfinished and assigned to an inactive Rider), pagination, `ParcelSummary` plus `assignedRider {id, displayName, isActive}`; no recipient fields beyond what Admin detail allows; sort allowlist | Parameterized; denied for other roles | TC10 | T01 |
 | M3-PH3-T03 | A15 `PATCH /admin/parcels/{id}/assignment` `{riderId, expectedVersion}` via `assign_parcel`: Admin only; locks actor, target Rider and parcel in the global order (accounts before parcel); target must be an active Rider; first assignment moves REGISTERED to ASSIGNED, increments version, appends ASSIGNED history and audit `PARCEL_ASSIGNED`; reassignment of ASSIGNED or OUT_FOR_DELIVERY keeps status, increments version, writes audit `PARCEL_REASSIGNED` with old/new Rider IDs and no history row; same Rider with matching version is a no-op; terminal parcels rejected; stale version 409 | Matches contract status rules | TC01-TC03 | H30, T01 |
 | M3-PH3-T04 | Retire TMP-02: E2E and integration flows use real assignment; seeded ASSIGNED fixtures remain only for isolated unit/integration cases and are labeled; CI check that browser specs do not call the seed profile | Checked in code review and CI grep | TC17 | T03 |
@@ -37,17 +37,17 @@ First task in the phase: T01 (merge `delivery_proof`), because Zikri's `hasProof
 | M3-PH3-T07 | A19 GET /parcels/{id}/proof: custom session/account version plus Seller-own/Rider-assigned/Admin access, anonymized denied; use stored bucket/key only, then read through private Storage API. Return verified bytes with no-store, nosniff, fixed safe Content-Disposition and media type. Never send public/signed object URLs or reveal service keys | Uniform protected 404; direct anonymous bucket/gateway access denied; no static route to service volumes | TC08 | T01, T06 |
 | M3-PH3-T08 | A18 `GET /admin/dashboard`: one aggregate statement producing counts for the five statuses and total from a single snapshot, zero-filled, `generatedAt`; Admin only; no recipient fields | Counts equal the database; zero case | TC09, TC19 | PH2 |
 | M3-PH3-T09 | React `/admin/parcels` (filters, needs-reassignment view, assignment dialog using A07 data (retire TMP-05), version refresh on 409, success refresh) and `/admin/dashboard` (five labeled counts, total, generated time, links into filtered lists) | Component and browser tests; Admin-only routes guarded and server-enforced | TC12, TC14 | H30 |
-| M3-PH3-T10 | React `RiderActionPanel` (Start delivery for ASSIGNED; Delivered/Failed with one photo input for OUT_FOR_DELIVERY, size/type hints, pending and error states, preserves selection on 409 where safe, refetches after uncertain network result, never auto-retries) and `ProofViewer` (fetch via A19 into a blob, create object URL, revoke on unmount/logout/navigation); export them using Zikri's slot props | Slots rendered in `/parcels/:id`; no filesystem path, privileged key or public media URL in the DOM | TC13 | H34 |
+| M3-PH3-T10 | React `RiderActionPanel` (Start delivery for ASSIGNED; Delivered/Failed with one photo input for OUT_FOR_DELIVERY, size/type hints, pending and error states, preserves selection on 409 where safe, refetches after uncertain network result, never auto-retries) and `ProofViewer` (fetch via A19 into a blob, create object URL, revoke on unmount/logout/navigation); export them using Zikri's slot props | Component wrapper proves props and behavior first; M2 wires `/parcels/:id` as H39 for the integrated journey. No privileged key or public media URL in the DOM | TC13 | H34 |
 | M3-PH3-T11 | Continuity flows: Admin list flags unfinished parcels assigned to inactive Riders; reassignment to an active Rider; disabled Rider's old cookie rejected before any write; old Rider loses detail/proof access immediately | INT-05 functional path | TC03, TC15 | H31 |
-| M3-PH3-T12 | Fixture contributions: parcels in OUT_FOR_DELIVERY, DELIVERED and FAILED with proof rows and harmless files, an anonymized parcel without proof, zero-count and non-zero-count dashboard datasets; consumed by Zikri's loader | Dataset loads idempotently on a clean database | TC18 | H38 |
+| M3-PH3-T12 | Fixture contributions: parcels in OUT_FOR_DELIVERY, DELIVERED and FAILED with proof rows and harmless files, an anonymized parcel without proof, zero-count and non-zero-count dashboard datasets; publish as H38 for Zikri's loader | Dataset loads idempotently on a clean database | TC18 | H11, T06 |
 | M3-PH3-T13 | Execute and record feature-level security rows: M3-01, M3-02, M3-03 and M3-04 (smoke corpus; full corpus PH4), M3-05, M3-06, M3-07, M3-08, M3-09, RLS-10 (initial), S-01 for A15/A17 | Actual results with commit | TC02, TC06-TC08, TC11 | T01-T08 |
 | M3-PH3-T14 | Run and record INT-02, INT-03 and the functional INT-05 in Playwright against Compose with the intended images; conformance of A14-A19 to the contract (CT-03) | Pass with traces stored privately | TC14-TC16 | G3 inputs |
 
 ## 5 Affected components
 
-- Database: migration 0006, functions `assign_parcel`, `update_delivery_status` (final branch), `lock_delivery_target`, reconcile helper, `delivery_proof` policies.
-- Backend: `modules/delivery/{routes_admin.py,routes_rider.py,routes_proof.py,service.py,repository.py,proof_pipeline.py,storage.py,dashboard.ts}`.
-- Frontend: `features/delivery/{AdminParcelsPage,DashboardPage,RiderActionPanel,ProofViewer}.tsx`.
+- Database: existing proof schema from 0004, migration 0007, functions `assign_parcel`, `update_delivery_status` (final branch), `lock_delivery_target`, reconcile helper, `delivery_proof` policies.
+- Backend: `src/server/modules/delivery/{routes_admin.ts,routes_rider.ts,routes_proof.ts,service.ts,repository.ts,proof_pipeline.ts,storage.ts,dashboard.ts}`.
+- Frontend: `src/features/delivery/{AdminParcelsPage,DashboardPage,RiderActionPanel,ProofViewer}.tsx`.
 - Config: proof root, upload limits, multipart limits.
 
 ## 6 Security requirements
@@ -91,7 +91,7 @@ H35 (`delivery_proof`, `hasProof`, action panel and proof viewer) to Zikri; H37 
 - Both final outcomes keep exactly one proof, coherent history/current status and no public photo route.
 - Contributes to G3 items 1-5.
 
-## 10 Integration checkpoint
+## 10 Integration check
 
 One local run through the full chain: Naszrul's Seller and Admin, Zikri's registration and tracking, Syauqi's assignment, proof and dashboard, with the same images that will deploy. Check tracking history timestamps equal the database and dashboard totals equal the sum of statuses.
 

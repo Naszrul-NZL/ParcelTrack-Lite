@@ -8,7 +8,7 @@ Syauqi can demonstrate M3 live on the cloud deployment in about 10 minutes, incl
 
 ## 2 Entry criteria
 
-- G5 passed; release-candidate commit, release identifiers and migration revision recorded; restore exercise passed.
+- G5 passed; release-candidate commit, release identifiers and migration revision recorded; required local restore exercise passed at G4; optional cloud repetition reported separately.
 - No open high-severity defect in M3.
 
 ## 3 Dependencies
@@ -27,7 +27,7 @@ Syauqi can demonstrate M3 live on the cloud deployment in about 10 minutes, incl
 | M3-PH6-T03 | Evidence for shared operational rows: S-02 (with Naszrul), S-07, S-09, RLS-03 and RLS-10 with Zikri, backup/restore record (timings, backup age, verification table) and fault-injection summary | Cross-referenced in the worksheet | TC02 | T01 |
 | M3-PH6-T04 | Demo script (about 10 minutes): Rider B cannot update Rider A's parcel, invalid status rejected, upload `shell.php.jpg` and an oversized image rejected, dashboard requested with no login at all and Seller/Rider denied on dashboard and assignment, Admin assigns, Rider (phone) starts and delivers with a valid photo, Failed case with PNG, history with actor and time, dashboard counts, anonymous photo request denied, storage listing showing random names outside the web root, concurrent final updates giving one winner; fallback evidence clearly marked | Timed rehearsal on the cloud URL | TC03 | T01 |
 | M3-PH6-T05 | Code walkthrough notes: `rules.ts` and the SQL functions, locking order, `lock_delivery_target`, proof pipeline, finalization sequence and compensation, reconciliation, purge job, backup lock, restore runbook; likely questions and answers | Peer questioning by Naszrul and Zikri recorded | TC04 | none |
-| M3-PH6-T06 | Operational handover: runbooks for backup, restore, rollback of release identifier, forced storage-failure check, with who holds recovery credentials (recorded privately, only roles in Git) | Walkthrough by a second member from the runbook alone | TC05 | M3-PH5-T04 |
+| M3-PH6-T06 | Operational handover: runbooks for backup, restore, rollback of release identifier, forced storage-failure check, with who holds recovery credentials (recorded privately, only roles in Git) | Walkthrough by a second member from the runbook alone | TC05 | M3-PH4-T07 (required local drill) |
 | M3-PH6-T07 | Test-data and hygiene check for M3: only synthetic images and parcels, upload corpus harmless, no real photos, demo accounts rotated, private proof bucket in demo environment cleaned after the demo | Scan and directory listing | TC06 | none |
 | M3-PH6-T08 | Group 30-minute rehearsals (two): M3 segment timing and the full ordered scenario; contingency if the phone/4G demo fails (desktop viewport with disclosure) | Two logged run-throughs | TC07 | H60 |
 | M3-PH6-T09 | Freeze: release record for M3 (migration revision, function definitions hash, release identifiers, restore exercise date) and known limitations (single instance, self-hosted Supabase Storage, no redelivery, no multiple photos) | Record present | TC08 | G5 |
@@ -62,7 +62,7 @@ M3 section of the security test document; backup/restore record; demo script; co
 - T01-T09 done; TC01-TC08 satisfied; M3 definition of done in the [module README](../README.md#module-definition-of-done) ticked with evidence links.
 - Contributes to G6.
 
-## 10 Integration checkpoint
+## 10 Integration check
 
 Single live walk through the full ordered demonstration with Naszrul and Zikri on the same deployment, then clean-up of demo data and rotation of demo credentials.
 

@@ -9,7 +9,7 @@ All M1 features work through the React UI and direct API against real PostgreSQL
 ## 2 Entry criteria
 
 - G2 passed: real sessions, CSRF, rate limit, audit service, authorization-matrix harness v1 in place; TMP-01 and TMP-04 retired.
-- Contract v3 merged (error-code registry, audit event-type list).
+- Contract v4 reviewed, including retained v3 amendments (error-code registry, audit event-type list).
 
 ## 3 Dependencies
 
@@ -38,13 +38,13 @@ Independent now: T01-T04, T06, T07, T10 (own tables and services).
 | M1-PH3-T10 | Private TypeScript maintenance CLI/job registry and maintenance gate: run jobs from scripts with maintenance_runtime, never from public handlers. Advisory locks prevent duplicate jobs and coordinate with backups; write gates return MAINTENANCE while active. Prototype scheduler runs locally after direct invocation is proven; cloud scheduler deferred. Job credentials excluded from Next.js web process | Dummy-job idempotence/lock/timeout tests; protected business routes respect gate; no public maintenance endpoint | TC19 | H13 |
 | M1-PH3-T11 | Execute and record feature-level security rows: M1-02, M1-05, M1-06 (JSON side), M1-08, M1-09, M1-10, S-01 for A02/A06/A08/A09 | Worksheet actual results with commit | TC01-TC03, TC06, TC09, TC11 | T01-T07 |
 | M1-PH3-T12 | Local production-build walking skeleton: build/start Next.js against full local Supabase, then real login, parcel registration/list, assignment/start-delivery smoke with runtime roles. Record local version and gaps. Prepare later cloud checklist without provisioning; cloud execution remains PH5 after local G4 and EXT-04 | Local build/HTTP/cookie/storage evidence; explicitly not a live cloud result | TC21 | EXT-04 is deferred for cloud execution; local work does not depend on it |
-| M1-PH3-T13 | Contract conformance for A01-A09 and A20: OpenAPI paths, methods, request/response schemas, status codes and error codes match the contract and the registry | CT-03 fails the build on drift | TC18 | PH1 CT tooling |
+| M1-PH3-T13 | Contract conformance for A01-A09, A20 and A21: OpenAPI paths, methods, request/response schemas, status codes and error codes match the contract and the registry | CT-03 fails the build on drift | TC18 | PH1 CT tooling |
 
 ## 5 Affected components
 
-- Backend: `modules/auth/{routes_register.py,routes_password.py,routes_admin.py,audit_routes.py,users.ts}`, `core/security_deps.ts`, `maintenance/{runner.py,locks.ts}`.
+- Backend: `src/server/modules/auth/{routes_register.ts,routes_password.ts,routes_admin.ts,audit_routes.ts,users.ts}`, `src/server/core/security_deps.ts`, `maintenance/{runner.ts,locks.ts}`.
 - Database: possibly additive migration for indexes (`app_user(role,is_active,created_at)`, `audit_event(event_type,occurred_at)`) via Zikri's chain.
-- Frontend: `features/auth/{RegisterPage,PasswordPage,AdminUsersPage,AuditPanel}.tsx`, shell and navigation.
+- Frontend: `src/features/auth/{RegisterPage,PasswordPage,AdminUsersPage,AuditPanel}.tsx`, shell and navigation.
 
 ## 6 Security requirements
 
@@ -71,7 +71,7 @@ Role forced server-side; strict request schemas; password policy and common-pass
 | M1-PH3-TC15 | Component (CMP-A04) | Password page for normal and must-change user | Success redirects to login and clears cache; must-change user cannot navigate away | M1-F04 |
 | M1-PH3-TC16 | Component (CMP-A05) | Admin users page: list/filter, create Rider, disable confirmation, 409, audit panel, display name `<img src=x onerror=alert(1)>` | Initial password field cleared and not shown after; confirmation names target; 409 refetches; payload shown as text | M1-06, M1-F05 |
 | M1-PH3-TC17 | Browser (E2E-A02) | New Seller registers through `/register` and logs in; Admin creates Rider; Rider forced password change; Rider logs in with new password; Admin disables Rider; Rider acts again | Registration and first login work; forced change enforced; landing page after change; next Rider action returns to login | M1-F01, M1-F03, M1-F05, INT-05 |
-| M1-PH3-TC18 | Contract (CT-03) | Compare OpenAPI to contract tables and error-code registry for A01-A09, A20 | No drift; unknown codes fail | contract |
+| M1-PH3-TC18 | Contract (CT-03) | Compare OpenAPI to contract tables and error-code registry for A01-A09, A20, A21 | No drift; unknown codes fail | contract |
 | M1-PH3-TC19 | Operations (OPS-03 skeleton) | Dummy job twice concurrently; interrupt mid-run; hold backup lock | Second run exits as locked; interrupted job leaves no stale lock; runner refuses to start under backup lock; logs contain counts only | REV-08 |
 | M1-PH3-TC20 | Unit (UT-A04) | Display name with HTML stored and returned | JSON contains literal text (encoded by JSON), never interpreted server-side | M1-06 |
 | M1-PH3-TC21 | Operations | Walking-skeleton deployment: HTTPS login for Seller, Rider, Admin, then instance destroyed | Login works; cookie `Secure`, `HttpOnly`, `__Host-`; result recorded as pass, fail or blocked | rubric 1b |
@@ -91,9 +91,9 @@ H30 (A07 Rider directory) and H31 (A09 disablement) to Syauqi in the first days 
 - INT-05 session-rejection leg and INT-06 (password change and logout paths) pass; INT-01 registration leg passes.
 - Contributes to G3.
 
-## 10 Integration checkpoint
+## 10 Integration check
 
-Full journey in one local stack: register Seller, Admin creates Rider, Rider changes password, Seller registers parcel (Zikri), Admin assigns (Syauqi), Admin disables Rider and the old cookie fails. Matrix harness includes rows for every A01-A09/A20 endpoint and the must-change case for A10-A12, A16-A19.
+Full journey in one local stack: register Seller, Admin creates Rider, Rider changes password, Seller registers parcel (Zikri), Admin assigns (Syauqi), Admin disables Rider and the old cookie fails. Matrix harness includes rows for every A01-A09/A20/A21 endpoint and the must-change case for A10-A12, A16-A19.
 
 ## 11 Failure risks and recovery
 

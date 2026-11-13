@@ -6,7 +6,8 @@ import { BACKUP_LOCK_KEY } from '@/shared/constants';
 export interface ActorContext { userId: string; sessionVersion: number }
 export interface TransactionOptions { actor?: ActorContext; write?: boolean }
 export interface PgConnection { query: PoolClient['query']; release: PoolClient['release'] }
-export async function transaction<T>(pool: Pick<Pool,'connect'>, options: TransactionOptions, work: (client: PoolClient) => Promise<T>): Promise<T> {
+export interface TransactionPool { connect(): Promise<PoolClient> }
+export async function transaction<T>(pool: TransactionPool, options: TransactionOptions, work: (client: PoolClient) => Promise<T>): Promise<T> {
   let client: PoolClient;
   try { client = await pool.connect(); } catch { throw new AppError('BUSY'); }
   let destroy = false;
@@ -41,6 +42,10 @@ export function getPool(role: 'app_runtime'|'tracking_runtime'): Pool {
   return pools.get(role)!;
 }
 export async function assertConnectedRole(client: PoolClient, expected: string) {
-  const result = await client.query<{role:string;bypass:boolean;superuser:boolean}>("SELECT current_user AS role, rolbypassrls AS bypass, rolsuper AS superuser FROM pg_roles WHERE rolname = current_user");
-  if (result.rows[0]?.role !== expected || result.rows[0].bypass || result.rows[0].superuser) throw new Error('Restricted runtime role assertion failed.');
+  const result = await client.query<{role:string;bypass:boolean;superuser:boolean;createdb:boolean;createrole:boolean;schema_create:boolean;owner_member:boolean}>(`SELECT current_user AS role, rolbypassrls AS bypass, rolsuper AS superuser,rolcreatedb AS createdb,rolcreaterole AS createrole,
+    has_schema_privilege(current_user,'app','CREATE') AS schema_create,
+    EXISTS(SELECT 1 FROM pg_catalog.pg_roles owner WHERE owner.rolname=ANY(ARRAY['migration_owner','domain_writer','auth_fn_owner','ops_fn_owner','lookup_fn_owner','maintenance_fn_owner']) AND pg_has_role(current_user,owner.oid,'MEMBER')) AS owner_member
+    FROM pg_catalog.pg_roles WHERE rolname=current_user`);
+  const role = result.rows[0];
+  if (!role || role.role !== expected || role.bypass || role.superuser || role.createdb || role.createrole || role.schema_create || role.owner_member) throw new Error('Restricted runtime role assertion failed.');
 }

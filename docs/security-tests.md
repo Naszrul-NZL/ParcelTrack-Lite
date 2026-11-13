@@ -1,6 +1,6 @@
 # ParcelTrack Lite security requirements and tests
 
-All requirements are planned. The full-stack application is not implemented yet and no test in this worksheet has been executed. Replace Not run with the observed result and evidence after each execution. Each module has more than five proposed input types, matching the final rubric's highest testing band when completed, documented and passing.
+This worksheet records the required security evidence. Foundation code and tests exist; see [implementation status](implementation-status.md). These whole-app worksheet scenarios remain unexecuted unless an actual result is recorded in their row. Replace Not run with the observed result and evidence after each execution. Each module has more than five proposed input types, matching the final rubric's highest testing band when completed, documented and passing.
 
 Use the [separate module plans](project-plan.md#plans-by-owner) for full functional acceptance, the [shared contract](shared/system-contract.md) for exact behavior, and the [integration scenarios](shared/integration-tests.md) for cross-module acceptance. The column First executed gives the phase in which each row first gets an observed result; [traceability section F](shared/traceability.md#f-security-worksheet-rows-51-to-phases-and-test-cases) lists the planned test cases for every row, PH4 consolidates all rows on one commit and PH6 records the final results. The rows here are security tests, not the entire project's test scope.
 

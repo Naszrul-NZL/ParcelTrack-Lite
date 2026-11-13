@@ -1,62 +1,50 @@
-# First execution sequence
+# Execution sequence
 
-This is the order in which each member starts. It follows the [dependency matrix](dependency-matrix.md) so that nobody waits on something that is not yet buildable. No calendar dates are assumed except the team's checkpoint on 22 October 2026. Phase 1 has started locally for all modules; [actual evidence and open work](../phase-1-progress.md) distinguish implementation from remaining tasks. The order below remains the plan.
+The root app, local infrastructure and migrations through `0004_integrated_erd` exist. See [implementation status](../implementation-status.md) for tested behavior and remaining foundation checks. This sequence orders the remaining work; it does not claim that the planned APIs are implemented.
 
-## Rules for the first stretch
+## Foundation verification
 
-1. One PR merges the reviewed plan set and the [contract v3 amendments](system-contract.md#contract-v3-amendments). All three approve (M1-PH1-T12, M2-PH1-T09, M3-PH1-T09) before code branches rely on them.
-2. The critical path is **role bootstrap and node-pg-migrate base (Zikri) -> auth tables and `lock_active_actor` (Naszrul) -> parcel tables and fixtures (Zikri)**. Zikri's first two tasks and Naszrul's skeleton task are therefore the first merges.
-3. Every `(CP)` task in a PH1 or PH2 file is checkpoint-critical (the list includes the minimal error envelope and logging, API client, DTOs, validators and the read-only detail route that the slices need). Handoffs during PH1 and PH2 count as delivered when merged to the integration branch with the proving test passing locally; evidence for 22 October is the local subset in the [phase framework](phase-framework.md#checkpoint-execution-rules). Non-CP tasks wait if time is short, and the checkpoint report says what was left out.
-4. Tests are written with the feature in the same PR. No feature merges without its listed security case.
+Complete outstanding PH1 checks and reviews against the existing code. Naszrul owns the shell, auth primitives and CI; Zikri owns role/bootstrap, migrations and RLS; Syauqi owns the shared harness, Storage and image pipeline. Reproduce a clean setup and record G1 evidence. Keep the confirmed lecturer stack approval, identities, repository administration and later hosting decisions in the [decision register](decision-register.md).
 
-## Order by member
+## Contributor starting point
 
-### Naszrul (M1)
+Module ownership is already assigned. Start from the same committed baseline, read your module README and PH1/PH2 tasks, and use the [foundation handoff status](../implementation-status.md#foundation-handoff-status) to distinguish existing code from outstanding acceptance. Do not recreate foundation services because their phase tasks are still open.
 
-| Order | Task | Why now | Unblocks |
-| --- | --- | --- | --- |
-| 1 | M1-PH1-T01 repository skeleton and locked dependencies, then M1-PH1-T02 settings | Everyone else needs a place to commit | Zikri's T02/T03, Syauqi's T01 |
-| 2 | M1-PH1-T03 local full Supabase Compose and Next.js | Database and API run locally | All integration tests |
-| 3 | M1-PH1-T13 external checks in parallel and on the first day: EXT-01 allocation receipt, EXT-02 written lecturer acceptance plus the Week 14 date (EXT-08), EXT-03, EXT-04 recorded as deferred until local acceptance, EXT-05 identities | Lead time outside the plan; a refusal under EXT-02 is the largest single risk | Local PH3 proceeds; hosting decision needed for PH5 |
-| 4 | M1-PH1-T10 password service, M1-PH1-T04 and T05 error envelope and log redaction | Independent; fixtures need hashing | Fixture loader (H14) |
-| 5 | M1-PH1-T06, then T07 auth_core migration and `lock_active_actor` (as soon as Zikri's T01/T02 merge) | Second link of the critical path | Zikri's 0003 and `create_parcel`; Syauqi's functions |
-| 6 | M1-PH1-T08 auth interface and TMP-01; M1-PH1-T09 API client; M1-PH1-T11 CI (Syauqi wires the harness job) | Others code against the interface | Zikri's A10, Syauqi's A17 |
-| 7 | PH2: M1-PH2-T02, T04, T07 (pure services), then T03, T05, T06, T08, T09, T10, T12 | Real login retires TMP-01 for the checkpoint | INT-CP-01 |
+| Owner | First review and remaining foundation work | Next bounded implementation |
+| --- | --- | --- |
+| Naszrul (M1) | Verify existing M1-PH1 work; finish remaining M1-PH1-T11 checks and M1-PH1-T12 contract review | M1-PH2-T02 through T09: real sessions/auth services and retirement of test identity/session substitutes |
+| Zikri (M2) | Verify existing M2-PH1 role/bootstrap, migrations, transaction helper, fixtures and DTOs; complete M2-PH1-T09 review | M2-PH2-T01, T02: verify schema/policies and add 0005; then T03, T04, T06 protected parcel APIs using H20 |
+| Syauqi (M3) | Complete remaining M3-PH1-T01/T02 harness checks, T05 resource evidence and T09 contract review against existing code | Draft M3-PH2-T02; apply 0006 after 0005, then T01, T03, T04 for guarded assignment fixtures and protected Rider services |
 
-### Zikri (M2)
+Naszrul coordinates shared layout/theme/component changes under the existing shell responsibility; each module owner implements their own screens. Follow the [overlap rule](phase-framework.md#overlap-rule): independent service tests and function drafts can start before G1, but G1 remains open until its checks and all three owner sign-offs exist.
 
-| Order | Task | Why now | Unblocks |
-| --- | --- | --- | --- |
-| 1 | M2-PH1-T01 role bootstrap, then M2-PH1-T02 node-pg-migrate base, 0001 and function-hardening template with lint | First link of the critical path | Naszrul's T06/T07; Syauqi's drafts |
-| 2 | M2-PH1-T04 constants and parity test; M2-PH1-T08 validators and token generator (independent) | Shared definitions | Syauqi's rules; every endpoint |
-| 3 | M2-PH1-T03 `unit_of_work` and pools | RLS context for all modules | M1-PH2-T08, A10, A16 |
-| 4 | M2-PH1-T05 migration 0003 (merge after Naszrul's 0002) | Parcel and history tables | Everything parcel-related |
-| 5 | M2-PH1-T06 fixture dataset and loader; M2-PH1-T07 DTOs | Controlled data for all slices | M1-PH2-T01, M3-PH2-T01 |
-| 6 | PH2: M2-PH2-T01 (policies) then T02 `create_parcel`, T03 A10, T04 A11, T06 A12 v1, T05 React, T07 tests, T08 fixtures | Seller slice | INT-CP-01 |
-| 7 | M2-PH1-T09 contract amendments review in parallel with steps 1 to 3 | Frozen contract | All |
+The [frontend foundation](frontend-foundation.md) supplies the implemented Airway theme, local fonts, shared controls, status mapping, parcel docket and field feedback. Reuse its documented exports before adding module UI; the real authentication and business-service handoffs remain in the table above.
 
-### Syauqi (M3)
+The [backend/test foundation](backend-foundation.md) now supplies the protected transaction/CSRF wrapper, safe API handler, isolated database/Storage fixtures and route/import drift checks. M2/M3 can build service tests with real restricted roles and temporary database sessions while H20 is being finished. TMP-04 remains explicitly temporary; these helpers do not create a real login endpoint or retire it.
 
-| Order | Task | Why now | Unblocks |
-| --- | --- | --- | --- |
-| 1 | M3-PH1-T01 minimal harness (role-asserting connections, per-job fresh database), M3-PH1-T03 pure rules with exhaustive unit tests | Independent of others; harness gives all owners role-asserting tests | Everyone's integration tests |
-| 2 | M3-PH1-T05 image-library spike and M3-PH1-T04 `ProofStore`; M3-PH1-T06 coordination prototype | Independent; retire design risk early | PH3 pipeline, PH4 backup |
-| 3 | M3-PH1-T02 Playwright skeleton and file fixtures; M3-PH1-T08 storage design note; M3-PH1-T09 contract amendments; then, while the spine waits on migrations, pair with Zikri on the role-attribute assertions (RLS-01) and the template-database fixture and with Naszrul on the CI integration job | Syauqi is idle on the critical path otherwise | PH2 browser tests |
-| 4 | M3-PH1-T07 migration drafts (merge when 0003 exists) | Prepared for PH2 | M3-PH2-T02 |
-| 5 | PH2: M3-PH2-T02 `update_delivery_status`, T03 A17, T04 A16, T01 seeded assigned parcels (TMP-02) after Zikri's loader hook, T05 Rider React, T06 tests, T07 Playwright | Rider slice | INT-CP-01 |
-| 6 | M3-PH2-T08 compile INT-CP-01 to INT-CP-03 evidence for the checkpoint report | Group evidence | G2 |
+Follow the [contribution procedure](../../CONTRIBUTING.md): merge the shared baseline into `main` first, update local `main`, then create a branch per owner and bounded task. PRs target `main` and name task IDs, affected handoffs, actual checks and any permitted substitute still in use. A consumer records handoff acceptance in that PR after exercising it from their own branch. Rebase later migrations onto the merged head; never edit an applied revision. Local commits prepare the baseline; sharing it still requires a push, review and merge.
 
-## Smallest checkpoint path if time is very short
+## Initial working slices
 
-If not all of PH1 and PH2 can finish before the checkpoint, protect this chain and disclose anything missing:
+| Order | Owner and task | Dependency and result |
+| --- | --- | --- |
+| 1 | Naszrul: M1-PH2-T02 through T09 | Real session, login/logout, CSRF, rate-limit and audit services; H20 retires test identity/session substitutes |
+| 2 | Zikri: M2-PH2-T01, T02, T03, T04, T06 | Verify existing schema/policies, add `0005_create_parcel`, then protected create/list/detail APIs using H20 and the shared transaction wrapper |
+| 3 | Syauqi: M3-PH2-T01 through T04 | Use guarded assigned fixtures, add `0006_delivery_functions`, then Rider list and Start delivery through real sessions |
+| 4 | Each module's PH2 UI and tests | Connect stock shadcn forms and shared client/session contracts; run INT-13, INT-14 and INT-15 on one database; record G2 evidence |
 
-1. M1-PH1-T01 to T03 -> M2-PH1-T01, T02 -> M1-PH1-T06, T07, T10 -> M2-PH1-T03, T05, T06.
-2. M1-PH2-T02 to T06 (login, logout, CSRF) with the seeded accounts from M1-PH2-T01.
-3. M2-PH2-T01 to T04 (create and list parcels) and M3-PH2-T02 to T04 (start delivery and Rider list).
-4. React pages M1-PH2-T10, M2-PH2-T05, M3-PH2-T05 and the browser/INT-CP checks.
+Database function work and pure service tests can proceed while real sessions are finished, using only the explicitly permitted substitutes in the [handoff register](dependency-matrix.md). A substitute must be retired before its named gate. No unprotected business route is exposed publicly.
 
-A partly built slice is reported as partial. A drawing, a mocked UI or text-only change is not a working demonstration.
+## Complete integrated workflows
 
-## After the checkpoint
+1. Naszrul delivers the Rider directory and disablement early (M1-PH3-T01, T02; H30/H31), followed by Seller registration, password/user administration and audit views.
+2. Zikri publishes the shared detail slot types and base A12 contract first (M2-PH3-T03; H34), without depending on Syauqi's components. Replay safety, search, public tracking and retention selection can proceed independently.
+3. Syauqi verifies the proof schema already present in 0004, adds `0007_delivery_final`, and builds assignment/reassignment, final outcomes, authorized proof access, dashboard and the RiderActionPanel/ProofViewer implementations (M3-PH3-T10; H35) against H34.
+4. Zikri wires the supplied components into the shared detail page (M2-PH3-T07; H39), completes `hasProof` integration and retires remaining UI mocks. All three owners prove Delivered, Failed, disabled-Rider reassignment and public privacy before G3.
+5. Naszrul connects the maintenance runner; Zikri and Syauqi complete retention, proof cleanup and local recovery together. Run PH4 authorization, RLS, race, upload and failure cases on the integrated app before G4.
 
-PH3 starts with the handoffs others wait for: M3-PH3-T01 (proof table), M1-PH3-T01 and T02 (Rider directory and disablement), then the remaining PH3 tasks in parallel. Do not begin PH4 hardening work on code that G3 has not stabilized, except tasks listed as independent in the dependency matrix.
+Every feature includes its validation, errors, loading/empty states, access controls and tests in the same change. Use [stock shadcn first](../ui-components.md); add an extension only for a demonstrated capability gap.
+
+## Release and final assessment
+
+After local G4 and a resolved hosting decision, execute PH5 cloud setup, HTTPS, persistence, required jobs, rollback and live journeys. The local restore drill is required; the isolated cloud restore repetition remains STRETCH and cannot block required work. PH6 repeats applicable required scenarios on the release candidate, assembles actual security results, and rehearses the [final demonstration](workflow-trace.md#final-demonstration-order). See the [phase gates](phase-framework.md) for evidence and owner sign-off.

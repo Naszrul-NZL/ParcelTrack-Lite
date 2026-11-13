@@ -1,6 +1,6 @@
 # Automated testing strategy
 
-This is the required test plan for the Next.js/TypeScript/Supabase PostgreSQL application. The new Next.js/full-Supabase app and its executable suites do not exist yet; the separate checkpoint demo has frontend-only tests. Every test described here is planned, not passed. Owners implement tests with their features and retain evidence against the [system contract](system-contract.md).
+This is the required test plan for the Next.js/TypeScript/Supabase PostgreSQL application. Foundation suites exist and their actual results are recorded in [implementation status](../implementation-status.md). The matrices below define required coverage; they do not claim all listed cases have passed. Owners implement tests with features and retain evidence against the [system contract](system-contract.md).
 
 ## Test layers and tools
 
@@ -67,6 +67,8 @@ Fixtures include one Admin, two Sellers, two Riders, inactive/must-change accoun
 
 Requests commit independently; an outer rollback does not isolate them. Reset only disposable application data and private test bucket objects through a guarded fixture credential. Never reset development volumes or vendor schemas. Independent parallel suites get separate full stacks; race tests intentionally share one database and use barriers. Demonstrate isolation before enabling parallel suites. Temporary local files serve only bounded staging/unit doubles; real proof persistence uses the Storage API. Test principal/failpoint injection lives only in test imports and cannot be enabled through production requests or flags.
 
+Implemented locally: the [backend/test foundation](backend-foundation.md) provides per-case clones from a freshly migrated, sealed application template inside the isolated test stack, restricted-role checkout checks, scoped real Storage keys and cleanup on success/failure. HAR-01 tests also demonstrate concurrent case isolation. Existing suite-wide parallelism is unchanged, and full HTTP role journeys/failpoints remain pending. The temporary session helper is TMP-04, not a principal override or proof of real login.
+
 ## Backend unit coverage
 
 Owners use table-driven tests for valid, invalid and boundary cases. Test observable decisions rather than reproducing implementation code in assertions.
@@ -94,7 +96,7 @@ Do not claim randomness is proven by generating a few unique values. Check use o
 
 ### All-endpoint authorization matrix
 
-For A01 through A20, parameterize expected access for anonymous, Seller A, Seller B, Rider A, Rider B, Admin, inactive and password-change-required identities. Include success where valid, wrong role, wrong ownership, expired/revoked session, missing/invalid CSRF on unsafe methods, malformed fields and unexpected sensitive fields. Do not expect every endpoint to permit every fixture; expected outcomes come from the contract. Check exact status/error shape, no unintended database/file changes and no extra sensitive response fields.
+For A01 through A21, parameterize expected access for anonymous, Seller A, Seller B, Rider A, Rider B, Admin, inactive and password-change-required identities. Include success where valid, wrong role, wrong ownership, expired/revoked session, missing/invalid CSRF on unsafe methods, malformed fields and unexpected sensitive fields. Do not expect every endpoint to permit every fixture; expected outcomes come from the contract. Check exact status/error shape, no unintended database/file changes and no extra sensitive response fields.
 
 For 404-protected parcel/proof routes, compare nonexistent IDs with inaccessible IDs. For authenticated list endpoints, assert filtering/count totals as well as individual rows. For A13 public tracking, include no-login access without any session or CSRF token (same-origin check only), a foreign `Origin`, and no direct table access through tracking_runtime.
 
@@ -171,6 +173,8 @@ Every security worksheet ID must also be mapped to an automated test name, or a 
 
 ## CI and release gates
 
+The current workflow has `app-check` and `server-integration` jobs. `app-check` includes the Airway token/contrast guard, production build and desktop/phone preview browser suite; Playwright manages its local server without a database for these previews. The named role/security/release jobs below remain planned where not yet implemented. Preview checks do not supply authenticated journey evidence.
+
 Every PR runs the jobs below (names are recorded in M1-PH1-T11 so branch protection can require them later). Slower suites (scale plan checks, full browser matrix, operations drills, security-tool scans) run nightly or on demand until G3 and before every release.
 
 | Job | Introduced | Content |
@@ -218,4 +222,4 @@ Each member needs more than five distinct input types; PH6 checks this per modul
 
 For every executed scenario record owner, feature/security/integration ID, exact input, expected result, actual result, commit/release/migration version, environment, timestamp and safe artifact reference. Automated JUnit/coverage/browser reports support the final rubric document but do not replace the owner's explanation.
 
-Current state: all suites and gates in this document are planned (phase files define the cases; none has run). No Next.js/backend/RLS test has run because that implementation is not present. Historical checkpoint frontend results do not satisfy these gates. Document-link checks are separate from software test results.
+Current state: foundation unit/component, database/Storage and preview browser suites have passed locally as recorded in [implementation status](../implementation-status.md). Business-flow, whole-app security and release gates remain open. Document consistency checks are separate from application results.

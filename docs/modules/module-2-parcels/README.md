@@ -1,15 +1,17 @@
 # Module 2 Parcel Registration and Public Tracking
 
-Owner: Zikri, GitHub Zikri809. Deliver backend parcel functionality, the shared database/RLS foundation and the React parcel/tracking feature. This folder is the full phased plan, not only the first checkpoint slice. Phase 1 foundation code and local tests now exist; see [actual progress and open gates](../../phase-1-progress.md). Later workflows remain planned and owner reviews are pending.
+Owner: Zikri, GitHub Zikri809. Deliver backend parcel functionality, the shared database/RLS foundation and the React parcel/tracking feature. This plan covers the complete project lifecycle. Phase 1 foundation code and local tests now exist; see [actual progress and open gates](../../implementation-status.md). Later workflows remain planned and owner reviews are pending.
 
-Use the [shared contract](../../shared/system-contract.md), [phase framework](../../shared/phase-framework.md), [dependency matrix](../../shared/dependency-matrix.md), [ERD](../../initial-erd.md) and [security worksheet](../../security-tests.md). Exact types, status values, validation, routes and permission rules are defined centrally. RLS/grant assertions use the actual restricted PostgreSQL roles; mocks cannot replace them.
+Use the [stock shadcn component policy](../../ui-components.md) and [current design](../../design/current-design.md) for every module screen.
+
+Use the [shared contract](../../shared/system-contract.md), [phase framework](../../shared/phase-framework.md), [dependency matrix](../../shared/dependency-matrix.md), [ERD](../../database-design.md) and [security worksheet](../../security-tests.md). Exact types, status values, validation, routes and permission rules are defined centrally. RLS/grant assertions use the actual restricted PostgreSQL roles; mocks cannot replace them.
 
 ## Contents of this folder
 
 | File | Purpose |
 | --- | --- |
 | [phases/PH1-foundation.md](phases/PH1-foundation.md) | Role bootstrap, node-pg-migrate base, `unit_of_work`, constants, migration 0003, fixtures, DTOs |
-| [phases/PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) | `create_parcel`, A10/A11/A12 v1, Seller screens, RLS isolation tests |
+| [phases/PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) | `create_parcel`, A10/A11/A12 v1, Seller screens, RLS isolation tests |
 | [phases/PH3-complete-functionality.md](phases/PH3-complete-functionality.md) | Replay-safe creation, search, full detail with slots, public tracking, retention functions |
 | [phases/PH4-hardening-regression.md](phases/PH4-hardening-regression.md) | Complete RLS suites, grant snapshot, retention job, concurrency, privacy regression, scale checks |
 | [phases/PH5-cloud-operations.md](phases/PH5-cloud-operations.md) | Production DB bootstrap, RLS under deployed credentials, retention on schedule, cloud privacy |
@@ -32,7 +34,7 @@ Tracking identifiers are generated on the server. Recipient accounts, parcel edi
 | Phase | Objective | Key tasks | Depends on | Exit |
 | --- | --- | --- | --- | --- |
 | PH1 | One database model nobody can bypass; shared definitions | T01-T02 roles and node-pg-migrate base (first on the group critical path), T03 `unit_of_work`, T04 constants, T05 complete 0003 with all policies, T06 fixtures | H01, later H03 | G1 |
-| PH2 | Seller creates and sees a real parcel under RLS | T01 policy tests, T02 `create_parcel` (0004), T03 A10, T04 A11, T05 UI, T06 A12 v1 | H03, H04, H20 | G2 |
+| PH2 | Seller creates and sees a real parcel under RLS | T01 policy tests, T02 `create_parcel` (0005), T03 A10, T04 A11, T05 UI, T06 A12 v1 | H03, H04, H20 | G2 |
 | PH3 | Complete M2 features | T01 replay, T02 search, T03-T07 detail/tracking, T08 retention functions | H21, H35 | G3 |
 | PH4 | Prove RLS, privacy, concurrency, retention | T01-T03 RLS/hardening, T03 job, T04-T08 suites | H33, H40 | G4 |
 | PH5 | Database and tracking on the chosen cloud host | T01-T03 bootstrap/grants/RLS under deployed creds, T07 tracking over HTTPS | H50, H51, H53, H54 | G5 |
@@ -44,11 +46,11 @@ Tracking identifiers are generated on the server. Recipient accounts, parcel edi
 | --- | --- | --- |
 | H02 roles/node-pg-migrate/hardening template and lint; H07 `unit_of_work`; H08 constants; H09 migration 0003; H11 fixtures; H12 DTOs | Naszrul, Syauqi | PH1 |
 | H22 `create_parcel`, A10, A12 v1; H25 parcel fixtures | Syauqi, group | PH2 |
-| H34 complete detail and slot contract; H36 retention functions | Syauqi, Naszrul | PH3 |
+| H34 slot types and base detail contract first; H39 completed detail wiring; H36 retention functions | Syauqi, Naszrul | PH3 |
 | H40 retention job; matrix rows and grants snapshot | Syauqi, Naszrul | PH4 |
 | H52 grant verification and RLS runner | Naszrul, Syauqi | PH5 |
 
-Consumes: H03 (0002, `lock_active_actor`), H04/H20 (auth), H21 (rate limit, audit), H10 (harness), H35 (proof table and components), H33 (runner), H13 (lock design), H50-H54 (cloud stack). Substitutes: see the [handoff register](../../shared/dependency-matrix.md#handoff-register).
+Consumes: H03 (0002, `lock_active_actor`), H04/H20 (auth), H21 (rate limit, audit), H10 (harness), H35 (proof-schema verification and components), H33 (runner), H13 (lock design), H50-H53 (cloud stack), with H54 an optional cloud restore repetition. Substitutes: see the [handoff register](../../shared/dependency-matrix.md#handoff-register).
 
 ## Interfaces and routes
 
@@ -63,7 +65,7 @@ Search/filter changes reset pagination and stale results. A previous user's parc
 
 Own A10 through A13 in the [endpoint table](../../shared/system-contract.md#endpoint-ownership). Own parcel and parcel_status_history schema (migration 0003) plus safe summary/detail/public DTOs, the role bootstrap, the node-pg-migrate conventions, the RLS context helper, constants and the fixture loader. Syauqi authors assignment/delivery writes against these tables through the agreed functions; Zikri reviews shared schema changes. No module creates a second Parcel model or status-history table.
 
-Zikri coordinates migration ordering but does not take ownership of other members' assessed code: Naszrul writes 0002, Syauqi writes 0005 to 0007, each reviewed for function hardening; 0003 is complete in PH1 and never edited.
+Zikri coordinates migration ordering but does not take ownership of other members' assessed code: Naszrul owns 0002, the agreed schema is implemented through shared revision 0004, Zikri writes 0005, and Syauqi writes 0006/0007. Each function is reviewed for hardening; applied revisions are never edited.
 
 ## Work package map
 
@@ -98,10 +100,6 @@ RLS is tested independently of an application WHERE seller_id filter. It does no
 ## Testing and acceptance
 
 All M2 tests are listed per phase and aggregated in [test-plan.md](test-plan.md). Run worksheet rows M2-01 to M2-10, RLS-01 to RLS-09 (RLS-03 and RLS-10 jointly with Syauqi) and the M2 shares of S-01, S-03, S-08. Use real PostgreSQL for RLS/transaction tests and browser tests for UI/privacy checks. Record exact input, expected/actual outcomes, safe evidence and Zikri's name. Keep more than five distinct security input types in the final record.
-
-### Checkpoint slice versus completion
-
-The checkpoint slice is M2-PH2: one registration form creates a real parcel and displays it in the Seller's own list with its generated token and persistence after refresh, plus another Seller's denied access. Public tracking, search, replay safety, retention and the hardening suites follow; the slice is not M2 completion.
 
 ### Module definition of done
 

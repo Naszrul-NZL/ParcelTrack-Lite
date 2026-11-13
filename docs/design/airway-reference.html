@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Airway / ParcelTrack Lite design reference</title>
+  <style>body { margin:0; background:#EDEDF3; } #pt-airway { max-width:1200px; margin-inline:auto; }</style>
+</head>
+<body>
+<div id="pt-airway" data-theme="light" aria-label="Experimental ParcelTrack interface">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+    #pt-airway { --aw-paper:#F7F7FB; --aw-surface:#FFFFFF; --aw-ink:#232336; --aw-muted:#656579; --aw-line:#D9D8E4; --aw-input:#858098; --aw-brand:#39358C; --aw-on-brand:#FFFFFF; --aw-hover:#2C286D; --aw-tint:#EDEBF7; --aw-docket:#E8E5F6; --aw-docket-ink:#272441; --aw-docket-muted:#625B78; --aw-yellow:#F3D47D; --aw-error:#AA303A; --aw-success:#31634B; --aw-success-soft:#E7F1EA; --aw-shadow:rgba(39,36,65,.13); --aw-display:"Barlow Condensed",Impact,sans-serif; font:400 14px/1.55 "DM Sans","Segoe UI",sans-serif; color:var(--aw-ink); color-scheme:light; text-align:left; }
+    #pt-airway[data-theme="dark"] { --aw-paper:#191824; --aw-surface:#24212F; --aw-ink:#F3F1FC; --aw-muted:#B4B0C5; --aw-line:#484253; --aw-input:#938CA9; --aw-brand:#BCB4F4; --aw-on-brand:#211D43; --aw-hover:#D2CCFF; --aw-tint:#343044; --aw-error:#FFACB5; --aw-success:#B7DFCA; --aw-success-soft:#293E34; --aw-shadow:rgba(0,0,0,.3); color-scheme:dark; }
+    #pt-airway * { box-sizing:border-box; }
+    #pt-airway [hidden] { display:none !important; }
+    #pt-airway h1, #pt-airway h2, #pt-airway h3, #pt-airway p { margin:0; color:inherit; }
+    #pt-airway button, #pt-airway input, #pt-airway select { font:inherit; color:inherit; }
+    #pt-airway button { touch-action:manipulation; }
+    #pt-airway button, #pt-airway input, #pt-airway select { transition:background-color 140ms,color 140ms,border-color 140ms; }
+    #pt-airway button:focus-visible, #pt-airway input:focus-visible, #pt-airway select:focus-visible, #pt-airway a:focus-visible { outline:3px solid var(--aw-brand); outline-offset:4px; }
+    #pt-airway button:disabled { background:var(--aw-tint); color:var(--aw-muted); border-color:var(--aw-input); cursor:wait; }
+    #pt-airway .aw-app { position:relative; background:var(--aw-paper); padding:0 40px; overflow:hidden; }
+    #pt-airway .aw-skip { position:absolute; top:-100px; left:20px; z-index:5; padding:12px 18px; background:var(--aw-brand); color:var(--aw-on-brand); border-radius:6px; }
+    #pt-airway .aw-skip:focus { top:12px; }
+    #pt-airway .aw-masthead { min-height:94px; display:flex; align-items:center; justify-content:space-between; gap:24px; border-bottom:1px solid var(--aw-line); }
+    #pt-airway .aw-wordmark { font-size:25px; font-weight:700; letter-spacing:-1.3px; white-space:nowrap; }
+    #pt-airway .aw-wordmark span { font-size:12px; font-weight:500; letter-spacing:0; vertical-align:super; margin-left:5px; }
+    #pt-airway .aw-nav { display:flex; gap:22px; align-items:center; }
+    #pt-airway .aw-nav button { position:relative; background:transparent; border:0; min-height:44px; padding:10px 0; font-size:13px; color:var(--aw-muted); }
+    #pt-airway .aw-nav button[aria-current="page"] { color:var(--aw-ink); font-weight:600; }
+    #pt-airway .aw-nav button[aria-current="page"]::after { position:absolute; content:""; bottom:2px; left:0; right:0; height:2px; background:var(--aw-brand); }
+    #pt-airway .aw-nav button:hover { color:var(--aw-brand); }
+    #pt-airway .aw-theme { min-height:40px; padding:8px 12px; border:1px solid var(--aw-input); border-radius:6px; background:transparent; font-size:12px; white-space:nowrap; }
+    #pt-airway .aw-theme:hover { background:var(--aw-tint); }
+    #pt-airway .aw-theme-mobile { display:none; }
+    #pt-airway .aw-main { padding-top:38px; }
+    #pt-airway .aw-context { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; font-size:12px; color:var(--aw-muted); }
+    #pt-airway .aw-context strong { color:var(--aw-ink); font-weight:500; }
+    #pt-airway .aw-context .aw-slash { padding-inline:9px; color:var(--aw-muted); }
+    #pt-airway .aw-live { font-size:12px; }
+    #pt-airway .aw-hero { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:56px; align-items:center; padding:34px 0 42px; }
+    #pt-airway .aw-status-title { font-family:var(--aw-display); font-size:clamp(70px,9.6vw,116px); font-weight:600; line-height:.91; letter-spacing:-2.8px; max-width:500px; }
+    #pt-airway .aw-status-title span { display:block; }
+    #pt-airway .aw-status-copy { color:var(--aw-muted); font-size:15px; max-width:330px; margin-top:25px; line-height:1.6; }
+    #pt-airway .aw-updated { display:flex; align-items:center; gap:12px; margin-top:26px; font-size:12px; color:var(--aw-muted); }
+    #pt-airway .aw-updated::before { content:""; display:block; width:24px; height:1px; background:var(--aw-input); }
+    #pt-airway .aw-lookup { margin-top:38px; max-width:410px; }
+    #pt-airway label { display:block; font-weight:500; font-size:12px; margin-bottom:8px; }
+    #pt-airway .aw-search { display:flex; align-items:stretch; background:var(--aw-surface); border:1px solid var(--aw-input); border-radius:8px; padding:5px; gap:5px; }
+    #pt-airway .aw-search input { width:100%; min-width:0; padding:10px; background:transparent; border:0; border-radius:4px; font-size:14px; }
+    #pt-airway input::placeholder { color:var(--aw-muted); opacity:1; }
+    #pt-airway input[aria-invalid="true"] { box-shadow:inset 0 -2px var(--aw-error); }
+    #pt-airway .aw-search button { min-height:46px; min-width:86px; border:1px solid var(--aw-brand); border-radius:5px; padding:10px 15px; background:var(--aw-brand); color:var(--aw-on-brand); font-size:13px; font-weight:600; }
+    #pt-airway .aw-search button:hover:not(:disabled) { background:var(--aw-hover); border-color:var(--aw-hover); }
+    #pt-airway .aw-error { font-size:12px; line-height:1.5; color:var(--aw-error); margin-top:7px; min-height:18px; }
+    #pt-airway .aw-docket-wrap { position:relative; padding:10px 0; }
+    #pt-airway .aw-docket { position:relative; overflow:hidden; background:var(--aw-docket); color:var(--aw-docket-ink); border-radius:16px; box-shadow:0 13px 30px -15px var(--aw-shadow); transform:rotate(2deg); }
+    #pt-airway .aw-docket-top { padding:23px 26px 24px; border-bottom:1px dashed #A8A0BE; }
+    #pt-airway .aw-docket-heading { display:flex; justify-content:space-between; gap:12px; font-size:12px; font-weight:500; }
+    #pt-airway .aw-sample-mark { font-size:11px; color:var(--aw-docket-muted); }
+    #pt-airway .aw-tracking { font:500 clamp(17px,2.4vw,23px)/1.5 ui-monospace,Consolas,monospace; letter-spacing:-.8px; margin-top:19px; overflow-wrap:anywhere; }
+    #pt-airway .aw-docket-stage { display:flex; align-items:center; gap:18px; margin-top:21px; }
+    #pt-airway .aw-stage-number { font-family:var(--aw-display); font-size:72px; font-weight:500; line-height:.95; letter-spacing:-2px; }
+    #pt-airway .aw-stage-caption { font-size:12px; color:var(--aw-docket-muted); }
+    #pt-airway .aw-stage-label { margin-top:2px; font-size:17px; font-weight:600; letter-spacing:-.4px; }
+    #pt-airway .aw-docket-bottom { position:relative; padding:25px 26px 24px; }
+    #pt-airway .aw-docket-bottom::before, #pt-airway .aw-docket-bottom::after { content:""; position:absolute; top:-10px; width:10px; height:20px; background:var(--aw-paper); }
+    #pt-airway .aw-docket-bottom::before { left:0; border-radius:0 10px 10px 0; }
+    #pt-airway .aw-docket-bottom::after { right:0; border-radius:10px 0 0 10px; }
+    #pt-airway .aw-journey { list-style:none; padding:0; margin:0; }
+    #pt-airway .aw-journey li { display:grid; grid-template-columns:24px minmax(0,1fr); gap:14px; position:relative; min-height:58px; padding-bottom:17px; }
+    #pt-airway .aw-journey li:last-child { min-height:24px; padding-bottom:0; }
+    #pt-airway .aw-journey li:not(:last-child)::after { content:""; position:absolute; left:11px; top:26px; bottom:3px; width:1px; background:#B2A9CA; }
+    #pt-airway .aw-node { display:flex; align-items:center; justify-content:center; width:24px; height:24px; border:1px solid #807391; border-radius:50%; color:var(--aw-docket-ink); font-size:11px; }
+    #pt-airway .aw-done .aw-node { background:var(--aw-docket-ink); border-color:var(--aw-docket-ink); color:var(--aw-docket); }
+    #pt-airway .aw-current .aw-node { background:var(--aw-yellow); color:var(--aw-docket-ink); border-color:var(--aw-docket-ink); font-weight:700; }
+    #pt-airway .aw-journey strong { display:block; font-weight:500; font-size:13px; }
+    #pt-airway .aw-journey time, #pt-airway .aw-pending-caption { display:block; color:var(--aw-docket-muted); font-size:11px; line-height:1.5; margin-top:2px; }
+    #pt-airway .aw-docket-empty { min-height:280px; display:flex; align-items:center; padding:30px 26px; }
+    #pt-airway .aw-docket-empty h2 { font:600 40px/1 var(--aw-display); margin-bottom:14px; letter-spacing:-.5px; }
+    #pt-airway .aw-docket-empty p { color:var(--aw-docket-muted); font-size:13px; }
+    #pt-airway .aw-samples { display:grid; grid-template-columns:1fr 2.4fr; gap:30px; align-items:center; border-top:1px solid var(--aw-line); padding:25px 0; }
+    #pt-airway .aw-samples h2 { font-size:13px; font-weight:500; }
+    #pt-airway .aw-samples p { font-size:11px; color:var(--aw-muted); margin-top:3px; }
+    #pt-airway .aw-sample-buttons { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+    #pt-airway .aw-sample-buttons button { display:flex; gap:12px; align-items:center; text-align:left; border:0; border-bottom:2px solid transparent; border-radius:0; background:transparent; padding:9px 0; min-height:50px; }
+    #pt-airway .aw-sample-buttons button[aria-pressed="true"] { border-bottom-color:var(--aw-brand); }
+    #pt-airway .aw-sample-buttons button:hover { background:var(--aw-tint); }
+    #pt-airway .aw-sample-no { font:500 32px/1 var(--aw-display); letter-spacing:-.5px; }
+    #pt-airway .aw-sample-state { color:var(--aw-muted); font-size:11px; line-height:1.4; }
+    #pt-airway .aw-footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; min-height:68px; border-top:1px solid var(--aw-line); color:var(--aw-muted); font-size:11px; }
+    #pt-airway .aw-footer strong { font-weight:500; color:var(--aw-ink); }
+    #pt-airway .aw-manifest-header { display:flex; align-items:flex-end; justify-content:space-between; gap:30px; padding:34px 0 30px; }
+    #pt-airway .aw-manifest-title { font-family:var(--aw-display); font-size:clamp(64px,8vw,88px); line-height:.95; font-weight:600; letter-spacing:-1.8px; }
+    #pt-airway .aw-manifest-header p { color:var(--aw-muted); font-size:13px; max-width:220px; }
+    #pt-airway .aw-manifest-tools { display:grid; grid-template-columns:minmax(0,1fr) minmax(180px,.45fr); gap:20px; padding:22px 0; border-top:1px solid var(--aw-line); }
+    #pt-airway .aw-manifest-tools input, #pt-airway .aw-manifest-tools select { width:100%; min-width:0; min-height:46px; border:1px solid var(--aw-input); background:var(--aw-surface); border-radius:6px; padding:10px 13px; font-size:14px; }
+    #pt-airway .aw-list-header { display:grid; grid-template-columns:1.1fr .8fr 1fr 22px; gap:16px; color:var(--aw-muted); padding:12px 20px; font-size:11px; border-bottom:1px solid var(--aw-line); }
+    #pt-airway .aw-records { list-style:none; margin:0; padding:0; min-height:280px; }
+    #pt-airway .aw-record { border-bottom:1px solid var(--aw-line); }
+    #pt-airway .aw-record-button { display:grid; grid-template-columns:1.1fr .8fr 1fr 22px; align-items:center; gap:16px; width:100%; min-height:81px; padding:18px 20px; border:0; background:transparent; text-align:left; }
+    #pt-airway .aw-record-button:hover { background:var(--aw-tint); }
+    #pt-airway .aw-record-button[aria-expanded="true"] { background:var(--aw-tint); }
+    #pt-airway .aw-record-id { font:500 14px/1.5 ui-monospace,Consolas,monospace; overflow-wrap:anywhere; }
+    #pt-airway .aw-record-status { font-size:12px; font-weight:500; }
+    #pt-airway .aw-record-date { color:var(--aw-muted); font-size:12px; }
+    #pt-airway .aw-disclosure { font-size:20px; font-weight:400; }
+    #pt-airway .aw-record-details { background:var(--aw-surface); padding:24px 24px 26px; }
+    #pt-airway .aw-record-details-header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
+    #pt-airway .aw-record-details h2 { font-size:15px; font-weight:600; letter-spacing:-.3px; }
+    #pt-airway .aw-record-details p { font-size:13px; color:var(--aw-muted); max-width:460px; margin-top:4px; }
+    #pt-airway .aw-open-track { border:1px solid var(--aw-input); min-height:44px; padding:8px 13px; border-radius:6px; background:transparent; white-space:nowrap; font-size:12px; }
+    #pt-airway .aw-open-track:hover { background:var(--aw-tint); }
+    #pt-airway .aw-events-horizontal { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; list-style:none; padding:0; margin:24px 0 0; }
+    #pt-airway .aw-events-horizontal li { padding-top:12px; border-top:2px solid var(--aw-line); min-width:0; }
+    #pt-airway .aw-events-horizontal strong { font-size:12px; font-weight:500; display:block; }
+    #pt-airway .aw-events-horizontal time { font-size:11px; color:var(--aw-muted); display:block; margin-top:3px; }
+    #pt-airway .aw-events-horizontal li:last-child { border-top-color:var(--aw-brand); }
+    #pt-airway .aw-no-records { padding:42px 20px; }
+    #pt-airway .aw-no-records h2 { font:600 36px/1 var(--aw-display); margin-bottom:12px; }
+    #pt-airway .aw-no-records p { font-size:13px; color:var(--aw-muted); }
+    #pt-airway .aw-no-records button { margin-top:18px; border:1px solid var(--aw-input); border-radius:6px; background:var(--aw-surface); min-height:44px; padding:8px 14px; font-size:13px; }
+    #pt-airway .aw-manifest-count { margin:16px 0 28px; color:var(--aw-muted); font-size:11px; }
+    #pt-airway .aw-sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+    #pt-airway .aw-loading .aw-docket { transform:none; }
+    #pt-airway .aw-loading .aw-error { color:var(--aw-muted); }
+    @media(min-width:1000px) { #pt-airway .aw-hero { gap:78px; } }
+    @media(max-width:760px) { #pt-airway .aw-app { padding:0 25px; } #pt-airway .aw-masthead { gap:18px; } #pt-airway .aw-nav { gap:16px; } #pt-airway .aw-hero { gap:28px; } #pt-airway .aw-status-title { font-size:82px; } #pt-airway .aw-docket-top, #pt-airway .aw-docket-bottom { padding-left:21px; padding-right:21px; } #pt-airway .aw-samples { grid-template-columns:1fr; gap:14px; } #pt-airway .aw-sample-buttons { gap:28px; } #pt-airway .aw-list-header, #pt-airway .aw-record-button { grid-template-columns:1.1fr .8fr .85fr 18px; gap:12px; padding-left:12px; padding-right:12px; } }
+    @media(max-width:600px) { #pt-airway .aw-app { padding:0 20px; } #pt-airway .aw-masthead { flex-wrap:wrap; min-height:116px; gap:0 12px; padding-top:14px; } #pt-airway .aw-wordmark { font-size:24px; } #pt-airway .aw-nav { order:3; width:100%; gap:24px; min-height:48px; } #pt-airway .aw-theme-desktop { display:none; } #pt-airway .aw-theme-mobile { display:block; } #pt-airway .aw-main { padding-top:26px; } #pt-airway .aw-context { font-size:11px; } #pt-airway .aw-live { display:none; } #pt-airway .aw-hero { grid-template-columns:1fr; gap:16px; padding-top:30px; padding-bottom:30px; } #pt-airway .aw-status-title { font-size:clamp(72px,20vw,104px); } #pt-airway .aw-status-copy { margin-top:20px; max-width:310px; } #pt-airway .aw-lookup { margin-top:26px; max-width:none; } #pt-airway input { font-size:16px !important; } #pt-airway .aw-docket-wrap { padding:10px 7px; } #pt-airway .aw-docket { transform:rotate(1deg); } #pt-airway .aw-docket-top { padding:24px; } #pt-airway .aw-docket-bottom { padding:26px 24px; } #pt-airway .aw-tracking { font-size:23px; } #pt-airway .aw-stage-number { font-size:72px; } #pt-airway .aw-sample-buttons { gap:12px; } #pt-airway .aw-sample-buttons button { flex-direction:column; align-items:flex-start; gap:8px; } #pt-airway .aw-sample-state { font-size:11px; } #pt-airway .aw-footer { padding-block:19px; } #pt-airway .aw-manifest-header { align-items:flex-start; flex-direction:column; gap:16px; padding-top:30px; } #pt-airway .aw-manifest-header p { max-width:100%; } #pt-airway .aw-manifest-tools { grid-template-columns:1fr; gap:14px; } #pt-airway .aw-list-header { grid-template-columns:1fr 1fr 18px; } #pt-airway .aw-list-header .aw-date-head { display:none; } #pt-airway .aw-record-button { grid-template-columns:1fr auto 18px; gap:10px; } #pt-airway .aw-record-id { font-size:12px; } #pt-airway .aw-record-status { font-size:11px; max-width:82px; } #pt-airway .aw-record-date { display:none; } #pt-airway .aw-record-details { padding:21px 14px; } #pt-airway .aw-record-details-header { flex-direction:column; gap:14px; } #pt-airway .aw-events-horizontal { grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px 16px; } }
+    @media(max-width:360px) { #pt-airway .aw-search { display:grid; grid-template-columns:minmax(0,1fr); gap:6px; } #pt-airway .aw-search input { min-height:44px; } #pt-airway .aw-search button { width:100%; } #pt-airway .aw-manifest-title { font-size:64px; } }
+    @media(prefers-reduced-motion:reduce) { #pt-airway *, #pt-airway *::before, #pt-airway *::after { transition:none !important; animation:none !important; } }
+  </style>
+  <div class="aw-app">
+    <a href="#aw-main" class="aw-skip cursor-interaction">Skip to parcel content</a>
+    <header class="aw-masthead">
+      <div class="aw-wordmark">parceltrack<span>lite</span></div>
+      <nav class="aw-nav" aria-label="Preview screens">
+        <button type="button" class="cursor-interaction" data-screen="tracking" aria-current="page">Track a parcel</button>
+        <button type="button" class="cursor-interaction" data-screen="manifest">Sample manifest</button>
+      </nav>
+      <button type="button" class="aw-theme aw-theme-desktop cursor-interaction" data-theme-toggle>Dark mode</button>
+      <button type="button" class="aw-theme aw-theme-mobile cursor-interaction" data-theme-toggle>Dark mode</button>
+    </header>
+    <main id="aw-main" class="aw-main">
+      <section class="aw-tracking-view" aria-label="Parcel tracking screen">
+        <div class="aw-context"><div>Tracking<span class="aw-slash">/</span><strong class="aw-context-id">PTL-DEMO-001</strong></div><span class="aw-live">Public tracking, no sign-in needed</span></div>
+        <div class="aw-hero">
+          <div class="aw-status-area">
+            <div class="aw-status-announcement" aria-live="polite" aria-atomic="true">
+              <h1 class="aw-status-title"><span>Out for</span><span>delivery.</span></h1>
+              <p class="aw-status-copy">The assigned rider has started this delivery. Every handoff is recorded below.</p>
+              <p class="aw-updated">Updated 22 Oct 2026, 9:40 am</p>
+            </div>
+            <div class="aw-lookup" role="search" aria-label="Look up a sample parcel">
+              <label for="aw-tracking-number">Track a parcel</label>
+              <div class="aw-search"><input id="aw-tracking-number" value="PTL-DEMO-001" placeholder="Enter your tracking number" autocomplete="off" spellcheck="false" maxlength="64" aria-describedby="aw-tracking-error"><button type="button" class="cursor-interaction aw-track-button">Track</button></div>
+              <p id="aw-tracking-error" class="aw-error" role="alert"></p>
+            </div>
+          </div>
+          <div class="aw-docket-wrap" aria-label="Delivery docket">
+            <article class="aw-docket">
+              <div class="aw-docket-top">
+                <div class="aw-docket-heading"><span>Delivery docket</span><span class="aw-sample-mark">Sample record</span></div>
+                <p class="aw-tracking">PTL-DEMO-001</p>
+                <div class="aw-docket-stage"><span class="aw-stage-number">03</span><div><p class="aw-stage-caption">Current stage / 04</p><p class="aw-stage-label">Out for delivery</p></div></div>
+              </div>
+              <div class="aw-docket-bottom"><ol class="aw-journey" aria-label="Shipment journey"></ol></div>
+            </article>
+          </div>
+        </div>
+        <section class="aw-samples" aria-label="Sample parcel selector">
+          <div><h2>Take a closer look.</h2><p>Three sample parcels, different stages.</p></div>
+          <div class="aw-sample-buttons">
+            <button type="button" class="cursor-interaction" data-sample="PTL-DEMO-001" aria-pressed="true"><span class="aw-sample-no">001</span><span class="aw-sample-state">Out for<br>delivery</span></button>
+            <button type="button" class="cursor-interaction" data-sample="PTL-DEMO-002" aria-pressed="false"><span class="aw-sample-no">002</span><span class="aw-sample-state">Delivery<br>complete</span></button>
+            <button type="button" class="cursor-interaction" data-sample="PTL-DEMO-003" aria-pressed="false"><span class="aw-sample-no">003</span><span class="aw-sample-state">Awaiting<br>assignment</span></button>
+          </div>
+        </section>
+      </section>
+      <section class="aw-manifest-view" aria-label="Sample manifest screen" hidden>
+        <div class="aw-context"><strong>Sample workspace</strong><span>Records from the interface demo</span></div>
+        <div class="aw-manifest-header"><h1 class="aw-manifest-title">The parcel<br>manifest.</h1><p>Every parcel has a story.<br>Select a record to see its handoffs.</p></div>
+        <div class="aw-manifest-tools">
+          <div><label for="aw-manifest-search">Find a sample parcel</label><input id="aw-manifest-search" type="search" placeholder="Search by tracking number" autocomplete="off" spellcheck="false"></div>
+          <div><label for="aw-status-filter">Delivery status</label><select id="aw-status-filter"><option value="all">All statuses</option><option value="Registered">Registered</option><option value="Out for delivery">Out for delivery</option><option value="Delivered">Delivered</option></select></div>
+        </div>
+        <div class="aw-list-header" aria-hidden="true"><span>Parcel</span><span>Current status</span><span class="aw-date-head">Latest update</span><span></span></div>
+        <ul class="aw-records" aria-label="Sample parcels"></ul>
+        <div class="aw-no-records" hidden><h2>No matching parcels.</h2><p>Change the tracking number or status to find a sample record.</p><button class="cursor-interaction" type="button">Clear filters</button></div>
+        <p class="aw-manifest-count" role="status">3 sample parcels</p>
+      </section>
+    </main>
+    <footer class="aw-footer"><strong>Every handoff. On record.</strong><span>Experimental interface / sample data only</span></footer>
+    <p class="aw-sr-only aw-announcement" aria-live="polite"></p>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById('pt-airway');
+      const parcels = [
+        { number:'PTL-DEMO-001', status:'Out for delivery', title:['Out for','delivery.'], stage:3, updated:'22 Oct 2026, 9:40 am', description:'The assigned rider has started this delivery. Every handoff is recorded below.', events:[{status:'Registered',time:'21 Oct 2026, 4:30 pm'},{status:'Assigned',time:'22 Oct 2026, 8:15 am'},{status:'Out for delivery',time:'22 Oct 2026, 9:40 am'}] },
+        { number:'PTL-DEMO-002', status:'Delivered', title:['Delivery','complete.'], stage:4, updated:'21 Oct 2026, 2:20 pm', description:'This sample parcel has completed its delivery. You can review every handoff in its record.', events:[{status:'Registered',time:'20 Oct 2026, 3:10 pm'},{status:'Assigned',time:'21 Oct 2026, 8:30 am'},{status:'Out for delivery',time:'21 Oct 2026, 10:00 am'},{status:'Delivered',time:'21 Oct 2026, 2:20 pm'}] },
+        { number:'PTL-DEMO-003', status:'Registered', title:['Ready for','its journey.'], stage:1, updated:'22 Oct 2026, 10:15 am', description:'Your parcel is registered and waiting for a rider assignment. Its next handoff will appear here.', events:[{status:'Registered',time:'22 Oct 2026, 10:15 am'}] }
+      ];
+      const stages = ['Registered','Assigned','Out for delivery','Delivered'];
+      let selected = parcels[0];
+      let activeScreen = 'tracking';
+      let expanded = 'PTL-DEMO-001';
+      let requestId = 0;
+      const input = root.querySelector('#aw-tracking-number');
+      const trackButton = root.querySelector('.aw-track-button');
+      const statusTitle = root.querySelector('.aw-status-title');
+      const docketTop = root.querySelector('.aw-docket-top');
+      const docketBottom = root.querySelector('.aw-docket-bottom');
+      const controls = root.querySelectorAll('[data-screen]');
+      function save() {
+        if (window.openai?.setWidgetState) window.openai.setWidgetState({modelContent:{concept:'Airway',theme:root.dataset.theme,screen:activeScreen},privateContent:{theme:root.dataset.theme,screen:activeScreen}}).catch(() => {});
+      }
+      function setTheme(theme) {
+        root.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+        root.querySelectorAll('[data-theme-toggle]').forEach(button => { button.textContent = root.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode'; });
+      }
+      function setScreen(screen) {
+        activeScreen = screen === 'manifest' ? 'manifest' : 'tracking';
+        root.querySelector('.aw-tracking-view').hidden = activeScreen !== 'tracking';
+        root.querySelector('.aw-manifest-view').hidden = activeScreen !== 'manifest';
+        controls.forEach(button => { if (button.dataset.screen === activeScreen) button.setAttribute('aria-current','page'); else button.removeAttribute('aria-current'); });
+      }
+      function renderDocket(parcel) {
+        docketTop.hidden = false;
+        root.querySelector('.aw-tracking').textContent = parcel.number;
+        root.querySelector('.aw-stage-number').textContent = String(parcel.stage).padStart(2,'0');
+        root.querySelector('.aw-stage-label').textContent = parcel.status;
+        docketBottom.innerHTML = '<ol class="aw-journey" aria-label="Shipment journey">' + stages.map((stage,index) => {
+          const event = parcel.events.find(item => item.status === stage);
+          const current = index + 1 === parcel.stage;
+          const done = index + 1 < parcel.stage;
+          return '<li class="'+(current?'aw-current':done?'aw-done':'aw-pending')+'"><span class="aw-node" aria-hidden="true">'+(done?'&#10003;':index+1)+'</span><div><strong>'+stage+(current?' <span class="aw-sr-only">Current stage</span>':'')+'</strong>'+(event?'<time>'+event.time+'</time>':'<span class="aw-pending-caption">Pending</span>')+'</div></li>';
+        }).join('') + '</ol>';
+      }
+      function renderParcel(parcel) {
+        selected = parcel;
+        root.classList.remove('aw-loading');
+        root.querySelector('.aw-tracking-view').removeAttribute('aria-busy');
+        statusTitle.innerHTML = parcel.title.map(line => '<span>'+line+'</span>').join('');
+        root.querySelector('.aw-status-copy').textContent = parcel.description;
+        root.querySelector('.aw-updated').textContent = 'Updated ' + parcel.updated;
+        root.querySelector('.aw-updated').hidden = false;
+        root.querySelector('.aw-context-id').textContent = parcel.number;
+        input.value = parcel.number;
+        input.setAttribute('aria-invalid','false');
+        root.querySelector('.aw-error').textContent = '';
+        root.querySelector('.aw-error').setAttribute('role','alert');
+        root.querySelectorAll('[data-sample]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.sample === parcel.number)));
+        renderDocket(parcel);
+        trackButton.disabled = false;
+        trackButton.textContent = 'Track';
+      }
+      function renderNotFound() {
+        root.classList.remove('aw-loading');
+        root.querySelector('.aw-tracking-view').removeAttribute('aria-busy');
+        statusTitle.innerHTML = '<span>No parcel</span><span>found.</span>';
+        root.querySelector('.aw-status-copy').textContent = 'This preview only contains the three sample parcels below. Choose one to see its delivery record.';
+        root.querySelector('.aw-updated').hidden = true;
+        root.querySelector('.aw-context-id').textContent = 'No matching sample';
+        root.querySelector('.aw-error').textContent = 'Try PTL-DEMO-001, PTL-DEMO-002 or PTL-DEMO-003.';
+        root.querySelector('.aw-error').setAttribute('role','alert');
+        input.setAttribute('aria-invalid','true');
+        docketTop.hidden = true;
+        docketBottom.innerHTML = '<div class="aw-docket-empty"><div><h2>A record starts<br>with a number.</h2><p>Check your tracking number, or select one of the sample parcels.</p></div></div>';
+        root.querySelectorAll('[data-sample]').forEach(button => button.setAttribute('aria-pressed','false'));
+        trackButton.disabled = false;
+        trackButton.textContent = 'Track';
+      }
+      function lookup(number) {
+        const normalized = number.trim().toUpperCase();
+        const currentRequest = ++requestId;
+        if (!normalized) {
+          root.classList.remove('aw-loading');
+          root.querySelector('.aw-error').setAttribute('role','alert');
+          root.querySelector('.aw-error').textContent = 'Enter a tracking number, or choose a sample parcel below.';
+          input.setAttribute('aria-invalid','true');
+          trackButton.disabled = false;
+          trackButton.textContent = 'Track';
+          root.querySelector('.aw-tracking-view').removeAttribute('aria-busy');
+          return;
+        }
+        input.value = normalized;
+        input.setAttribute('aria-invalid','false');
+        root.querySelector('.aw-error').textContent = 'Opening sample record...';
+        root.querySelector('.aw-error').setAttribute('role','status');
+        root.querySelector('.aw-tracking-view').setAttribute('aria-busy','true');
+        root.classList.add('aw-loading');
+        trackButton.disabled = true;
+        trackButton.textContent = 'Finding';
+        window.setTimeout(() => {
+          if (currentRequest !== requestId) return;
+          const parcel = parcels.find(item => item.number === normalized);
+          if (parcel) renderParcel(parcel); else renderNotFound();
+        },350);
+      }
+      function renderManifest() {
+        const query = root.querySelector('#aw-manifest-search').value.trim().toUpperCase();
+        const filter = root.querySelector('#aw-status-filter').value;
+        const filtered = parcels.filter(parcel => parcel.number.includes(query) && (filter === 'all' || filter === parcel.status));
+        root.querySelector('.aw-no-records').hidden = filtered.length > 0;
+        root.querySelector('.aw-records').hidden = filtered.length === 0;
+        root.querySelector('.aw-manifest-count').textContent = filtered.length + (filtered.length === 1 ? ' sample parcel' : ' sample parcels');
+        root.querySelector('.aw-records').innerHTML = filtered.map(parcel => {
+          const open = expanded === parcel.number;
+          const panelId = 'aw-detail-' + parcel.number.slice(-3);
+          return '<li class="aw-record"><button type="button" class="aw-record-button cursor-interaction" data-record="'+parcel.number+'" aria-expanded="'+open+'" aria-controls="'+panelId+'"><span class="aw-record-id">'+parcel.number+'</span><span class="aw-record-status">'+parcel.status+'</span><time class="aw-record-date">'+parcel.updated+'</time><span class="aw-disclosure" aria-hidden="true">'+(open?'&#8722;':'+')+'</span></button><div class="aw-record-details" id="'+panelId+'" '+(open?'':'hidden')+'><div class="aw-record-details-header"><div><h2>'+parcel.status+'</h2><p>'+parcel.description+'</p></div><button type="button" class="aw-open-track cursor-interaction" data-open-track="'+parcel.number+'">Open tracking</button></div><ol class="aw-events-horizontal" aria-label="Recorded handoffs">'+parcel.events.map(event=>'<li><strong>'+event.status+'</strong><time>'+event.time+'</time></li>').join('')+'</ol></div></li>';
+        }).join('');
+      }
+      root.querySelector('.aw-records').addEventListener('click',event => {
+        const disclosure = event.target.closest('[data-record]');
+        const openTrack = event.target.closest('[data-open-track]');
+        if (disclosure) {
+          const number = disclosure.dataset.record;
+          expanded = expanded === number ? null : number;
+          root.querySelectorAll('[data-record]').forEach(button => {
+            const open = button.dataset.record === expanded;
+            button.setAttribute('aria-expanded',String(open));
+            button.querySelector('.aw-disclosure').textContent = open ? '\u2212' : '+';
+            root.querySelector('#'+button.getAttribute('aria-controls')).hidden = !open;
+          });
+        }
+        if (openTrack) {
+          ++requestId;
+          renderParcel(parcels.find(parcel => parcel.number === openTrack.dataset.openTrack));
+          setScreen('tracking');
+          save();
+          root.querySelector('[data-screen="tracking"]').focus();
+        }
+      });
+      trackButton.addEventListener('click',() => lookup(input.value));
+      input.addEventListener('keydown',event => { if (event.key === 'Enter') { event.preventDefault(); lookup(input.value); } });
+      root.querySelectorAll('[data-sample]').forEach(button => button.addEventListener('click',() => lookup(button.dataset.sample)));
+      controls.forEach(button => button.addEventListener('click',() => { setScreen(button.dataset.screen); save(); }));
+      root.querySelector('.aw-skip').addEventListener('click',event => { event.preventDefault(); root.querySelector(activeScreen === 'tracking' ? '#aw-tracking-number' : '#aw-manifest-search').focus(); });
+      root.querySelectorAll('[data-theme-toggle]').forEach(button => button.addEventListener('click',() => { setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark'); save(); }));
+      root.querySelector('#aw-manifest-search').addEventListener('input',renderManifest);
+      root.querySelector('#aw-status-filter').addEventListener('change',renderManifest);
+      root.querySelector('.aw-no-records button').addEventListener('click',() => { root.querySelector('#aw-manifest-search').value = ''; root.querySelector('#aw-status-filter').value = 'all'; renderManifest(); root.querySelector('#aw-manifest-search').focus(); });
+      function restore(saved) {
+        const state = saved?.privateContent;
+        if (state?.theme) setTheme(state.theme);
+        if (state?.screen) setScreen(state.screen);
+      }
+      renderParcel(selected);
+      renderManifest();
+      restore(window.openai?.widgetState);
+      window.addEventListener('openai:set_globals',event => restore(event.detail?.globals?.widgetState));
+      if (globalThis.Tweak) {
+        const settings = { weight:600, tilt:2 };
+        const tweak = new Tweak({container:root.querySelector('.aw-app'),onChange:() => {
+          root.querySelectorAll('.aw-status-title,.aw-manifest-title').forEach(heading => { heading.style.fontWeight = settings.weight; });
+          root.querySelector('.aw-docket').style.transform = 'rotate('+settings.tilt+'deg)';
+        }});
+        tweak.addSlider(settings,'weight',{label:'Heading weight',min:500,max:700,step:100});
+        tweak.addSlider(settings,'tilt',{label:'Docket angle',min:0,max:3,step:.5,unit:'deg'});
+      }
+    })();
+  </script>
+</div>
+</body>
+</html>

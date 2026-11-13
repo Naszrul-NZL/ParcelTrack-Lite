@@ -1,0 +1,67 @@
+@import "tailwindcss" source("../");
+@import "./airway-tokens.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-dm-sans), "Segoe UI", sans-serif;
+  --font-heading: var(--font-barlow-condensed), Impact, sans-serif;
+  --font-mono: ui-monospace, Consolas, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-docket: var(--docket);
+  --color-docket-foreground: var(--docket-foreground);
+  --color-docket-muted-foreground: var(--docket-muted-foreground);
+  --color-docket-node-border: var(--docket-node-border);
+  --color-journey-current: var(--journey-current);
+  --color-journey-current-foreground: var(--journey-current-foreground);
+  --color-sidebar: var(--card);
+  --color-sidebar-foreground: var(--foreground);
+  --color-sidebar-primary: var(--primary);
+  --color-sidebar-primary-foreground: var(--primary-foreground);
+  --color-sidebar-accent: var(--accent);
+  --color-sidebar-accent-foreground: var(--accent-foreground);
+  --color-sidebar-border: var(--border);
+  --color-sidebar-ring: var(--ring);
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+}
+
+@layer base {
+  * { @apply border-border; box-sizing: border-box; }
+  body { @apply bg-background text-foreground font-sans; margin: 0; font-size: 16px; line-height: 1.55; }
+  button, input, select, textarea { font: inherit; }
+  button, a { touch-action: manipulation; }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+  a { color: var(--primary); text-underline-offset: 4px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 3px solid var(--ring); outline-offset: 4px; }
+  h1, h2, h3, h4, p { margin: 0; }
+  h1, h2 { font-family: var(--font-barlow-condensed), Impact, sans-serif; font-weight: 600; line-height: 1; }
+  h3, h4 { font-weight: 600; }
+  ::selection { background: var(--primary); color: var(--primary-foreground); }
+}

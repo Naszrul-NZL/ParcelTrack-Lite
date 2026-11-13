@@ -1,6 +1,6 @@
 # Module 2 test plan
 
-Owner: Zikri. Coverage plan for M2 and the shared database boundary, linked to phases, tasks and requirements. Every test below is planned; none has run. A phase cannot pass because its screens render: RLS, privacy and data-consistency cases must show their expected outcomes with evidence. Test case (TC) definitions live in the phase files; the index at the end is generated from them by `tools/check_plan_docs.py`.
+Owner: Zikri. Coverage plan for M2 and the shared database boundary, linked to phases, tasks and requirements. This is the planned coverage matrix; [implementation status](../../implementation-status.md) records executable results. Mark a case passed only when its exact inputs and outcomes have evidence. A phase cannot pass because its screens render: RLS, privacy and data-consistency cases must show their expected outcomes with evidence. Test case (TC) definitions live in the phase files; the index at the end is generated from them by `tools/check_plan_docs.py`.
 
 Related: [testing strategy](../../shared/testing-strategy.md), [integration scenarios](../../shared/integration-tests.md), [traceability](../../shared/traceability.md), [security worksheet](../../security-tests.md).
 
@@ -82,23 +82,23 @@ Rubric input types for criterion 3: SQL injection in search (M2-PH3-TC03); XSS i
 | M2-PH1-TC10 | PH1 | Unit (UT-P01) | M2-03 | [PH1-foundation.md](phases/PH1-foundation.md) |
 | M2-PH1-TC11 | PH1 | Integration (RLS-04, RLS-05) | RLS-04, RLS-05 | [PH1-foundation.md](phases/PH1-foundation.md) |
 | M2-PH1-TC12 | PH1 | Integration | RLS-06, RLS-09 | [PH1-foundation.md](phases/PH1-foundation.md) |
-| M2-PH2-TC01 | PH2 | Integration (IT-P01) | M2-F01, M2-05 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC02 | PH2 | Integration (IT-P01) | M2-08, M2-09, RLS-06 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC03 | PH2 | Unit and integration (UT-P01) | M2-03 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC04 | PH2 | Integration (S-01) | S-01 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC05 | PH2 | Integration (IT-P01) | M2-F01 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC06 | PH2 | RLS (RLS-02) | RLS-02 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC07 | PH2 | RLS (RLS-04) | RLS-04 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC08 | PH2 | RLS (RLS-06 partial) | RLS-06, RLS-09 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC09 | PH2 | RLS (RLS-05) | RLS-05, INT-08 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC10 | PH2 | Integration (IT-P02) | M2-04, P1 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC11 | PH2 | Integration (IT-P02) | M2-F02 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC12 | PH2 | Component (CMP-P01) | M2-F01, M2-02 prep | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC13 | PH2 | Component (CMP-P02) | M2-F02 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC14 | PH2 | Browser (E2E-P01) | INT-CP-01, INT-CP-02 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC15 | PH2 | Integration (IT-A01 matrix) | authz matrix | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC16 | PH2 | Fixture (FIX-01) | TMP-02 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M2-PH2-TC17 | PH2 | Static and integration (UT-P03) | M2-01 prep, P4 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
+| M2-PH2-TC01 | PH2 | Integration (IT-P01) | M2-F01, M2-05 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC02 | PH2 | Integration (IT-P01) | M2-08, M2-09, RLS-06 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC03 | PH2 | Unit and integration (UT-P01) | M2-03 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC04 | PH2 | Integration (S-01) | S-01 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC05 | PH2 | Integration (IT-P01) | M2-F01 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC06 | PH2 | RLS (RLS-02) | RLS-02 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC07 | PH2 | RLS (RLS-04) | RLS-04 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC08 | PH2 | RLS (RLS-06 partial) | RLS-06, RLS-09 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC09 | PH2 | RLS (RLS-05) | RLS-05, INT-08 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC10 | PH2 | Integration (IT-P02) | M2-04, P1 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC11 | PH2 | Integration (IT-P02) | M2-F02 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC12 | PH2 | Component (CMP-P01) | M2-F01, M2-02 prep | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC13 | PH2 | Component (CMP-P02) | M2-F02 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC14 | PH2 | Browser (E2E-P01) | INT-13, INT-14 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC15 | PH2 | Integration (IT-A01 matrix) | authz matrix | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC16 | PH2 | Fixture (FIX-01) | TMP-02 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M2-PH2-TC17 | PH2 | Static and integration (UT-P03) | M2-01 prep, P4 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
 | M2-PH3-TC01 | PH3 | Integration and concurrency (IT-P01) | M2-F01, INT-09 | [PH3-complete-functionality.md](phases/PH3-complete-functionality.md) |
 | M2-PH3-TC02 | PH3 | Unit (UT-P02) | P3 | [PH3-complete-functionality.md](phases/PH3-complete-functionality.md) |
 | M2-PH3-TC03 | PH3 | Integration (IT-P02) | M2-01, M2-F02 | [PH3-complete-functionality.md](phases/PH3-complete-functionality.md) |

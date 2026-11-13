@@ -41,7 +41,7 @@ Independent now: T01, T03, T06, T08, T09, T10.
 
 ## 5 Affected components
 
-`modules/delivery/{reconcile.py,purge.py,maintenance.ts}`, `infra/backup/{backup,restore,verify}`, `tests/integration/delivery/`, `tests/e2e/delivery/`, jobs in the runner, additive migrations only through the shared chain.
+`src/server/modules/delivery/{reconcile.ts,purge.ts,maintenance.ts}`, `infra/backup/{backup,restore,verify}`, `tests/integration/delivery/`, `tests/e2e/delivery/`, jobs in the runner, additive migrations only through the shared chain.
 
 ## 6 Security requirements
 
@@ -61,7 +61,7 @@ Verified: no committed proof without a valid durable file and vice versa, no del
 | M3-PH4-TC08 | Integration (IT-D04) | Dashboard with 10 concurrent writers; compare each response with a snapshot; after INT-02/03 datasets | Each response internally consistent (sum equals total); final counts equal database | M3-F04 |
 | M3-PH4-TC09 | Integration (IT-D04) | Proof endpoint with `%2e%2e`, double encoding, backslashes, `Range`, `HEAD`, wrong method, row without file | No traversal; safe behavior for Range/HEAD; generic 404/503; no paths or keys in any response | M3-05 |
 | M3-PH4-TC10 | Browser (E2E-D03) | Phone project: abort after send; offline mid-upload; throttled 4G | Uncertain message; refetch; no automatic resubmission; committed result displayed; deliberate retry works only if not committed | M3-F03, INT-10 |
-| M3-PH4-TC11 | Scan and review | Canary scan; inspect audit/log entries for M3 events; static scan of `modules/delivery` for string-built SQL | Actor, time, IDs present; no address/phone/filename; no SQL assembled from request values | S-05, P5, P4 |
+| M3-PH4-TC11 | Scan and review | Canary scan; inspect audit/log entries for M3 events; static scan of `src/server/modules/delivery` for string-built SQL | Actor, time, IDs present; no address/phone/filename; no SQL assembled from request values | S-05, P5, P4 |
 | M3-PH4-TC12 | Consolidated run and CI gate | Execute M3-01..M3-10, RLS-03, RLS-10; coverage gates; matrix rows A14-A19 | Worksheet updated; gates enforced; missing scenario fails CI | rubric 3 |
 | M3-PH4-TC13 | Concurrency (IT-D01, IT-A03) | Assign while the target Rider is being disabled; finalize while disabled | Consistent ordering: commit before disablement valid, later denied | P1, INT-05 |
 | M3-PH4-TC14 | Operations (OPS-03) | Staging file 25 h old; final unreferenced 25 h old unlocked; referenced old file; young file; file under active upload lock | Only the unreferenced and settled old files removed | REV-08, REV-13 |
@@ -79,7 +79,7 @@ H41 (backup lock and scripts) to Naszrul (runner honors lock) and Zikri (post-re
 - Worksheet rows M3-01 to M3-10, RLS-03 and RLS-10 have actual results.
 - Contributes to G4 items 1-6.
 
-## 10 Integration checkpoint
+## 10 Integration check
 
 INT-04, INT-05, INT-09, INT-10, INT-11 and the local half of INT-12 run in CI/Compose together with Naszrul's and Zikri's suites; Zikri's grant snapshot includes migration 0006 functions; the runner executes all registered jobs.
 

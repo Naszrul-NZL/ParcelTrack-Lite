@@ -3,11 +3,11 @@ import { timingSafeEqual } from 'node:crypto';
 import { AppError } from './errors';
 import { getSettings } from './settings';
 export function equalSecret(a: string, b: string) { const aa=Buffer.from(a); const bb=Buffer.from(b); return aa.length === bb.length && timingSafeEqual(aa,bb); }
-export function verifyOrigin(request: Request) {
+export function verifyOrigin(request: Request, expectedOrigin = getSettings().APP_ORIGIN) {
   const origin = request.headers.get('origin');
-  if (origin) { if (origin !== getSettings().APP_ORIGIN) throw new AppError('CSRF_INVALID'); return; }
+  if (origin) { if (origin !== expectedOrigin) throw new AppError('CSRF_INVALID'); return; }
   if (request.headers.get('sec-fetch-site') === 'same-origin') return;
-  try { if (new URL(request.headers.get('referer') ?? '').origin === getSettings().APP_ORIGIN) return; } catch { /* Missing/malformed provenance is rejected below. */ }
+  try { if (new URL(request.headers.get('referer') ?? '').origin === expectedOrigin) return; } catch { /* Missing/malformed provenance is rejected below. */ }
   throw new AppError('CSRF_INVALID');
 }
 export function sourceAddress(request: Request): string {

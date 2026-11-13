@@ -1,6 +1,6 @@
 # Shared system contract
 
-Contract version 4, revised on 22 October 2026 for local-first Next.js and full Supabase Docker. Domain rules and stable identifiers from v3 are retained (amendments below proposed in the phased plan set, revised after independent review, and effective once all three owners approve them in M1-PH1-T12, M2-PH1-T09 and M3-PH1-T09). Where the [v3 amendments](#contract-v3-amendments) differ from earlier text, the amendments win until the earlier text is edited in the same PR. Planning baseline for all three module folders. Changing a rule here requires review by every affected owner and updates to tests. Examples and limits are design decisions unless explicitly attributed to the case study. Required unit, integration and browser coverage is defined in the [testing strategy](testing-strategy.md).
+Contract version 4, aligned on 13 November 2026 for local-first Next.js and full Supabase Docker. This is the implementation baseline for all three module folders; formal team acceptance remains pending M1-PH1-T12, M2-PH1-T09 and M3-PH1-T09. Domain rules and stable identifiers from v3 are retained. The historical heading [Contract v3 amendments](#contract-v3-amendments) remains so existing links resolve; that section is part of v4 and takes precedence over conflicting earlier text. A cleanup commit does not supply the missing owner approvals. Changing a rule here requires review by every affected owner and updates to tests. Examples and limits are design decisions unless explicitly attributed to the case study. Required unit, integration and browser coverage is defined in the [testing strategy](testing-strategy.md).
 
 ## Architecture and code boundaries
 
@@ -8,7 +8,7 @@ Use one full-stack Next.js App Router application in TypeScript, running on the 
 
 ```text
 src/app/                     Next.js layouts, pages and thin Route Handlers
-  api/v1/                    existing A01-A21 HTTP contracts
+  api/v1/                    planned A01-A21 contracts; health is implemented
 src/features/auth/           Naszrul: account UI
 src/features/parcels/        Zikri: registration, detail and public tracking UI
 src/features/delivery/       Syauqi: assignment, delivery and dashboard UI
@@ -24,14 +24,15 @@ tests/                       Vitest unit/component, real HTTP/DB integration, Pl
 infra/supabase/              pinned upstream Compose configuration and local overrides
 infra/                       runner, private backup and later cloud configuration
 docs/modules/                module ownership and phased implementation plans
-checkpoint-demo/             existing React/Vite browser-only prototype, unchanged
 ```
 
-The tree describes future implementation, not code created by this documentation change. Server Components call the same authorized server services directly, without an HTTP request back to their own app. Client Components use same-origin `/api/v1` Route Handlers. Keep business mutations in these handlers initially; adding a Server Action later requires the same authentication, CSRF/origin, validation, throttling, audit and transaction checks. Layout redirects and Next.js proxy/middleware are navigation aids, never the only authorization boundary.
+The tree defines the code boundaries; [implementation status](../implementation-status.md) identifies which parts currently exist. Server Components call the same authorized server services directly, without an HTTP request back to their own app. Client Components use same-origin `/api/v1` Route Handlers. Keep business mutations in these handlers initially; adding a Server Action later requires the same authentication, CSRF/origin, validation, throttling, audit and transaction checks. Layout redirects and Next.js proxy/middleware are navigation aids, never the only authorization boundary.
 
 Use `pg` with parameterized queries and a single checked-out client per transaction. Use node-pg-migrate for versioned SQL, Zod strict objects for runtime validation, Argon2id for password hashes and Sharp for image decoding/re-encoding. Lock supported Node.js, Next.js, Supabase image and library versions during PH1. No separate Python API, separate Vite production frontend, Edge Function business backend or HTTP integration between independent application stacks is planned.
 
 The full Supabase services run locally, but the application retains the existing username-based account and opaque-session contract. Supabase Auth is available infrastructure, not a second login authority; application users are not silently mirrored into `auth.users`. A future switch to Supabase Auth requires a separate reviewed identity/session migration. Next.js uses restricted PostgreSQL roles against schema `app`; browsers never query that schema directly. Do not expose it through PostgREST, GraphQL or Realtime. Supabase `anon`, `authenticated` and `service_role` receive no application-schema grants. Storage uses a private `delivery-proofs` bucket and a server-only Storage API adapter; application authorization always runs before a storage operation.
+
+Use [stock shadcn/ui first](../ui-components.md), with shared components in `src/components/ui/` and the [current design](../design/current-design.md). The existing public screens are previews until their real APIs are connected.
 
 ## Identity and permission rules
 
@@ -65,19 +66,24 @@ Initial limits: anonymous session 10 minutes absolute; authenticated session 30 
 
 ## Shared data model
 
-Five business entities remain in the [ERD](../initial-erd.md). Sessions and rate-limit buckets are supporting infrastructure.
+Eight business entities form the agreed [ERD](../database-design.md). USER maps to `app_user`, with SELLER, RIDER and ADMIN stored as separate subclass tables since `0004_integrated_erd`. Sessions and rate-limit buckets are supporting infrastructure.
 
 | Entity | Required fields and constraints |
 | --- | --- |
 | app_user | id bigint PK; username normalized lowercase unique; display_name; password_hash Argon2id; role; is_active; must_change_password; session_version; version; created_at |
+| seller | user_id PK + FK to app_user.id; shared account attributes inherited through USER |
+| rider | user_id PK + FK to app_user.id; shared account attributes inherited through USER |
+| admin | user_id PK + FK to app_user.id; shared account attributes inherited through USER |
 | parcel | id; tracking_number unique; seller_id FK; assigned_rider_id nullable FK; recipient_name/phone/address nullable only after anonymization; weight_kg numeric(8,3); current_status; version; client_request_id UUID; creation_fingerprint nullable after anonymization; created_at; terminal_at nullable; delivered_at nullable; anonymized_at nullable; unique(seller_id,client_request_id) |
 | parcel_status_history | id; parcel_id; changed_by_id; status; changed_at. Append-only through controlled operations; deterministic ordering by changed_at then id |
-| delivery_proof | id; parcel_id unique FK; uploaded_by_id; storage_key unique; media_type; size_bytes; uploaded_at. At most one proof per parcel |
+| delivery_proof | id; parcel_id unique FK; uploaded_by_id FK to rider.user_id; storage_key unique; media_type; size_bytes; uploaded_at. At most one proof per parcel |
 | audit_event | id; actor_id nullable; target_user_id nullable; parcel_id nullable; event_type; outcome; occurred_at; request_id; allowlisted details such as old/new Rider IDs. Never arbitrary request bodies |
 | auth_session | token_digest PK; user_id nullable; user_session_version nullable; csrf_token; created_at; last_seen_at; expires_at; absolute_expires_at |
 | rate_limit_bucket | bucket type, keyed identity/source digest, window identifier, counter and expires_at, with unique bucket key for atomic updates |
 
 Index tracking_number; seller/status/created_at; assigned_rider/status/created_at; history(parcel_id,changed_at,id); audit timestamps; and expiry columns. Use foreign keys, valid-role/status checks, positive-weight checks and no destructive cascading deletion of business history. Accounts are disabled instead of deleted. Do not add unlisted user/parcel fields to public DTOs automatically.
+
+Subclass membership is complete and disjoint. Triggers create and maintain exactly one matching subclass per account; direct mismatched inserts and removal of the matching subclass are rejected. Parcel `seller_id` references `seller.user_id`; nullable `assigned_rider_id` references `rider.user_id`. Role changes that would invalidate parcel or proof references fail atomically. Status-history and audit actors continue to reference `app_user.id`. New parcels require Registered history before commit, and history is append-only. ADMIN assignment remains an operation recorded in audit events; PARCEL has no `admin_id`.
 
 ## API conventions
 
@@ -129,7 +135,7 @@ Public tracking uses POST to avoid putting tracking tokens into URLs/access logs
 - Weight: finite decimal from 0.001 to 100.000 kg, at most three decimal places; reject NaN and infinities before database access. This upper limit is a proposed project rule, not a source requirement.
 - Tracking: PTL- followed by 32 uppercase hexadecimal characters generated from 16 cryptographically random bytes. Validate length/format; uniqueness is enforced in PostgreSQL with bounded collision retry.
 - Throttle defaults, hashing capacity and request caps are defined in the v3 amendments (login blocking is keyed by username and source together; successes are not counted against a source). They are configurable and tested at the threshold boundaries. Generic login errors and no permanent automatic lockout prevent trivial permanent account denial.
-- Proof: one decoded JPG/PNG, maximum 3 MiB input and 20 million pixels. Reject corrupt, unsupported or multi-frame input; reject unsafe/double executable extensions. Re-encode to an allowed format, strip metadata, enforce an output byte limit and generate a random filename. Original names are not retained for serving.
+- Proof: one decoded JPG/PNG, maximum 3 MiB input and 12 million pixels. Reject corrupt, unsupported or multi-frame input; reject unsafe/double executable extensions. Re-encode to an allowed format, strip metadata, enforce an output byte limit and generate a random filename. Original names are not retained for serving.
 - Set reverse-proxy body cap to 4 MiB for upload overhead plus application streaming cap of 3 MiB per file; use a smaller JSON body limit. Account for multipart part count and filename length too. Do not fully buffer an unlimited request before checking limits.
 
 ## Status and assignment rules
@@ -196,9 +202,9 @@ Revision order is fixed and equals dependency order; a revision is "applied" onc
 | `0001_bootstrap_schema` | Zikri | Schema `app`, revoke default PUBLIC privileges, default privileges per creating role, hardening template |
 | `0002_auth_core` | Naszrul | `app_user`, `auth_session`, `rate_limit_bucket`, `audit_event` (plain `parcel_id`), `system_state`, foundation functions `lock_active_actor` and `get_login_snapshot` |
 | `0003_parcels` | Zikri | `parcel`, `parcel_status_history`, constraints, indexes, RLS enable and force, **all** policies (runtime-role and owner-role), grants, policy helper, `audit_event.parcel_id` foreign key |
-| `0004_create_parcel` | Zikri | `create_parcel` |
-| `0005_delivery_functions` | Syauqi | `update_delivery_status`, start-delivery branch only |
-| `0006_delivery_proof` | Syauqi | `delivery_proof`, its policies and grants |
+| `0004_integrated_erd` | Shared schema | Implemented: subclass tables/backfill/triggers, role-specific FKs, `delivery_proof` with RLS/grants, initial-history constraint and append-only history |
+| `0005_create_parcel` | Zikri | Planned: `create_parcel` |
+| `0006_delivery_functions` | Syauqi | Planned: `update_delivery_status`, start-delivery branch only |
 | `0007_delivery_final` | Syauqi | `assign_parcel`, `lock_delivery_target`, final-outcome branch, reconcile helper |
 | later, named | owner of the function | `tracking_lookup`, `retention_functions` (Zikri); `proof_maintenance_functions` (Syauqi); `account_functions` (`register_account`, `change_password`, `set_user_active`), `session_cleanup_functions`, `ops_functions` (Naszrul) |
 
@@ -209,6 +215,8 @@ Timeouts (`ALTER ROLE`, configurable): `app_runtime` statement 10 s, lock 3 s, i
 ### Row-level security policies for owner roles and runtime roles
 
 FORCE RLS applies to the table owner; function owners are ordinary roles subject to policies, so every function owner needs explicit policies:
+
+- `auth_fn_owner`: `SELECT`, `INSERT`, `DELETE` with a `FOR ALL` policy on `seller`, `rider` and `admin`, solely for maintaining membership through account triggers. Web runtime roles have no subclass DML grants. Shared-account reads continue through the existing safe column grants on `app_user`.
 
 - `domain_writer`: `FOR ALL ... USING (true) WITH CHECK (true)` on `parcel`, `parcel_status_history` and `delivery_proof`. The functions themselves enforce actor, role, assignment, version and transition through `lock_active_actor`; owner policies never call the principal helper.
 - `lookup_fn_owner`: `SELECT` only, column grants `parcel(id, tracking_number)` and `parcel_status_history(id, parcel_id, status, changed_at)` (`id` is needed for ordering).
@@ -228,8 +236,8 @@ FORCE RLS applies to the table owner; function owners are ordinary roles subject
 | Function | Owner | Callable by | Behavior summary |
 | --- | --- | --- | --- |
 | `lock_active_actor`, `get_login_snapshot`, `register_account`, `change_password`, `set_user_active` | `auth_fn_owner` | `app_runtime` / `domain_writer` as noted | Account checks and mutations (revision `0002`) |
-| `create_parcel` | `domain_writer` | `app_runtime` | Seller only; replay-safe; inserts parcel, REGISTERED history and audit atomically (`0004`) |
-| `update_delivery_status` | `domain_writer` | `app_runtime` | Assigned active Rider only; legal transitions; proof metadata on final outcomes (`0005`, final branch `0007`) |
+| `create_parcel` | `domain_writer` | `app_runtime` | Seller only; replay-safe; inserts parcel, REGISTERED history and audit atomically (`0005`) |
+| `update_delivery_status` | `domain_writer` | `app_runtime` | Assigned active Rider only; legal transitions; proof metadata on final outcomes (`0006`, final branch `0007`) |
 | `assign_parcel`, `lock_delivery_target` | `domain_writer` | `app_runtime` | Admin assignment; locks and rechecks actor, assignment, OUT_FOR_DELIVERY state and version (`0007`) |
 | `lookup_tracking(token)` | `lookup_fn_owner` | `tracking_runtime` only | Status and timestamps for the exact token |
 | `list_retention_candidates(batch, as_of)`, `anonymize_parcel(parcel_id, as_of)` | `maintenance_fn_owner` | `maintenance_runtime` | Select and anonymize terminal parcels 12 months after `terminal_at`, and non-terminal parcels with no status change for 12 months (D-06, D-31) |
@@ -240,7 +248,7 @@ FORCE RLS applies to the table owner; function owners are ordinary roles subject
 
 ### SQLSTATE mapping, error codes and timeouts (D-20)
 
-SQL functions raise custom SQLSTATEs in class `PT`, mapped once in `core/errors.ts` (Naszrul) with a unit test that the mapped set is a subset of the registry: PT001 FORBIDDEN, PT002 NOT_FOUND, PT003 VERSION_CONFLICT, PT004 INVALID_TRANSITION, PT005 INVALID_ASSIGNEE, PT006 PROOF_REQUIRED, PT007 TARGET_NOT_ALLOWED, PT008 PASSWORD_CHANGE_REQUIRED, PT009 IDEMPOTENCY_CONFLICT, PT010 REQUEST_EXPIRED, PT011 USERNAME_TAKEN, PT012 UNAUTHENTICATED (inactive account or stale session version). Lock timeout (55P03), deadlock (40P01), statement timeout (57014), advisory-lock wait timeout and connection-pool timeout map to `503 BUSY`. All modules use only registry codes; an unregistered code fails conformance test CT-03.
+SQL functions raise custom SQLSTATEs in class `PT`, mapped once in `src/server/core/errors.ts` (Naszrul) with a unit test that the mapped set is a subset of the registry: PT001 FORBIDDEN, PT002 NOT_FOUND, PT003 VERSION_CONFLICT, PT004 INVALID_TRANSITION, PT005 INVALID_ASSIGNEE, PT006 PROOF_REQUIRED, PT007 TARGET_NOT_ALLOWED, PT008 PASSWORD_CHANGE_REQUIRED, PT009 IDEMPOTENCY_CONFLICT, PT010 REQUEST_EXPIRED, PT011 USERNAME_TAKEN, PT012 UNAUTHENTICATED (inactive account or stale session version). Lock timeout (55P03), deadlock (40P01), statement timeout (57014), advisory-lock wait timeout and connection-pool timeout map to `503 BUSY`. All modules use only registry codes; an unregistered code fails conformance test CT-03.
 
 | Code | HTTP | Meaning |
 | --- | --- | --- |

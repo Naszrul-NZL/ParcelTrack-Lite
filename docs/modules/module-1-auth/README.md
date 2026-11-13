@@ -1,6 +1,8 @@
 # Module 1 Login and User Management
 
-Owner: Naszrul, GitHub Naszrul-NZL. Deliver the Next.js Route Handlers auth module and React auth feature. This folder is the module's complete phased plan, including work after the 22 October checkpoint. Phase 1 foundation code and local tests now exist; see [actual progress and open gates](../../phase-1-progress.md). Later workflows remain planned and owner reviews are pending.
+Owner: Naszrul, GitHub Naszrul-NZL. Deliver the Next.js Route Handlers auth module and React auth feature. This folder is the module's complete phased plan, covering the complete project lifecycle. Phase 1 foundation code and local tests now exist; see [actual progress and open gates](../../implementation-status.md). Later workflows remain planned and owner reviews are pending.
+
+Use the [stock shadcn component policy](../../ui-components.md) and [current design](../../design/current-design.md) for every module screen.
 
 Read the [shared contract](../../shared/system-contract.md), the [phase framework](../../shared/phase-framework.md), the [dependency matrix](../../shared/dependency-matrix.md) and the [security worksheet](../../security-tests.md). The shared contract owns exact payloads, role names, limits and errors; do not create alternative definitions in this module.
 
@@ -9,7 +11,7 @@ Read the [shared contract](../../shared/system-contract.md), the [phase framewor
 | File | Purpose |
 | --- | --- |
 | [phases/PH1-foundation.md](phases/PH1-foundation.md) | Skeleton, configuration, `app_user`/`auth_session` migration, `lock_active_actor`, password service, API client |
-| [phases/PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) | Real server-side login, logout, CSRF, rate limit, audit; retires the test principal |
+| [phases/PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) | Real server-side login, logout, CSRF, rate limit, audit; retires the test principal |
 | [phases/PH3-complete-functionality.md](phases/PH3-complete-functionality.md) | Registration, Rider creation, password change, user management, audit viewer, maintenance runner skeleton |
 | [phases/PH4-hardening-regression.md](phases/PH4-hardening-regression.md) | Full authorization matrix, session/CSRF/race suites, incident commands, headers, regression |
 | [phases/PH5-cloud-operations.md](phases/PH5-cloud-operations.md) | chosen cloud host, proxy, TLS, secrets, first boot, release and rollback, cloud verification |
@@ -65,7 +67,7 @@ Forms support keyboard use, visible labels, field errors and pending states. Pas
 
 ## API and source ownership
 
-Own A01 through A09 and A20 in the [endpoint table](../../shared/system-contract.md#endpoint-ownership). Implement src/server/modules/auth and src/features/auth, plus the shared session provider, CSRF-aware client plumbing, security dependencies and maintenance runner consumed by M2/M3.
+Own A01 through A09, A20 and A21 in the [endpoint table](../../shared/system-contract.md#endpoint-ownership). Implement src/server/modules/auth and src/features/auth, plus the shared session provider, CSRF-aware client plumbing, security dependencies and maintenance runner consumed by M2/M3.
 
 Own app_user, auth_session, rate_limit_bucket, system_state and audit_event definitions (migration 0002). Zikri adds the audit-to-parcel foreign key in 0003; Syauqi and Zikri write their own event producers through the audit event-type list in the contract. Export only Principal/UserSummary DTOs; never serialize the ORM user record automatically.
 
@@ -120,10 +122,6 @@ Rate-limit counters and failed-login audit events must survive a rejected login;
 
 All M1 tests are listed per phase in the phase files and aggregated in [test-plan.md](test-plan.md). Execute worksheet rows M1-01 through M1-12 and the M1 shares of S-01 to S-06, S-08, S-09. Use real PostgreSQL for integration tests; an in-memory database does not prove production constraints or shared limiter behavior. Record input, expected result, actual result, evidence and Naszrul's name. More than five input types must be demonstrated for the rubric's highest testing band.
 
-### Checkpoint slice versus completion
-
-The checkpoint slice is M1-PH2: seeded account login, one protected page per role, failed login and logout using real session storage. It is not M1 completion. Registration, user administration, password change and the hardening suites follow in PH3 and PH4.
-
 ### Module definition of done
 
 Tick a box only with a linked passing result from the stated phase.
@@ -131,7 +129,7 @@ Tick a box only with a linked passing result from the stated phase.
 - [ ] PH1 exit criteria met (G1): skeleton, 0002, `lock_active_actor`, password service, interface, API client.
 - [ ] PH2 exit criteria met (G2): real login/logout/CSRF/rate limit/audit; TMP-01 retired.
 - [ ] M1-F01 through M1-F05 work through React and direct API requests (G3).
-- [ ] A01 through A09 and A20 follow the shared payload/error contract (CT-03).
+- [ ] A01 through A09, A20 and A21 follow the shared payload/error contract (CT-03).
 - [ ] M2/M3 use the same auth, CSRF and role dependencies without local alternatives.
 - [ ] All session, password, disablement, rate-limit, race, incident-command and audit checks pass (G4); M1-01 to M1-12 have actual results.
 - [ ] M1 unit/component and real-PostgreSQL/API suites meet the testing strategy gates, including the authorization matrix.

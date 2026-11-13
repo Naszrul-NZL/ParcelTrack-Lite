@@ -1,2 +1,7 @@
+import { SignInPreview } from '@/features/preview/sign-in-preview';
 export const dynamic='force-dynamic';
-export default function Login(){return <><h1>Sign in</h1><p>Account sign-in will be connected in Phase 2. This local preview does not accept passwords yet.</p></>;}
+export default async function Login({ searchParams }: { searchParams: Promise<{ workspace?: string | string[] }> }) {
+  const params = await searchParams;
+  const workspace = params.workspace === 'rider' || params.workspace === 'admin' ? params.workspace : 'seller';
+  return <div className="page-width login-page"><SignInPreview initialWorkspace={workspace} /></div>;
+}

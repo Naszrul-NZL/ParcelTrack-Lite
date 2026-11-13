@@ -1,10 +1,12 @@
 # Local Next.js and full Supabase Docker
 
-Updated 22 October 2026. These commands run the root Phase 1 application. The separate `checkpoint-demo/` remains historical frontend evidence. See [implemented work and open gates](phase-1-progress.md).
+Updated 13 November 2026. These commands run the root Next.js application and full local Supabase stack. See [implemented work and open gates](implementation-status.md).
 
 ## Requirements
 
 Use Node.js 24.14.0, npm 11.9.0 and Docker Desktop with Linux containers/WSL2. Exact dependencies and upstream provenance are in [infra/VERSIONS.md](../infra/VERSIONS.md). This machine ran all 11 default services with Docker allocated about 4 GB RAM. That is startup evidence, not a capacity guarantee; allow additional memory for Next.js and browsers.
+
+Python 3 is needed for the documentation checker and bundled design helpers; the application itself has no Python runtime. Confirm `node --version` before running checks: the project supports Node.js 24, and another installed version may come first in your terminal's path.
 
 ## First setup
 
@@ -26,6 +28,8 @@ Open http://localhost:3000. The shell, navigation and `/api/v1/health` work. Sig
 
 `local:init` generates credentials idempotently. Development web settings live in `.env.local`; operator settings, dashboard credentials, generated Compose and vendor settings live under `.local/development/`. Never copy operator credentials into the web environment. These files are ignored by Git. The private upstream environment template is fetched from the recorded immutable commit and checked against its checksum. The preserved upstream configuration is under `infra/supabase/vendor/`.
 
+The agreed eight-entity ERD is implemented through `0004_integrated_erd`. For an existing local database, run `npm run db:migrate` then `npm run db:verify`; no reset or fixture reload is needed. The migration backfills one matching subclass per account and validates existing seller/rider references. It stops without applying changes if legacy assignments use the wrong role or a parcel lacks Registered history; inspect and correct those rows before retrying. New account inserts automatically create the matching subclass. Delivery-proof metadata now exists, while upload and finalization routes remain later work.
+
 The full stack includes PostgreSQL, private Storage, gateway, Studio, Auth, PostgREST, Realtime, pooler and supporting services. Optional upstream logging services are preserved as optional overrides. App identity remains username/Argon2id/opaque sessions; Supabase Auth is infrastructure, not another identity authority. Browser code receives no database, operator or Storage service credentials.
 
 ## Addresses and lifecycle
@@ -39,6 +43,8 @@ The full stack includes PostgreSQL, private Storage, gateway, Studio, Auth, Post
 | Compose project | parceltrack-development | parceltrack-test |
 
 Every published port binds to loopback. Studio requires the generated private dashboard login. The app schema is outside exposed Data API schemas, with no schema access for `anon`, `authenticated` or `service_role`.
+
+On Windows, a bind failure can mean the OS reserved a pooler port even when no process is listening. Inspect `netsh interface ipv4 show excludedportrange protocol=tcp`, choose two available ports outside those ranges, and change only the pooler's host ports in the ignored `.local/<profile>/compose.yml`. Keep the `127.0.0.1` binding and container ports unchanged, then retry `local:up`. The verification run used test host ports 55431/55432; they are examples, not guaranteed free on another machine. Direct database/gateway ports and application connection settings stay unchanged. `local:init` regenerates this file, so reapply the local override after running it.
 
 The generated Compose file sets Supavisor's open-file soft and hard limits to 100,000, as required by its startup script. This avoids startup failures on hosts with a lower Docker default, including GitHub runners. Failed starts report the pooler's recent logs with generated credentials redacted. Git attributes preserve LF line endings for Linux container mounts and the generated API snapshot on Windows checkouts.
 
@@ -68,9 +74,9 @@ npm run fixtures:files
 npm run test:spike
 ```
 
-Test configuration is `.env.test.local` and `.local/test/`; test and development use separate credentials, ports and volumes. Integration tests assert real restricted roles; no HTTP header supplies a test identity. Current suites run sequentially with read-only seed data and unique Storage probe keys. Per-test cloned databases and the complete HTTP auth harness remain open work.
+Test configuration is `.env.test.local` and `.local/test/`; test and development use separate credentials, ports and volumes. Integration tests assert real restricted roles; no HTTP header supplies a test identity. New service suites use the [isolated database/Storage harness](shared/backend-foundation.md#isolated-test-cases): each case clones a migrated template and cleans its own sessions, files and objects. Older low-level probes retain rollback/scratch isolation and the suite-wide parallel setting remains off. Complete real HTTP authentication journeys and H20 `login_as` remain open work.
 
-For browser checks, build the app, start `npm start` with the test profile in another terminal, then:
+For browser checks, build the app, then run the following. Playwright starts the production app automatically and stops the process it owns afterwards. It can also reuse a server you already started locally:
 
 ```powershell
 $env:PTL_PROFILE='test'
@@ -93,4 +99,4 @@ Remove-Item Env:PTL_PROFILE -ErrorAction SilentlyContinue
 
 The private `delivery-proofs` bucket enforces JPEG/PNG and 3 MiB through the supported Storage API. Validation re-encodes one JPEG/PNG frame, strips metadata/trailing bytes, and rejects over 12 MP. The future route must enforce the 4 MiB multipart-body cap and parcel authorization before privileged Storage calls. See the [storage design](modules/module-3-delivery/storage-design.md).
 
-The backup lock prototype proves writer drainage and maintenance rejection. Full backup/restore, reconciliation, login/rate-limit/CSRF routes, business APIs, cloud hosting, team reviews and external approvals remain open. A cloud app cannot reach this laptop's loopback services; hosting is a later decision, with no cloud account needed for Phase 1.
+The backup lock prototype proves writer drainage and maintenance rejection. Full backup/restore, reconciliation, login/rate-limit/CSRF routes, business APIs, cloud hosting and team reviews remain open. The lecturer has approved the tech stack (EXT-02). A cloud app cannot reach this laptop's loopback services; hosting is a later decision, with no cloud account needed for Phase 1.
