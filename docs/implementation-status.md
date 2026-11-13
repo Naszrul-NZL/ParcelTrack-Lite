@@ -10,9 +10,9 @@ Updated 13 November 2026. All three modules have local foundation code; G1 revie
 | M2 foundation | Restricted database-role bootstrap; ordered migrations 0001–0004; bounded pg transactions; forced RLS; SQL hardening checks; shared constants/Zod DTOs; phone/decimal/token validation; guarded synthetic fixtures; health-only API snapshot |
 | M3 foundation | Restricted-role integration harness and isolated full Supabase test profile; desktop/phone Playwright; hostile-file fixtures; delivery state rules; private Storage API adapter/staging; bounded Sharp sanitizer; backup-lock prototype; delivery-function drafts and reconciliation design |
 | Agreed ERD | `0004_integrated_erd` adds Seller/Rider/Admin subclasses with complete, disjoint membership and automatic synchronization; role-specific foreign keys; real DeliveryProof table and RLS; required initial Registered history and append-only history |
-| UI | Stock shadcn/ui with Base UI, Tailwind 4 and semantic navy/orange tokens; home, sign-in and public tracking previews. Seven stock components are present. No community registry is configured |
+| UI | Airway light/dark themes on Home, Sign in and sample public tracking; locally served DM Sans/Barlow Condensed; stock shadcn/Base UI controls, shared navigation, parcel docket, five-status presentation and field feedback; generated theme CSS with contrast/drift checks. No community registry is configured |
 
-The [Airway guide](../DESIGN.md) is the approved design target for future module screens. Its reference, tokens and contributor instructions are available; the existing root preview has not yet been migrated to that theme.
+The [Airway guide](../DESIGN.md) now has an [implemented frontend foundation](shared/frontend-foundation.md) for module owners to consume. The current screens use it; real authenticated role workspaces and business actions remain PH2/PH3 work.
 
 The app currently exposes `/api/v1/health`. Real login, registration, logout, CSRF/rate-limit endpoints, parcel creation/search/tracking, assignment, Rider updates, proof access and dashboards remain PH2/PH3 work. Current preview pages do not establish authentication or save parcel data. The session provider will be connected when its endpoints exist.
 
@@ -20,10 +20,10 @@ The app currently exposes `/api/v1/health`. Real login, registration, logout, CS
 
 | Check | Observed result |
 | --- | --- |
-| `npm run check` | 301 unit/component tests pass, with TypeScript, ESLint, SQL hardening and DTO/API drift checks |
-| Isolated database/Storage suite | 19 integration tests pass, including fresh installation, forward upgrade, atomic rejection of invalid legacy data, subtype consistency, role-specific references, RLS, private Storage and backup coordination |
+| `npm run check` | 303 unit/component tests pass, with TypeScript, ESLint, SQL hardening, DTO/API drift checks and Airway token parity/32 contrast checks |
+| Isolated database/Storage suite | 19 integration tests passed on the contributor baseline, including fresh installation, forward upgrade, atomic rejection of invalid legacy data, subtype consistency, role-specific references, RLS, private Storage and backup coordination. Database code is unchanged by the Airway migration; this suite was not rerun for that UI-only change |
 | Production build | Next.js build passes |
-| Desktop and phone browser checks | 12 checks pass, covering the current previews, navigation, headers, layout and rejected untrusted Host; inspected browser console has no errors |
+| Desktop and phone browser checks | 16 checks pass, covering all five statuses, form feedback, navigation, headers, both themes, preference persistence, local fonts, long identifiers, 320–1440px reflow, enlarged text and reduced motion. Browser error logs are empty |
 | Dependency audit | Runtime-only audit reports zero vulnerabilities. Full audit reports 12 moderate tooling dependency findings and no high/critical findings; no forced dependency downgrade applied |
 | Local database | Migration 0004 applied and verified on development and test databases; existing accounts, password hashes, parcels and history preserved |
 
@@ -32,6 +32,8 @@ These results do not mark every planned test case or security worksheet row as p
 Private logs, browser traces, screenshots and credentials stay in ignored local locations. During Windows integration verification, the test profile used alternate pooler ports because the normal pair was reserved; direct database ports stayed unchanged. Test services were stopped while retaining their volumes.
 
 The contributor-baseline verification on 13 November 2026 repeated the application checks and build with Node.js 24.22.1, npm 10.9.9, Docker Engine 29.7.2 and Compose 5.5.1. It also passed the 19 isolated integration tests, documentation checker (zero errors/warnings), local credential-exposure scan, 137 standalone design-helper tests, catalog validation and eight contrast-helper reference cases. Original lecturer files were compared byte-for-byte against their previous Git locations. These checks do not replace another owner's clean-checkout reproduction or remote CI.
+
+The later Airway migration on the same date passed the updated checks above on Node.js 24.22.1. Playwright now starts/stops its built preview server automatically; the CI app job includes the same browser suite. Theme CSS is generated from the approved JSON and forced to LF in Git to avoid Windows checkout drift. No application dependencies or database revisions were added. Visual decisions and the delivery review are in [UI preview review](ui-preview-review.md).
 
 ## Remaining work and evidence
 

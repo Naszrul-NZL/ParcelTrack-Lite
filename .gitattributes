@@ -1,5 +1,7 @@
 *.pdf binary
 *.pptx binary
 *.zip binary
+*.ttf binary
 infra/supabase/vendor/** text eol=lf
 docs/api/openapi.json text eol=lf
+src/app/airway-tokens.css text eol=lf

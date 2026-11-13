@@ -1,6 +1,6 @@
 # UI component policy
 
-ParcelTrack Lite uses stock shadcn/ui as its default component source. Use an existing stock component or compose stock components before considering a community registry. Apply the approved [Airway design guide](../DESIGN.md) and [contributor handoffs](design/CONTRIBUTING.md) as each module's frontend is implemented. The older navy/orange preview is historical styling; this documentation change does not migrate application components by itself.
+ParcelTrack Lite uses stock shadcn/ui as its default component source. Use an existing stock component or compose stock components before considering a community registry. The current public screens implement the approved [Airway design guide](../DESIGN.md). Reuse the [shared frontend exports](shared/frontend-foundation.md) and [contributor handoffs](design/CONTRIBUTING.md) for new module screens.
 
 ## Choosing a component
 
@@ -14,7 +14,7 @@ Different styling alone is not a reason to add another registry. Customize the l
 ## Foundation
 
 - Next.js App Router and React with TypeScript.
-- Tailwind CSS 4 with semantic shadcn theme variables.
+- Tailwind CSS 4 with semantic shadcn theme variables, generated from the approved Airway JSON tokens and verified by `npm run design:check`.
 - Base UI as the explicit shadcn component base.
 - Local component source in `src/components/ui`, shared class merging in `src/lib/utils.ts`, and configuration in `components.json`.
 - Exact direct dependency versions and the committed npm lockfile.
@@ -22,6 +22,8 @@ Different styling alone is not a reason to add another registry. Customize the l
 - Existing forms and sample tracking remain previews until their application endpoints are implemented.
 
 The current screens need stock Button, Input, Label, Badge, Card, Alert and Radio Group components. Forms remain connected to their existing handlers. Form-state libraries, charts, tables and additional components are added when an implemented feature needs them.
+
+Airway customizes the existing stock control source and composes a product-specific `ParcelDocket`, `ParcelStatusBadge`, `FieldFeedback`, navigation and theme toggle. The theme preference is rendered on the server and survives navigation/reload. Licensed local DM Sans/Barlow Condensed files remove build-time and browser font-provider dependencies. The docket remains light paper in both themes and uses its own text/focus pairs.
 
 Only dependencies required by these components are retained: Base UI, shadcn's `cn` helper and `class-variance-authority`, plus the Tailwind build tools. Current components use Tailwind's built-in data-attribute variants. Add icon packages, animation CSS or other shadcn stylesheet utilities when a selected component needs them.
 

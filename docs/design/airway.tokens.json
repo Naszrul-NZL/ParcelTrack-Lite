@@ -1,8 +1,8 @@
 {
   "name": "ParcelTrack Lite / Airway",
-  "status": "approved visual direction; application integration pending per module",
+  "status": "implemented in shared frontend and current public previews; apply to new module screens",
   "approvedOn": "2026-11-13",
-  "format": "Project reference tokens; not automatically imported by the application",
+  "format": "Source for src/app/airway-tokens.css; generate with npm run design:write and verify with npm run design:check",
   "themes": {
     "light": {
       "background": "#F7F7FB",

@@ -1,7 +1,8 @@
 import { TrackingPanel } from '@/features/preview/tracking-panel';
-export const dynamic='force-dynamic';
+export const dynamic = 'force-dynamic';
 export default async function Track({ searchParams }: { searchParams: Promise<{ number?: string | string[] }> }) {
   const params = await searchParams;
-  const number = typeof params.number === 'string' ? params.number.slice(0, 64) : '';
-  return <div className="page-width tracking-page"><div className="page-heading"><h1>Track a parcel</h1><p className="lead">Follow the latest status, from registration to delivery.</p></div><TrackingPanel key={number} initialNumber={number} /></div>;
+  // Only known synthetic identifiers can be linked. Real tracking stays out of URLs.
+  const number = typeof params.number === 'string' && /^PTL-DEMO-00[1-5]$/.test(params.number) ? params.number : '';
+  return <div className="page-width tracking-page"><TrackingPanel key={number} initialNumber={number} /></div>;
 }

@@ -4,7 +4,7 @@ The product owner approved **Airway** on 13 November 2026. The canonical guide i
 
 Airway uses indigo actions, cool paper surfaces, Barlow Condensed display type, DM Sans controls and a lavender delivery docket. Yellow identifies the current journey stage. The guide specifies the exact light/dark pairs, accessible states and responsive treatment.
 
-Apply the design as each contributor implements the relevant module. The existing application can still show the earlier navy/orange preview until those screens are migrated. The design handoff does not implement all proposed actions or add new backend scope.
+Home, public tracking and Sign in now implement Airway in both themes. The [shared frontend foundation](../shared/frontend-foundation.md) supplies the actual exports, local font pipeline and token checks. Apply it as each contributor implements the relevant module; proposed actions still need their backend contracts and services.
 
 ## Historical preview
 

@@ -1,0 +1,70 @@
+/* Generated from docs/design/airway.tokens.json. Run npm run design:write. */
+:root {
+  --background: #F7F7FB;
+  --foreground: #232336;
+  --card: #FFFFFF;
+  --card-foreground: #232336;
+  --popover: #FFFFFF;
+  --popover-foreground: #232336;
+  --primary: #39358C;
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #2C286D;
+  --secondary: #EDEBF7;
+  --secondary-foreground: #232336;
+  --muted: #EDEBF7;
+  --muted-foreground: #656579;
+  --accent: #EDEBF7;
+  --accent-foreground: #39358C;
+  --border: #D9D8E4;
+  --input: #858098;
+  --ring: #39358C;
+  --destructive: #AA303A;
+  --destructive-foreground: #FFFFFF;
+  --success: #31634B;
+  --success-soft: #E7F1EA;
+  --docket: #E8E5F6;
+  --docket-foreground: #272441;
+  --docket-muted-foreground: #625B78;
+  --docket-rule: #A8A0BE;
+  --docket-connector: #B2A9CA;
+  --docket-node-border: #807391;
+  --journey-current: #F3D47D;
+  --journey-current-foreground: #272441;
+  --docket-shadow: rgba(39,36,65,0.13);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --background: #191824;
+  --foreground: #F3F1FC;
+  --card: #24212F;
+  --card-foreground: #F3F1FC;
+  --popover: #24212F;
+  --popover-foreground: #F3F1FC;
+  --primary: #BCB4F4;
+  --primary-foreground: #211D43;
+  --primary-hover: #D2CCFF;
+  --secondary: #343044;
+  --secondary-foreground: #F3F1FC;
+  --muted: #343044;
+  --muted-foreground: #B4B0C5;
+  --accent: #343044;
+  --accent-foreground: #BCB4F4;
+  --border: #484253;
+  --input: #938CA9;
+  --ring: #BCB4F4;
+  --destructive: #FFACB5;
+  --destructive-foreground: #2C1520;
+  --success: #B7DFCA;
+  --success-soft: #293E34;
+  --docket: #E8E5F6;
+  --docket-foreground: #272441;
+  --docket-muted-foreground: #625B78;
+  --docket-rule: #A8A0BE;
+  --docket-connector: #B2A9CA;
+  --docket-node-border: #807391;
+  --journey-current: #F3D47D;
+  --journey-current-foreground: #272441;
+  --docket-shadow: rgba(0,0,0,0.30);
+  color-scheme: dark;
+}

@@ -1,6 +1,6 @@
 # Airway: ParcelTrack Lite design guide
 
-**Approved visual direction, 13 November 2026.** The product owner selected the Airway experiment as the foundation for future module screens. This guide establishes the shared appearance and interaction principles. It does not mean every production screen has already been migrated.
+**Approved visual direction, 13 November 2026.** The product owner selected Airway as the shared interface direction. Home, public tracking and Sign in now use its theme, local fonts and reusable parcel docket. Future module screens build on the [implemented frontend foundation](docs/shared/frontend-foundation.md); real business workflows remain their owners' work.
 
 | Reference | Purpose |
 | --- | --- |

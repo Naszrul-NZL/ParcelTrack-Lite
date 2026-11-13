@@ -1,8 +1,29 @@
 # Public UI preview review
 
-This record covers the existing navy/orange preview. The approved target for future module screens is [Airway](../DESIGN.md); its adoption and theme checks belong to the relevant frontend implementation changes.
+The current public screens implement [Airway](../DESIGN.md). The earlier navy/orange records below are historical evidence.
 
-## 13 November 2026: stock shadcn adoption
+## 13 November 2026: Airway implementation
+
+Direction: parcel tracking and role workspaces in the approved freight-label language, ENERGY 3 / RHYTHM 3 / MOTION 1. Condensed display type establishes the parcel/status focal point; DM Sans supports forms and working text. The lavender docket groups parcel identity and real recorded stages. Yellow identifies only the current stage. Other forms and workspace rows stay flat.
+
+The existing stock shadcn/Base UI controls were themed and retained. Shared exports now cover navigation, theme preference, five canonical status labels, field feedback and the parcel docket. Licensed fonts are served locally through Next's font pipeline. The [frontend handoff](shared/frontend-foundation.md) documents imports and work boundaries so module owners can compose these pieces independently.
+
+- Behavior PASS: 16 production-browser checks across desktop/phone exercise all five sample statuses, empty/invalid/loading/missing/found tracking, recovery, sign-in validation, password visibility/clearing, workspace radio keys, sample links, main navigation and skip-to-content. Preview forms send no credentials or business writes. User-entered tracking remains out of the URL; only known synthetic sample IDs are linkable.
+- Theme PASS: light/dark preference survives navigation and reload. Actual font faces load from the app origin, with no external resource requests in the theme/font journey. The docket keeps its own paper/text colors. The dark no-match recovery button uses docket text/boundary tokens rather than inheriting the surrounding dark theme's light text.
+- Layout PASS: Home, tracking and Sign in fit 320, 390, 768, 1024 and 1440px in both themes. A full-format 36-character tracking identifier wraps within the docket. The enlarged-text check doubles computed text sizes at a desktop viewport; reduced-motion styles are exercised separately from narrow-screen reflow. Representative desktop and phone screenshots covering all three screens and both themes were visually inspected.
+- Contrast/focus PASS: `npm run design:check` verifies 32 text/control/focus token pairs across both themes, theme-key parity and generated CSS drift. Radio focus uses an opaque outline. The tracking result has an inner docket-ink focus edge in addition to its surrounding-theme outline. Disabled button/input text keeps the measured muted pair instead of fading through opacity.
+- Application checks PASS: 303 unit/component tests, TypeScript, ESLint, SQL hardening, API snapshot, production build, documentation consistency and local credential-exposure scan. Two component tests prove Failed never presents Delivered and future stages never gain invented timestamps. Browser error logs are empty. No dependency or database migration change accompanies the UI work.
+
+### Delivery gate
+
+- Hard gate PASS: labeled sample records, working destinations/actions, all relevant tracking/form states, keyboard focus and both themes verified by the journeys above; no unsupported metrics, fabricated testimonials, decorative assets or delivery promises.
+- Purpose gate PASS: condensed type echoes freight labels; the docket is reserved for parcel documents; perforation separates identity from handoffs; the current-stage marker has a state label; the restrained paper shadow identifies that document layer. Two overview links use a small directional arrow to open the parcel view. No gradients, glow, generic illustration, new icon package or perpetual animation was added.
+- Liveliness PASS: ENERGY 3 / RHYTHM 3 / MOTION 1 is expressed through a large status/headline, distinctive paper docket, flat workspace rows and a quieter account form. The motif and typography match the approved reference, with responsive reading order rather than a repeated card grid.
+- Craftsmanship PASS: shared tokens, fonts, stock controls and status mapping keep screens consistent; labels and feedback describe real actions; forms preserve useful input on failure and clear passwords on preview completion; public/private boundaries remain those of the system contract.
+
+Remaining scope: these are still sample tracking and local form previews. Real sessions, registration, assignment, proof access, dashboards and private detail slots remain owned module work. This review does not mark G1 complete or certify later role journeys.
+
+## Historical: stock shadcn adoption before Airway
 
 Home, Tracking and Sign in now use stock shadcn Button, Input, Label, Badge, Card, Alert and Radio Group source, generated with CLI 4.23.0 and the Base UI base. Theme and control sizing follow the existing navy, white and orange direction: ENERGY 2 / RHYTHM 2 / MOTION 1. Buttons remain at least 44px tall and inputs use 16px text. Delivery history remains a semantic ordered list. No community registry has been adopted; the [component policy](ui-components.md) records the stock-first rule.
 

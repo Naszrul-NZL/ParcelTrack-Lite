@@ -30,8 +30,10 @@
     "storage:init": "tsx --conditions=react-server scripts/storage-init.ts",
     "contract:check": "tsx scripts/contracts.ts --check",
     "contract:write": "tsx scripts/contracts.ts --write",
+    "design:check": "node scripts/design-tokens.mjs --check",
+    "design:write": "node scripts/design-tokens.mjs --write",
     "sql:lint": "tsx scripts/sql-lint.ts",
-    "check": "npm run typecheck && npm run lint && npm test && npm run sql:lint && npm run contract:check"
+    "check": "npm run typecheck && npm run lint && npm test && npm run sql:lint && npm run contract:check && npm run design:check"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",

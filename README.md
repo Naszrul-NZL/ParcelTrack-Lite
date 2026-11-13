@@ -25,6 +25,8 @@ Each owner builds their module's UI, server logic and tests. Database design, la
 
 Owners are already assigned. Begin with the [contributor starting point](docs/shared/execution-sequence.md#contributor-starting-point) and [foundation handoff status](docs/implementation-status.md#foundation-handoff-status) before picking a task; existing foundation code still needs team acceptance and should not be rebuilt.
 
+The [implemented frontend foundation](docs/shared/frontend-foundation.md) provides Airway light/dark themes, local fonts, shared shadcn controls, status presentation, the parcel docket and field feedback. Module owners can compose these without independently changing the global theme or shell.
+
 ## Shared implementation references
 
 - [Architecture and document index](docs/shared/README.md)

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export function Navigation() {
+export function AppNavigation() {
   const pathname = usePathname();
   return <nav aria-label="Main navigation">
     {[['/', 'Home'], ['/track', 'Track a parcel'], ['/login', 'Sign in']].map(([href, label]) =>

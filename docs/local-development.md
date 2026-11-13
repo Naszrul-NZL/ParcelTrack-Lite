@@ -76,7 +76,7 @@ npm run test:spike
 
 Test configuration is `.env.test.local` and `.local/test/`; test and development use separate credentials, ports and volumes. Integration tests assert real restricted roles; no HTTP header supplies a test identity. Current suites run sequentially with read-only seed data and unique Storage probe keys. Per-test cloned databases and the complete HTTP auth harness remain open work.
 
-For browser checks, build the app, start `npm start` with the test profile in another terminal, then:
+For browser checks, build the app, then run the following. Playwright starts the production app automatically and stops the process it owns afterwards. It can also reuse a server you already started locally:
 
 ```powershell
 $env:PTL_PROFILE='test'

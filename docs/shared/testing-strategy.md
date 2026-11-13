@@ -171,6 +171,8 @@ Every security worksheet ID must also be mapped to an automated test name, or a 
 
 ## CI and release gates
 
+The current workflow has `app-check` and `server-integration` jobs. `app-check` includes the Airway token/contrast guard, production build and desktop/phone preview browser suite; Playwright manages its local server without a database for these previews. The named role/security/release jobs below remain planned where not yet implemented. Preview checks do not supply authenticated journey evidence.
+
 Every PR runs the jobs below (names are recorded in M1-PH1-T11 so branch protection can require them later). Slower suites (scale plan checks, full browser matrix, operations drills, security-tool scans) run nightly or on demand until G3 and before every release.
 
 | Job | Introduced | Content |

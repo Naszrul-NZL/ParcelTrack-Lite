@@ -1,6 +1,6 @@
 # Contributing to the Airway design system
 
-The shared visual guide is [DESIGN.md](../../DESIGN.md). Airway is approved for the app's future screens; the current application may still contain the earlier navy/orange styling. Apply the new guide as the responsible contributor reaches each screen. A migration across every module is a separate implementation task.
+The shared visual guide is [DESIGN.md](../../DESIGN.md). Airway is implemented on the current Home, tracking and Sign in screens. Start from the [frontend foundation](../shared/frontend-foundation.md) for shared exports and module boundaries; extend it as the responsible contributor implements each real workflow.
 
 ## Start here
 
@@ -10,7 +10,7 @@ The shared visual guide is [DESIGN.md](../../DESIGN.md). Airway is approved for 
 4. Reuse the [shared tokens](airway.tokens.json), fonts and component treatments. Implement through shared primitives rather than independent per-page palettes.
 5. Include visual evidence and relevant behavior checks with the module's change. Mention any deliberate exception and its reason.
 
-The standalone reference uses remote web fonts with local fallbacks; an offline browser may display different letterforms. Its optional Codex Tweak controls are guarded and are not required to use it in a normal browser. The production application should load fonts through its own font pipeline.
+The standalone reference uses remote web fonts with local fallbacks; an offline browser may display different letterforms. Its optional Codex Tweak controls are guarded and are not required to use it in a normal browser. The application serves licensed local fonts through `next/font/local` and uses no browser font-provider requests.
 
 ## What this handoff authorizes
 
@@ -20,7 +20,7 @@ The standalone reference uses remote web fonts with local fallbacks; an offline 
 | Recommended implementation patterns | Introduce or reuse them when a module needs the corresponding screen or action; keep business scope and ownership intact |
 | Dependent feature ideas | Wait for the required contract, data and permission decisions; record the dependency instead of showing a working-looking placeholder |
 
-The design-guide task packages these rules and skills. It does not implement copy/share, delivery proof UI, additional endpoints or new parcel actions now.
+The shared foundation implements the theme, shell, status mapping, docket and field feedback. Copy/share, delivery proof UI, additional endpoints and parcel actions remain module work subject to their contracts.
 
 ## Module handoffs and feature boundaries
 
@@ -53,7 +53,7 @@ The repository includes these skills under [`.agents/skills/`](../../.agents/ski
 | `antislop-layoutmobile` | Reflow, overflow, touch targets and phone layouts |
 | `ui-ux-pro-max` | Searchable component, interaction, typography and accessibility guidance |
 
-These are real checked-in candidate files, not links to a contributor's home directory. Commit and push them with the guide so teammates receive the same snapshots through Git. No private-machine setup or global preference file is part of the installation. [Official OpenAI documentation](https://learn.chatgpt.com/docs/build-skills#where-codex-loads-local-skills) describes repository discovery under `.agents/skills`.
+These are repository files, not links to a contributor's home directory. Pull the shared baseline to receive the same snapshots. No private-machine setup or global preference file is part of the installation. [Official OpenAI documentation](https://learn.chatgpt.com/docs/build-skills#where-codex-loads-local-skills) describes repository discovery under `.agents/skills`.
 
 For Codex, open a new chat in this project after pulling the change; if skills do not appear, restart the app. With another coding assistant, point it to [AGENTS.md](../../AGENTS.md) and the skill paths; discovery conventions may differ.
 

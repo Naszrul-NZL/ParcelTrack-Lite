@@ -14,6 +14,7 @@ This folder holds the cross-module material: the single architecture, the author
 | Requirement to phase to task to test mapping | [traceability.md](traceability.md) | extend only here |
 | Source requirements, team decisions, proposed choices, external dependencies | [decision-register.md](decision-register.md) | cite D-nn, EXT-nn, SRC-nn |
 | What each member starts with | [execution-sequence.md](execution-sequence.md) | cite |
+| Shared UI exports, theme/font integration and frontend work boundaries | [frontend-foundation.md](frontend-foundation.md) | consume shared components and cite |
 | Test layers, tooling, fixtures, CI gates, evidence | [testing-strategy.md](testing-strategy.md) | cite |
 | Local Supabase setup, later deployment, backup, restore and incident process | [integration-and-deployment.md](integration-and-deployment.md) | cite |
 | Agreed ERD and implemented schema | [../database-design.md](../database-design.md) | cite |

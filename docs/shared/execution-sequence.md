@@ -18,6 +18,8 @@ Module ownership is already assigned. Start from the same committed baseline, re
 
 Naszrul coordinates shared layout/theme/component changes under the existing shell responsibility; each module owner implements their own screens. Follow the [overlap rule](phase-framework.md#overlap-rule): independent service tests and function drafts can start before G1, but G1 remains open until its checks and all three owner sign-offs exist.
 
+The [frontend foundation](frontend-foundation.md) supplies the implemented Airway theme, local fonts, shared controls, status mapping, parcel docket and field feedback. Reuse its documented exports before adding module UI; the real authentication and business-service handoffs remain in the table above.
+
 Use a branch per owner and bounded task. Each PR names task IDs, affected handoffs, actual checks and any permitted substitute still in use. A consumer records handoff acceptance in that PR after exercising it from their own branch. Rebase later migrations onto the merged head; never edit an applied revision. Local commits prepare the baseline; sharing it still requires a push and the repository's normal PR workflow.
 
 ## Initial working slices
