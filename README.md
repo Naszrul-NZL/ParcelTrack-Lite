@@ -4,6 +4,7 @@ Secure parcel tracking coursework for STTCK3033, based on the RapidExpress case 
 
 ## Start here
 
+- [Contribution procedure: branches, reviews and merging](CONTRIBUTING.md)
 - [Local setup and verification](docs/local-development.md)
 - [Current implementation and remaining work](docs/implementation-status.md)
 - [Complete project plan](docs/project-plan.md)

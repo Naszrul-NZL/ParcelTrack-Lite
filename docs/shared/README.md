@@ -14,6 +14,7 @@ This folder holds the cross-module material: the single architecture, the author
 | Requirement to phase to task to test mapping | [traceability.md](traceability.md) | extend only here |
 | Source requirements, team decisions, proposed choices, external dependencies | [decision-register.md](decision-register.md) | cite D-nn, EXT-nn, SRC-nn |
 | What each member starts with | [execution-sequence.md](execution-sequence.md) | cite |
+| Branches, PR review and merging into main | [contribution procedure](../../CONTRIBUTING.md) | link and summarize |
 | Shared UI exports, theme/font integration and frontend work boundaries | [frontend-foundation.md](frontend-foundation.md) | consume shared components and cite |
 | Shared protected service boundary, isolated fixtures and API/import checks | [backend-foundation.md](backend-foundation.md) | consume shared helpers and cite |
 | Test layers, tooling, fixtures, CI gates, evidence | [testing-strategy.md](testing-strategy.md) | cite |

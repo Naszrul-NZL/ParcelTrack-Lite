@@ -22,7 +22,7 @@ The [frontend foundation](frontend-foundation.md) supplies the implemented Airwa
 
 The [backend/test foundation](backend-foundation.md) now supplies the protected transaction/CSRF wrapper, safe API handler, isolated database/Storage fixtures and route/import drift checks. M2/M3 can build service tests with real restricted roles and temporary database sessions while H20 is being finished. TMP-04 remains explicitly temporary; these helpers do not create a real login endpoint or retire it.
 
-Use a branch per owner and bounded task. Each PR names task IDs, affected handoffs, actual checks and any permitted substitute still in use. A consumer records handoff acceptance in that PR after exercising it from their own branch. Rebase later migrations onto the merged head; never edit an applied revision. Local commits prepare the baseline; sharing it still requires a push and the repository's normal PR workflow.
+Follow the [contribution procedure](../../CONTRIBUTING.md): merge the shared baseline into `main` first, update local `main`, then create a branch per owner and bounded task. PRs target `main` and name task IDs, affected handoffs, actual checks and any permitted substitute still in use. A consumer records handoff acceptance in that PR after exercising it from their own branch. Rebase later migrations onto the merged head; never edit an applied revision. Local commits prepare the baseline; sharing it still requires a push, review and merge.
 
 ## Initial working slices
 
