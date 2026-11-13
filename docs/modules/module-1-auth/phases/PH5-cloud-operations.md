@@ -18,7 +18,7 @@ After the complete local Next.js/full-Supabase implementation passes G4, adapt i
 | --- | --- | --- | --- |
 | Role bootstrap, migration job, grant verification script | Zikri M2-PH1-T01, M2-PH5-T01 | H02, H52 | None; blocks T04 |
 | persistent Docker volumes, mount layout, backup and timer units | Syauqi M3-PH5-T01-T03 | H51 | Local named volumes for dry runs only |
-| Restore environment and runbook for post-restore verification | Syauqi M3-PH5-T04 | H54 | Local drill from PH4 |
+| Required local restore runbook; optional cloud repetition | Syauqi M3-PH4-T07; M3-PH5-T04 optional | H44 | H54 only for the optional cloud repetition |
 | Client-IP trust rule verified behind proxy for M2 rate limits | own T12 -> Zikri M2-PH5-T07 | H53 | Socket address only (limiter then keys the proxy; unacceptable for release) |
 
 Independent now: T02 (config files), T03 (secrets design), T05 (benchmark harness), T07 (pipeline), T10 (needs GitHub admin).
@@ -34,7 +34,7 @@ Independent now: T02 (config files), T03 (secrets design), T05 (benchmark harnes
 | M1-PH5-T05 | Benchmark Argon2id on actual deployed resources and record p95 latency, hashing parameters, memory and concurrent-login behavior. Tune bounded hashing work without weakening password security; do not promise fixed 15-user capacity from an untested free plan | Measurements and resource/quota limits recorded | TC09 | T01 |
 | M1-PH5-T06 | HTTPS verification of session security: `__Host-ptl_session` accepted by browsers, `Secure`, `HttpOnly`, `SameSite=Lax`, no Domain; HTTP never receives the cookie; Host allow-list; CSRF and Origin checks with the real domain; no CORS | S-02 evidence from the live URL, including nmap port scan, testssl.sh TLS check and an OWASP ZAP baseline scan of the public routes, tool versions recorded | TC06 | T02 |
 | M1-PH5-T07 | Release pipeline: record commit, Next.js build/deployment ID, application migration revision and pinned Supabase images; use container digests when containers are used. Rehearse compatible app rollback and keep schema-changing releases read-only until post-deploy smoke passes. Use expand-then-contract migrations; no automatic vendor downgrade | Previous compatible release serves with data preserved and measured rollback time | TC03 | T04 |
-| M1-PH5-T08 | Post-restore authentication verification with Syauqi's restore: run `purge-sessions`, re-apply `lock-accounts` from the operations log, then test that a cookie captured before the backup but revoked afterwards stays unauthorized, and fresh logins work for all roles | S-09 passes on the restored environment | TC07 | H54, H42 |
+| M1-PH5-T08 | Post-restore authentication verification using the required PH4 local drill; repeat in cloud only if the STRETCH drill is attempted: run `purge-sessions`, re-apply `lock-accounts` from the operations log, then test that a cookie captured before the backup but revoked afterwards stays unauthorized, and fresh logins work for all roles | S-09 passes on the restored environment | TC07 | H44, H42; H54 optional |
 | M1-PH5-T09 | M1 cloud journeys on the live URL: Seller registration/login, Admin creation of a Rider, forced password change, disablement and old-session rejection, logout, password-change multi-device revocation; all roles log in online | INT-06 and the M1 legs of INT-01 and INT-05 pass | TC08 | T04 |
 | M1-PH5-T10 | Branch protection and check names: after the first successful CI run on `main`, apply the PR-only protection (direct pushes blocked including admins, force-push and deletion blocked) with administrator rights; decide whether to require named checks and approvals and record the choice. Status stays pending until GitHub confirms | `gh api` readback or settings screenshot attached; EXT-03 updated | TC10 | EXT-03 |
 | M1-PH5-T11 | Incident drill on the cloud stack: simulated report, lock a test Admin with the private command on the instance, verify old cookie rejection, recover, record elapsed time against the one-hour rule | Timed record in the runbook evidence | TC11 | M1-PH4-T11 |
@@ -67,15 +67,15 @@ HTTPS-only cookies and HSTS; private DB and application ports; least-privilege h
 
 ## 8 Deliverables and handoffs
 
-H50 (cloud stack, proxy, secrets, first boot) to Zikri and Syauqi; H53 (client-IP trust) to Zikri. Consumes H51, H52, H54. Live URL recorded in the status board only after TC06 and TC08 pass.
+H50 (cloud stack, proxy, secrets, first boot) to Zikri and Syauqi; H53 (client-IP trust) to Zikri. Consumes H51, H52 and required H44 recovery evidence; H54 is optional. Live URL recorded in the status board only after TC06 and TC08 pass.
 
 ## 9 Exit criteria
 
-- T01-T12 complete (T10 may show "pending external" with evidence of the blocker); TC01-TC12 pass.
+- Required MUST/SHOULD tasks T01-T12 complete and applicable TC01-TC12 pass. If T10 is pending external administration, record the blocker and keep the module's PH5 exit and full G5 open.
 - All four user types work on the live URL; restart/redeploy keeps data (with Syauqi's TC); cookie flags verified on HTTPS.
 - Contributes to G5 items 1-3, 5-7.
 
-## 10 Integration checkpoint
+## 10 Integration check
 
 Run INT-01, INT-05, INT-06 and the M1 legs of INT-12 on the live stack together with Zikri's and Syauqi's cloud journeys; record URL, commit, release identifiers, migration revision and timestamp.
 

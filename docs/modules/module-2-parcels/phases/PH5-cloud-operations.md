@@ -18,7 +18,7 @@ The database boundary and M2 behavior hold on the real deployment: roles are boo
 | chosen cloud host, proxy, TLS, secrets, first-boot script | Naszrul M1-PH5-T01-T04 | H50 | Local production-like Compose with TLS terminated by the same proxy config for dry runs |
 | Persistent encrypted Supabase volumes mounted for PostgreSQL | Syauqi M3-PH5-T01 | H51 | Named volumes for rehearsals |
 | Real client-IP behavior behind proxy | Naszrul M1-PH5-T12 | H53 | none; T07 blocked |
-| Restore environment from backup | Syauqi M3-PH5-T04 | H54 | PH4 local drill |
+| Required local restore environment; optional cloud repetition | Syauqi M3-PH4-T07; M3-PH5-T04 optional | H44 | H54 only for the optional cloud repetition |
 
 Independent now: T01 (scripts), T06 (queries on a local copy).
 
@@ -30,7 +30,7 @@ Independent now: T01 (scripts), T06 (queries on a local copy).
 | M2-PH5-T02 | Configure restricted pg pools, connection/lock/statement timeouts and query redaction for the actual host; pin vendor configuration and verify DB/Storage persistent volumes. A transaction always stays on one client; transaction pooler mode must be tested for app roles and SET LOCAL semantics before use | Resource/connection settings measured and documented; no assumption of unlimited serverless connections | TC03 | H51 |
 | M2-PH5-T03 | Run portable RLS/catalog/transaction-reuse/tracking boundary tests against the actual deployed Supabase database using app_runtime/tracking_runtime from a private test runner. Check gateway bypass attempts with anon/authenticated keys as well | Connected role asserted; no owner/service-role substitution; synthetic data only | TC04 | T01 |
 | M2-PH5-T04 | Retention on the live stack: backdate synthetic parcels in a test dataset, execute the scheduled `retention_anonymize` job twice and after interruption, confirm photo denial and purge with Syauqi, tracking unchanged, logs contain no personal data | First safe scheduled run recorded; failure alert recipient confirmed | TC05 | H51, M3-PH5-T03 |
-| M2-PH5-T05 | Post-restore verification in Syauqi's isolated restore environment: recreate roles with the bootstrap script, check grants against the snapshot, run the RLS subset, run retention so expired data is anonymized and photos denied before reopening, confirm tracking and Seller lists | S-09 and INT-12 database legs pass | TC06 | H54 |
+| M2-PH5-T05 | Post-restore verification using the required PH4 isolated local environment; repeat in cloud only if the STRETCH drill is attempted: recreate roles with the bootstrap script, check grants against the snapshot, run the RLS subset, run retention so expired data is anonymized and photos denied before reopening, confirm tracking and Seller lists | S-09 and INT-12 database legs pass | TC06 | H44; H54 optional |
 | M2-PH5-T06 | Query behavior on chosen cloud host at project scale: load synthetic scale data, run the PH4 plan checks and timing for list/search/lookup/detail/dashboard/Admin list, record numbers and instance size | Recorded measurements; no claim beyond them | TC07 | none (M3-PH5-T07 samples after this task) |
 | M2-PH5-T07 | Public tracking over HTTPS: privacy inspection (body, DOM, headers, storage, referrer), `no-store` preserved by the proxy, rate limit keyed to the real client behind the proxy, request logs without tokens, 429 behavior with `Retry-After` | INT-07 on the live URL passes | TC08 | H53 |
 | M2-PH5-T08 | M2 cloud journeys: INT-01 (Seller registers and creates), INT-04 (cross-user), INT-07, INT-08 (pooled isolation via repeated alternate-user requests), INT-11 (retention interruption leg) | Pass on the live URL with recorded commit and release identifiers | TC09 | G5 inputs |
@@ -59,7 +59,7 @@ No database credential reuse across roles; no public database port; deployed run
 
 ## 8 Deliverables and handoffs
 
-H52 (grant verification and RLS runner under deployed credentials) to Naszrul and Syauqi; database verification results feed restore evidence (H54 consumer). Consumed: H50, H51, H53, H54.
+H52 (grant verification and RLS runner under deployed credentials) to Naszrul and Syauqi; database verification results feed restore evidence (H44 consumer; H54 optional). Consumed: H50, H51, H53 and H44; H54 optional.
 
 ## 9 Exit criteria
 
@@ -67,7 +67,7 @@ H52 (grant verification and RLS runner under deployed credentials) to Naszrul an
 - No grant drift; RLS subset passes with deployed credentials; retention verified on schedule.
 - Contributes to G5 items 1-5, 7.
 
-## 10 Integration checkpoint
+## 10 Integration check
 
 Run INT-01, INT-04, INT-07, INT-08, INT-11 and INT-12 database legs on the live stack alongside Naszrul's and Syauqi's cloud journeys, on one release candidate.
 

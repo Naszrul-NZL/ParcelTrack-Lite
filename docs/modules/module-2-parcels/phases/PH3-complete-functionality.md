@@ -9,14 +9,14 @@ All M2 functions work through the React UI and direct API on real PostgreSQL: re
 ## 2 Entry criteria
 
 - G2 passed; TMP-01 and TMP-04 retired; Seller registration and login real (M1-PH3-T03 for the register leg in browser tests).
-- Syauqi merges migration 0006 (`delivery_proof`) early in PH3 so `hasProof` and fixtures are real; until then `hasProof` is false.
+- Migration 0004 already supplies `delivery_proof` and its policies. Publish H34 slot types before consuming H35 components; wire them in T07.
 
 ## 3 Dependencies
 
 | Needs | From | Handoff | Substitute |
 | --- | --- | --- | --- |
 | Rate-limit service v1 and audit service | Naszrul M1-PH2-T04, T07 | H21 | none (delivered in PH2) |
-| `delivery_proof` table and policies, `hasProof` source | Syauqi M3-PH3-T01 | H35 | `hasProof` constant false |
+| `delivery_proof` table and policies, `hasProof` source | Implemented migration 0004; Syauqi verifies in M3-PH3-T01 | none | No schema substitute needed |
 | Rider action panel and proof viewer React components with the agreed props | Syauqi M3-PH3-T10 | H35 | Placeholder components in the slots |
 | `assign_parcel` (real assignment) to create ASSIGNED fixtures and reassignment visibility | Syauqi M3-PH3-T03 | H37 | TMP-02 seeds |
 | Maintenance runner skeleton | Naszrul M1-PH3-T10 | H33 | Retention functions are tested directly; job wiring in PH4 |
@@ -30,11 +30,11 @@ Independent now: T01, T02, T04, T08 (database and services).
 | --- | --- | --- | --- | --- |
 | M2-PH3-T01 | Replay-safe creation: compute the creation fingerprint as HMAC-SHA256, keyed by `FINGERPRINT_KEY`, over the canonical normalized request (trimmed fields, normalized phone, three-place weight); store it on the parcel; `create_parcel` returns the original parcel when `(seller_id, client_request_id)` exists with the same fingerprint (API 200), conflicts with a different fingerprint (409 `IDEMPOTENCY_CONFLICT`), and returns 409 `REQUEST_EXPIRED` when the fingerprint was cleared by anonymization; concurrency safe through the unique constraint; React keeps one client request ID per intended registration | Replay, conflict and expiry cases pass | TC01, TC02 | PH2 |
 | M2-PH3-T02 | A11 search/filter/sort: `q` (1-64 characters) matches the tracking number as a case-insensitive literal prefix or the recipient name as a literal substring, with `\`, `%` and `_` escaped so wildcards never broaden results (design choice D-08); `status` from the enum; `sort` from an allowlist (`createdAt` desc default, `currentStatus`) with id tie-break; pagination page >= 1, pageSize cap 100; add a supporting prefix index only if EXPLAIN at scale demands it | Invalid parameters 422; own rows only | TC03, TC04 | PH2 |
-| M2-PH3-T03 | A12 complete: for ADMIN each history item also carries `changedBy {id, displayName}` (never for other roles); `assignedRider` (`id`, `displayName`, `isActive`) or null, `hasProof`, `anonymized`, `terminalAt`, history ordered by `changed_at` then `id`; inaccessible/nonexistent uniform 404; shared service used by Seller, Rider and Admin; publish the slot contract in `shared/types` (props of `RiderActionPanel` and `ProofViewer`: `parcel: ParcelDetail`, `onChanged(): void`) so the detail page imports Syauqi's components without circular type dependencies | Same service for all roles; DTO allowlist test | TC05, TC11 | H35 |
+| M2-PH3-T03 | Publish H34 slot types first, then complete A12: for ADMIN each history item also carries `changedBy {id, displayName}` (never for other roles); `assignedRider` (`id`, `displayName`, `isActive`) or null, `hasProof`, `anonymized`, `terminalAt`, history ordered by `changed_at` then `id`; inaccessible/nonexistent uniform 404; shared service used by Seller, Rider and Admin; publish the slot contract in `src/shared/types` (props of `RiderActionPanel` and `ProofViewer`: `parcel: ParcelDetail`, `onChanged(): void`) without importing Syauqi's component implementations; T07 consumes H35 after those components exist | Same service for all roles; DTO allowlist test | TC05, TC11 | PH2, implemented 0004 |
 | M2-PH3-T04 | Revision `tracking_lookup`: `lookup_tracking(token)` hardened function owned by `lookup_fn_owner` with column-limited SELECT on parcel (`id`, `tracking_number`) and history (`id`, `parcel_id`, `status`, `changed_at`; `id` is needed for ordering) and explicit read policies for that owner; exact token match, returns rows ordered by time then id; `EXECUTE` granted only to `tracking_runtime`; separate `tracking_runtime` pool in the backend | `tracking_runtime` cannot read tables or enumerate; hostile search_path ignored | TC06 | H02 |
 | M2-PH3-T05 | A13 `POST /public/tracking` `{trackingNumber}`: no CSRF token and no anonymous session (read-only), but the same-origin check applies; normalize/validate token (422 on bad format); rate limit 30 lookups per source per minute through the shared limiter (source from the trusted-proxy rule, invalid tokens counted too); call `lookup_tracking` via `tracking_runtime`; unknown valid token 404; response exactly `{history:[{status,changedAt}]}`; `no-store`; token never written to logs or URLs; never uses the private detail serializer | Public body allowlist test across all statuses | TC07, TC08 | H21 |
 | M2-PH3-T06 | React `/track`: form, POST lookup (no token or session bootstrap needed), timeline with Malaysia time, distinct messages for 404, 422, 429 and network failure, no token in URL/referrer/analytics, nothing stored in browser storage, `Referrer-Policy: no-referrer` honored | Browser tests inspect DOM and network | TC09, TC10 | T05 |
-| M2-PH3-T07 | React search/filter UI on `/seller/parcels` (debounce, pagination reset on filter change, ignore stale responses), full `/parcels/:id` with slots (`RiderActionPanel` for assigned Rider while status allows an action, `ProofViewer` when `hasProof`), anonymized view, 401/404/422/429 handling | Component tests with slot doubles; real components in G3 journeys | TC11 | H35 |
+| M2-PH3-T07 | React search/filter UI on `/seller/parcels` (debounce, pagination reset on filter change, ignore stale responses), full `/parcels/:id` with slots (`RiderActionPanel` for assigned Rider while status allows an action, `ProofViewer` when `hasProof`), anonymized view, 401/404/422/429 handling | Component tests with slot doubles; real components in G3 journeys | TC11 | T03 (H34), H35 |
 | M2-PH3-T08 | Revision `retention_functions` (`maintenance_fn_owner`, executable only by `maintenance_runtime`): `list_retention_candidates(batch, as_of)` selecting terminal parcels whose `terminal_at + interval '12 months'` has passed and `anonymized_at IS NULL` (DELIVERED and FAILED alike, D-06; SHOULD: non-terminal parcels with no status change for 12 months as well, D-31); `anonymize_parcel(id)` sets recipient name, phone and address to null, clears the fingerprint, sets `anonymized_at`, increments version, audits `RETENTION_ANONYMIZED`; `as_of` accepted only through the maintenance role so no request path can move the clock; idempotent; never touches history | Boundary tests incl. month-end and leap year | TC12, TC13 | H02 |
 | M2-PH3-T09 | Full fixture dataset: parcels in all five statuses, an anonymized parcel, two ownership groups, zero-count and non-zero dashboard datasets, parcels with proof rows created through real flows where possible and test-provisioner DML otherwise (TMP-06, test-only); Syauqi supplies proof-file fixtures | Dataset loads on empty database; contains no real data | TC18 | H35, H38 |
 | M2-PH3-T10 | Execute and record feature-level security rows: M2-01, M2-02 (API/DOM-literal side), M2-03, M2-04 (list, search, detail, history), M2-05, M2-06 (API side), M2-07 (basic boundary), M2-08, M2-09, RLS-07, RLS-08 (initial), S-01 for A10/A13 | Worksheet updated with actual results and commit | TC03, TC06-TC08, TC14, TC15 | T01-T06 |
@@ -44,8 +44,8 @@ Independent now: T01, T02, T04, T08 (database and services).
 ## 5 Affected components
 
 - Database: `create_parcel` replay logic, `lookup_tracking`, `list_retention_candidates`, `anonymize_parcel`, policies for `lookup_fn_owner` and `maintenance_fn_owner`.
-- Backend: `modules/parcels/{service.py,repository.py,tracking.py,retention.py,routes.ts}`, tracking pool wiring.
-- Frontend: `features/parcels/{SellerParcelListPage,ParcelDetailPage,TrackPage}.tsx`, slot types.
+- Backend: `src/server/modules/parcels/{service.ts,repository.ts,tracking.ts,retention.ts,routes.ts}`, tracking pool wiring.
+- Frontend: `src/features/parcels/{SellerParcelListPage,ParcelDetailPage,TrackPage}.tsx`, slot types.
 
 ## 6 Security requirements
 
@@ -68,7 +68,7 @@ Keyed idempotency fingerprint that is not a plain hash of personal data; literal
 | M2-PH3-TC11 | Component (CMP-P04) | Detail page with slot doubles for each role/status; search race (slow first response); filter change | Slots render only when allowed; anonymized state; stale response ignored; pagination resets | M2-F02 |
 | M2-PH3-TC12 | Integration (IT-P04) | Terminal parcels at 12 months minus 1 s, exact, plus 1 s; 2028-02-29 and month-end dates; DELIVERED and FAILED; non-terminal parcels with and without a status change in the last 12 months; already anonymized; call as `app_runtime` and with `as_of` from a request path | Eligibility per rule; only maintenance role may call; no request path can set `as_of` | M2-10, M2-F04 |
 | M2-PH3-TC13 | Integration (IT-P04) | `anonymize_parcel` twice; inspect row, history, audit; A12 and A13 afterwards; old creation key | Recipient fields and fingerprint null, `anonymized_at` set, version incremented, history intact; detail shows anonymized; tracking still works; `REQUEST_EXPIRED`; second call no-op | M2-10 |
-| M2-PH3-TC14 | Integration / static | Hostile strings in name and address (`<script>`, `'; --`, 10 000 characters); static scan for string-built SQL in `modules/parcels` | Stored and returned literally within limits; oversize 422; scan finds none | M2-01, M2-02, P4 |
+| M2-PH3-TC14 | Integration / static | Hostile strings in name and address (`<script>`, `'; --`, 10 000 characters); static scan for string-built SQL in `src/server/modules/parcels` | Stored and returned literally within limits; oversize 422; scan finds none | M2-01, M2-02, P4 |
 | M2-PH3-TC15 | Integration (IT-P02) | Seller B: list with A's token, A's ID in detail, guess nearby IDs | Empty list; uniform 404; no side channel in totals | M2-04 |
 | M2-PH3-TC16 | Browser (E2E-P03) | Seller registers (UI), logs in, creates parcel, searches it, opens detail | Journey passes; search finds it; detail shows history | INT-01 |
 | M2-PH3-TC17 | Contract (CT-03) | OpenAPI vs contract for A10-A13 | No drift | contract |
@@ -87,7 +87,7 @@ H34 (complete A12 and slot contracts) to Syauqi; H36 (retention functions) to Sy
 - INT-01 and INT-07 pass; contribution to INT-04 recorded.
 - Contributes to G3 items 1-5.
 
-## 10 Integration checkpoint
+## 10 Integration check
 
 Compose run: Naszrul's registered Seller creates parcels, Syauqi's Admin assigns and Rider finalizes, Zikri's `/track` shows the same history with identical timestamps, and retention functions applied to a backdated copy keep tracking working. All with the same images and fixtures.
 

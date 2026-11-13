@@ -1,11 +1,6 @@
 # Microsoft Office temporary files
 ~$*
 
-# Local checkpoint build dependencies and verification outputs
-checkpoint-demo/node_modules/
-checkpoint-demo/dist/
-deliverables/.build/
-
 # Local application, generated credentials, containers and test evidence
 node_modules/
 .next/

@@ -34,7 +34,7 @@ Independent now: T01 design, T02 scripts and policies written in advance, T06 te
 | M3-PH5-T05 | Restart/redeploy Next.js and full Supabase containers; replace app build and restart host where supported without deleting volumes. Verify DB rows, private objects, schema revision and session behavior; sessions may survive normal restart but never database restore | Persistence evidence on actual host; no destructive reset command | TC05 | H50 |
 | M3-PH5-T06 | Android browser or documented 4G emulation: login/list/start/finalize with valid image up to 3 MiB, 4 MiB body cap; slow/interrupted upload and uncertain-commit UI. Tune measured timeout/memory settings; a hosted platform cap still applies if chosen later | Timings and clean failure/reconciliation results; no inconsistent status/proof | TC06 | H50 |
 | M3-PH5-T07 | Capacity sampling on the chosen instance: peak memory during image validation with concurrent uploads (about 15 Riders), Admin list and dashboard query times at the project-scale dataset, backup duration and size; no sustained-load claim beyond the measurements | Table of measurements with instance type | TC07 | M2-PH5-T06 |
-| M3-PH5-T08 | M3 cloud journeys on the live URL: INT-02 (Delivered), INT-03 (Failed), INT-05 (disable and reassign), INT-10 (object/database failure checks that are safe online, such as forced storage-unavailable in a staging copy), INT-12 (first boot, restart, restore) | Pass with recorded commit, release identifiers and timestamps | TC08 | G5 inputs |
+| M3-PH5-T08 | M3 cloud journeys on the live URL: INT-02 (Delivered), INT-03 (Failed), INT-05 (disable and reassign), INT-10 (object/database failure checks that are safe online, such as forced storage-unavailable in a staging copy), INT-12 (required first boot/restart; cloud restore only if the STRETCH drill is attempted) | Pass with recorded commit, release identifiers and timestamps | TC08 | G5 inputs |
 | M3-PH5-T09 | Reconciliation and purge jobs on the cloud: create an orphan file and an anonymized parcel with proof in a test dataset, run scheduled jobs, confirm correct deletion/preservation and alert path | Logged job results show counts only | TC09 | T03 |
 
 ## 5 Affected components
@@ -52,7 +52,7 @@ Encrypted volumes and bucket, least-privilege access, no public access to proofs
 | M3-PH5-TC01 | Operations | Inspect DB/Storage volume lifecycle and encryption/permissions; recreate services; request private objects and Studio anonymously | Data/objects retained; private infrastructure and proofs denied | S-07, M3-05 |
 | M3-PH5-TC02 | Operations | Backup destination privacy/expiry, write/recovery credential scope, encrypted archive and offline-key recovery | No public backup; correct credentials/key required; retention documented | P3 backup interpretation |
 | M3-PH5-TC03 | Operations (OPS-03) | Timers' first run, second run, forced failure, concurrent copy | Jobs succeed idempotently; failure alerts the recorded recipient; no overlapping copies | REV-08 |
-| M3-PH5-TC04 | Operations (OPS-07) | Full restore exercise per T04 | All verification items pass; revoked cookie 401; expired data anonymized before reopening; timing and backup age recorded | S-09, INT-12 |
+| M3-PH5-TC04 | Operations (OPS-07, STRETCH cloud) | Optional cloud restore exercise per T04; required local evidence is M3-PH4-TC07 | All verification items pass; revoked cookie 401; expired data anonymized before reopening; timing and backup age recorded | S-09, INT-12 |
 | M3-PH5-TC05 | Operations (OPS-06) | Container kills, redeploy, reboot | Rows and photos intact; migration revision unchanged; services healthy | S-07 |
 | M3-PH5-TC06 | Operations / device | Android 4G upload of 3 MiB and slow link | A 3 MiB upload completes within 60 s on the 4G profile, or fails cleanly with the uncertain-state UI and no inconsistent state; timeouts tuned from the recorded timings | M3-F03 |
 | M3-PH5-TC07 | Operations (OPS-09) | Concurrent validations, dashboard/list timings, backup duration | Measured values recorded | capacity |
@@ -61,7 +61,7 @@ Encrypted volumes and bucket, least-privilege access, no public access to proofs
 
 ## 8 Deliverables and handoffs
 
-H51 (volumes, backups, timers) to Naszrul and Zikri; H54 (restore environment and runbook) to Naszrul and Zikri for their post-restore verification. Consumed: H50, H52, H42.
+H51 (volumes, backups, timers) to Naszrul and Zikri; H54 (optional cloud restore repetition) to Naszrul and Zikri; required recovery evidence uses H44 from PH4. Consumed: H50, H52, H42.
 
 ## 9 Exit criteria
 
@@ -69,7 +69,7 @@ H51 (volumes, backups, timers) to Naszrul and Zikri; H54 (restore environment an
 - Local matching app-data/Storage restore already passed at G4; cloud restart/redeploy preserves data and required scheduled jobs run. Record cloud stretch-drill results separately.
 - Contributes to G5 items 1, 3-7.
 
-## 10 Integration checkpoint
+## 10 Integration check
 
 On one release candidate, Naszrul's cloud auth journeys, Zikri's database and tracking checks and Syauqi's delivery/restore journeys run in sequence; restore verification uses all three owners' checks.
 

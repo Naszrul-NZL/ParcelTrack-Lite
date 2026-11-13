@@ -16,16 +16,19 @@ it('M2-PH1-TC06 parcel constraints reject invalid weight, status and duplicate k
   }
  }finally{await db.query('ROLLBACK');await db.end();}
 });
-it('M3-PH1-TC07 draft proof constraints work in a rolled-back scratch transaction',async()=>{
+it('M3-PH1-TC07 migrated proof requires a Rider, valid metadata and one proof per parcel',async()=>{
  const db=new Client({connectionString:process.env.MIGRATION_DATABASE_URL});await db.connect();
  try{
-  await db.query('BEGIN');await db.query(await readFile('db/drafts/0006_delivery_proof.sql','utf8'));
+  await db.query('BEGIN');const rider=(await db.query("SELECT id FROM app.app_user WHERE role='RIDER' AND is_active AND NOT must_change_password LIMIT 1")).rows[0].id;
   await db.query('SET LOCAL ROLE domain_writer');const parcel=(await db.query('SELECT id,seller_id FROM app.parcel ORDER BY id LIMIT 1')).rows[0];
   const sql='INSERT INTO app.delivery_proof(parcel_id,uploaded_by_id,storage_key,media_type,size_bytes) VALUES($1,$2,$3,$4,$5)';const key=parcel.id+'/'+('a'.repeat(32))+'.jpg';
   for(const [path,type,size] of [['../x','image/jpeg',1],[key,'image/gif',1],[key,'image/jpeg',4194304]]){
-   await db.query('SAVEPOINT probe');await expect(db.query(sql,[parcel.id,parcel.seller_id,path,type,size])).rejects.toMatchObject({code:'23514'});await db.query('ROLLBACK TO SAVEPOINT probe');
+   await db.query('SAVEPOINT probe');await expect(db.query(sql,[parcel.id,rider,path,type,size])).rejects.toMatchObject({code:'23514'});await db.query('ROLLBACK TO SAVEPOINT probe');
   }
-  await db.query(sql,[parcel.id,parcel.seller_id,key,'image/jpeg',1]);await db.query('SAVEPOINT probe');await expect(db.query(sql,[parcel.id,parcel.seller_id,parcel.id+'/'+('b'.repeat(32))+'.jpg','image/jpeg',1])).rejects.toMatchObject({code:'23505'});await db.query('ROLLBACK TO SAVEPOINT probe');
+  await db.query('SAVEPOINT probe');await expect(db.query(sql,[parcel.id,parcel.seller_id,key,'image/jpeg',1])).rejects.toMatchObject({code:'23503'});await db.query('ROLLBACK TO SAVEPOINT probe');
+  await db.query(sql,[parcel.id,rider,key,'image/jpeg',1]);await db.query('SAVEPOINT probe');await expect(db.query(sql,[parcel.id,rider,parcel.id+'/'+('b'.repeat(32))+'.jpg','image/jpeg',1])).rejects.toMatchObject({code:'23505'});await db.query('ROLLBACK TO SAVEPOINT probe');
+  const other=(await db.query('SELECT id FROM app.parcel WHERE id<>$1 LIMIT 1',[parcel.id])).rows[0];
+  await db.query('SAVEPOINT probe');await expect(db.query(sql,[other.id,rider,key,'image/jpeg',1])).rejects.toMatchObject({code:'23505'});await db.query('ROLLBACK TO SAVEPOINT probe');
  }finally{await db.query('ROLLBACK');await db.end();}
 });
 it('M2-PH1-TC02 gateway does not expose the app schema and Realtime publishes no app tables',async()=>{

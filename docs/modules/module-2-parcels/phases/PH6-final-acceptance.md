@@ -29,7 +29,7 @@ Zikri can demonstrate M2 live on the cloud deployment in about 10 minutes, inclu
 | M2-PH6-T05 | Code walkthrough notes: schema and constraints, migration order, `unit_of_work` and transaction-local context, policies and helper, `create_parcel` and replay, `lookup_tracking`, retention functions and job, tracking token generator; likely questions and answers | Peer questioning by Naszrul and Syauqi recorded | TC04 | none |
 | M2-PH6-T06 | Evidence for retention and data protection policy P3: documented procedure, last scheduled run, anonymization sample on synthetic data, backup expiry interpretation of the 12-month policy (D-17) | Procedure and sample linked | TC05 | M2-PH5-T04 |
 | M2-PH6-T07 | Repository and data hygiene for M2: synthetic data only, no real recipients, payload corpora contain no personal data, fixtures flagged, secrets scan | Scan clean | TC06 | none |
-| M2-PH6-T08 | Group 30-minute rehearsals (two) with timing for the M2 segment and the full end-to-end order from the [checkpoint plan](../../../checkpoint-plan.md#later-integrated-demonstration-order) | Two logged run-throughs | TC07 | H60 |
+| M2-PH6-T08 | Group 30-minute rehearsals (two) with timing for the M2 segment and the full end-to-end order from the [final demonstration order](../../../shared/workflow-trace.md#final-demonstration-order) | Two logged run-throughs | TC07 | H60 |
 | M2-PH6-T09 | Freeze: confirm release record for M2 (commit, migration revision, grants snapshot hash) and list known limitations (no parcel editing, no recipient accounts, single-instance database) | Record present | TC08 | G5 |
 
 ## 5 Affected components
@@ -62,7 +62,7 @@ M2 section of the security test document; RLS evidence; demo script; code notes;
 - T01-T09 done; TC01-TC08 satisfied; M2 definition of done in the [module README](../README.md#module-definition-of-done) ticked with evidence links.
 - Contributes to G6.
 
-## 10 Integration checkpoint
+## 10 Integration check
 
 Single end-to-end live run in the planned order with Naszrul and Syauqi, using the same deployment, then reset of demo accounts.
 

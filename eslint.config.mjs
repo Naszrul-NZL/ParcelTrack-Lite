@@ -4,7 +4,7 @@ import typescript from 'typescript-eslint';
 import hooks from 'eslint-plugin-react-hooks';
 export default defineConfig([
   js.configs.recommended, ...typescript.configs.recommended, hooks.configs.flat.recommended,
-  globalIgnores(['.next/**', 'node_modules/**', 'checkpoint-demo/**', 'infra/supabase/vendor/**', 'deliverables/**', 'next-env.d.ts']),
+  globalIgnores(['.next/**', 'node_modules/**', 'infra/supabase/vendor/**', 'next-env.d.ts']),
   { files: ['src/shared/**/*', 'src/features/**/*'], rules: {
     'no-restricted-imports': ['error', { patterns: ['@/server/*', '**/server/**', 'pg', 'argon2', 'node:*'] }],
   } },

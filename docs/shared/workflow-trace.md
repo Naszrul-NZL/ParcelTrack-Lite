@@ -1,6 +1,6 @@
 # Whole-project workflow trace
 
-Each end-to-end workflow is traced through the phase plans. "First partial" is the earliest phase in which part of the workflow works; "complete and tested" is the phase at which the workflow works completely and its tests (including failure and race cases) pass locally; "on the chosen cloud host" is where it is verified on the live stack. Planned only; nothing is implemented. See [integration scenarios](integration-tests.md) for the exact tests.
+Each end-to-end workflow is traced through the phase plans. "First partial" is the earliest phase in which part of the workflow works; "complete and tested" is the phase at which the workflow works completely and its tests (including failure and race cases) pass locally; "on the chosen cloud host" is where it is verified on the live stack. This is a coverage plan; [implementation status](../implementation-status.md) records available code and evidence. See [integration scenarios](integration-tests.md) for the exact tests.
 
 ## Summary
 
@@ -75,3 +75,16 @@ PH3: `FAILED` branch of `update_delivery_status` with one validated proof; `term
 | Grants and RLS equal snapshot after restore | PH4 | PH5 | M2-PH4-T01; M2-PH5-T05; M2-PH5-TC06 |
 
 The local restore workflow completes at G4 with actual matching app-data/Storage evidence. PH5 adds durable off-host backup and deployed-host checks. The isolated cloud restore drill retains its STRETCH tier; it does not retroactively block local completion.
+
+
+## Final demonstration order
+
+The final assessment is a 30-minute group demonstration, approximately 10 minutes per member. Rehearse the same release candidate and synthetic dataset on the live HTTPS URL. Each member demonstrates their own code and blocked attacks, then explains the relevant controls.
+
+1. Naszrul shows failed and successful login, Seller registration, protected role access, Rider creation/disablement, password change and session revocation.
+2. Zikri registers a parcel with validation, shows its tracking number and persistence, searches the Seller's own list and proves cross-Seller denial.
+3. Syauqi assigns the parcel as Admin, starts delivery as the assigned Rider, completes with validated proof and shows authorized proof access. Use a second parcel for Failed and show updated counts for all five statuses, including zero counts.
+4. Zikri opens anonymous tracking and demonstrates that only status/timestamps appear. Syauqi and Naszrul show that another Rider, a disabled account and an unauthorized role cannot bypass the API.
+5. Each member cites their security-test inputs, expected/actual results and evidence, and explains their own implementation. Keep recovery, retention and rollback evidence available for questions without spending the live demonstration on a destructive restore.
+
+Two timed rehearsals must include valid and hostile inputs, interrupted/error states and role switches. A preview or mock is disclosed as incomplete and cannot count as a working final requirement.

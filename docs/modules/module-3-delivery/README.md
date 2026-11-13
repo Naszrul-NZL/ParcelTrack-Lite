@@ -1,15 +1,17 @@
 # Module 3 Delivery Update and Admin Dashboard
 
-Owner: Syauqi, GitHub Qee110. Deliver backend delivery operations, the shared test harness, private proof storage, backup/restore coordination and React delivery/Admin screens. This folder is the full phased plan after the checkpoint as well. Phase 1 foundation code and local tests now exist; see [actual progress and open gates](../../phase-1-progress.md). Later workflows remain planned and owner reviews are pending.
+Owner: Syauqi, GitHub Qee110. Deliver backend delivery operations, the shared test harness, private proof storage, backup/restore coordination and React delivery/Admin screens. This plan covers the complete project lifecycle. Phase 1 foundation code and local tests now exist; see [actual progress and open gates](../../implementation-status.md). Later workflows remain planned and owner reviews are pending.
 
-Follow the [shared contract](../../shared/system-contract.md), [phase framework](../../shared/phase-framework.md), [dependency matrix](../../shared/dependency-matrix.md), [ERD](../../initial-erd.md) and [security worksheet](../../security-tests.md). Use the shared state/permission rules and DTOs rather than duplicating them here. Transaction/file failure cases require actual PostgreSQL and private filesystem integration.
+Use the [stock shadcn component policy](../../ui-components.md) and [current design](../../design/current-design.md) for every module screen.
+
+Follow the [shared contract](../../shared/system-contract.md), [phase framework](../../shared/phase-framework.md), [dependency matrix](../../shared/dependency-matrix.md), [ERD](../../database-design.md) and [security worksheet](../../security-tests.md). Use the shared state/permission rules and DTOs rather than duplicating them here. Transaction/file failure cases require actual PostgreSQL and private filesystem integration.
 
 ## Contents of this folder
 
 | File | Purpose |
 | --- | --- |
 | [phases/PH1-foundation.md](phases/PH1-foundation.md) | Test harness, Playwright and file fixtures, pure rules, `ProofStore`, image decision, coordination design |
-| [phases/PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) | Rider list, Start delivery with actor/time, seeded assignment (TMP-02), checkpoint evidence |
+| [phases/PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) | Rider list, Start delivery with actor/time, seeded assignment (TMP-02), integration evidence |
 | [phases/PH3-complete-functionality.md](phases/PH3-complete-functionality.md) | Proof table, assignment/reassignment, Delivered/Failed with proof, dashboard, screens |
 | [phases/PH4-hardening-regression.md](phases/PH4-hardening-regression.md) | Fault injection, reconciliation, purge, concurrency, upload corpus, backup lock and local restore drill |
 | [phases/PH5-cloud-operations.md](phases/PH5-cloud-operations.md) | persistent Docker, off-host backups, timers, cloud restore exercise, Android/4G checks |
@@ -33,8 +35,8 @@ Admin can assign/read but cannot submit Rider delivery updates. Delivered/Failed
 | Phase | Objective | Key tasks | Depends on | Exit |
 | --- | --- | --- | --- | --- |
 | PH1 | Independent testing and design foundations | T01 harness, T03 pure rules, T04 `ProofStore`, T05 image spike, T06 lock design | H02, H08, H09 | G1 |
-| PH2 | Rider starts delivery on a seeded parcel | T02 function, T03 A17 v1, T04 A16, T05 UI, T08 checkpoint evidence | H03, H20, H25 | G2 |
-| PH3 | All five features | T01 `delivery_proof` 0006 then 0007 (first), T03 assign, T05-T07 proof, T08 dashboard, T09-T10 UI | H30, H31, H34 | G3 |
+| PH2 | Rider starts delivery on a seeded parcel | T02 function, T03 A17 v1, T04 A16, T05 UI, T08 integration evidence | H03, H20, H25 | G2 |
+| PH3 | All five features | T01 verify 0004 proof schema, then add 0007 finalization, T03 assign, T05-T07 proof, T08 dashboard, T09-T10 UI | H30, H31, H34 | G3 |
 | PH4 | Consistency under faults, races, hostile uploads; backup lock and drill | T01-T04 faults/reconcile/purge, T05 concurrency, T06 corpus, T07 backup | H33, H40, H42 | G4 |
 | PH5 | Durable cloud storage, backups, restore | T01-T04 volumes/private off-host backup/timers/restore, T05 persistence, T06 4G | H50, H52 | G5 |
 | PH6 | Final evidence and demonstration | T02 document, T04 demo, T06 runbooks | G5 | G6 |
@@ -44,7 +46,7 @@ Admin can assign/read but cannot submit Rider delivery updates. Delivered/Failed
 | Provides | To | Phase |
 | --- | --- | --- |
 | H10 harness, Playwright skeleton, file fixtures; H13 ProofStore, lock design, storage layout | Naszrul, Zikri | PH1 |
-| H23 `update_delivery_status` v1, A16/A17 v1; checkpoint evidence compilation | group | PH2 |
+| H23 `update_delivery_status` v1, A16/A17 v1; integration evidence compilation | group | PH2 |
 | H35 `delivery_proof`, Rider action panel, proof viewer; H37 assignment; H38 proof fixtures | Zikri, all | PH3 |
 | H41 backup lock; H44 backup/restore scripts; reconcile and purge jobs; matrix rows A14-A19 (H43) | Naszrul, Zikri | PH4 |
 | H51 volumes, backups, timers; H54 restore environment | Naszrul, Zikri | PH5 |
@@ -102,10 +104,6 @@ All search/filter SQL is parameterized. Multipart requests still require CSRF pr
 ## Testing and acceptance
 
 All M3 tests are listed per phase and aggregated in [test-plan.md](test-plan.md). Run worksheet rows M3-01 to M3-10, RLS-03, RLS-10 and the M3 shares of S-01, S-05, S-07, S-09. Use actual PostgreSQL roles and private storage in integration tests; a mocked upload handler alone does not prove the final workflow. Record exact input, expected/actual results, safe evidence and Syauqi's name.
-
-### Checkpoint slice versus completion
-
-The checkpoint slice is M3-PH2: a seeded assigned parcel is shown in the Rider screen and the assigned Rider can move it to Out for Delivery, persisting the change and actor/time, with another Rider denied. Assignment, upload handling, Failed outcome, dashboard and reassignment follow in PH3 and PH4; the slice is not M3 completion.
 
 ### Module definition of done
 

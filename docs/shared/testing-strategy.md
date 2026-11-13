@@ -1,6 +1,6 @@
 # Automated testing strategy
 
-This is the required test plan for the Next.js/TypeScript/Supabase PostgreSQL application. The new Next.js/full-Supabase app and its executable suites do not exist yet; the separate checkpoint demo has frontend-only tests. Every test described here is planned, not passed. Owners implement tests with their features and retain evidence against the [system contract](system-contract.md).
+This is the required test plan for the Next.js/TypeScript/Supabase PostgreSQL application. Foundation suites exist and their actual results are recorded in [implementation status](../implementation-status.md). The matrices below define required coverage; they do not claim all listed cases have passed. Owners implement tests with features and retain evidence against the [system contract](system-contract.md).
 
 ## Test layers and tools
 
@@ -94,7 +94,7 @@ Do not claim randomness is proven by generating a few unique values. Check use o
 
 ### All-endpoint authorization matrix
 
-For A01 through A20, parameterize expected access for anonymous, Seller A, Seller B, Rider A, Rider B, Admin, inactive and password-change-required identities. Include success where valid, wrong role, wrong ownership, expired/revoked session, missing/invalid CSRF on unsafe methods, malformed fields and unexpected sensitive fields. Do not expect every endpoint to permit every fixture; expected outcomes come from the contract. Check exact status/error shape, no unintended database/file changes and no extra sensitive response fields.
+For A01 through A21, parameterize expected access for anonymous, Seller A, Seller B, Rider A, Rider B, Admin, inactive and password-change-required identities. Include success where valid, wrong role, wrong ownership, expired/revoked session, missing/invalid CSRF on unsafe methods, malformed fields and unexpected sensitive fields. Do not expect every endpoint to permit every fixture; expected outcomes come from the contract. Check exact status/error shape, no unintended database/file changes and no extra sensitive response fields.
 
 For 404-protected parcel/proof routes, compare nonexistent IDs with inaccessible IDs. For authenticated list endpoints, assert filtering/count totals as well as individual rows. For A13 public tracking, include no-login access without any session or CSRF token (same-origin check only), a foreign `Origin`, and no direct table access through tracking_runtime.
 
@@ -218,4 +218,4 @@ Each member needs more than five distinct input types; PH6 checks this per modul
 
 For every executed scenario record owner, feature/security/integration ID, exact input, expected result, actual result, commit/release/migration version, environment, timestamp and safe artifact reference. Automated JUnit/coverage/browser reports support the final rubric document but do not replace the owner's explanation.
 
-Current state: all suites and gates in this document are planned (phase files define the cases; none has run). No Next.js/backend/RLS test has run because that implementation is not present. Historical checkpoint frontend results do not satisfy these gates. Document-link checks are separate from software test results.
+Current state: foundation unit/component, database/Storage and preview browser suites have passed locally as recorded in [implementation status](../implementation-status.md). Business-flow, whole-app security and release gates remain open. Document consistency checks are separate from application results.

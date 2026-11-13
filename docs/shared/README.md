@@ -1,6 +1,6 @@
 # Shared architecture, contracts and gates
 
-This folder holds the cross-module material: the single architecture, the authoritative contract, phase and gate definitions, handoffs, integration tests and operations plans. Module-specific plans live in [docs/modules](../modules). The Next.js/Supabase implementation is planned; the separate React checkpoint prototype already exists and has frontend-only evidence.
+This folder holds the cross-module material: the single architecture, the authoritative contract, phase and gate definitions, handoffs, integration tests and operations plans. Module-specific plans live in [docs/modules](../modules). The Next.js/Supabase foundation and stock shadcn previews exist; [implementation status](../implementation-status.md) separates available behavior from planned workflows.
 
 ## One authoritative home for each topic
 
@@ -9,14 +9,14 @@ This folder holds the cross-module material: the single architecture, the author
 | Roles, statuses, DTOs, endpoints, permissions, limits, error codes, database privileges, function signatures, proof and retention rules | [system-contract.md](system-contract.md) | link and summarize, never redefine |
 | Phases PH1-PH6, identifiers, milestone matrix, group gates G1-G6 | [phase-framework.md](phase-framework.md) | cite phase and gate IDs |
 | Handoffs H01-H61, temporary substitutes TMP-01-TMP-06, migration order, independent versus blocked work | [dependency-matrix.md](dependency-matrix.md) | cite IDs |
-| Integration scenarios INT-CP-01 to INT-12 | [integration-tests.md](integration-tests.md) | cite IDs |
+| Integration scenarios INT-01 to INT-15 | [integration-tests.md](integration-tests.md) | cite IDs |
 | Six end-to-end workflows by phase | [workflow-trace.md](workflow-trace.md) | cite |
 | Requirement to phase to task to test mapping | [traceability.md](traceability.md) | extend only here |
 | Source requirements, team decisions, proposed choices, external dependencies | [decision-register.md](decision-register.md) | cite D-nn, EXT-nn, SRC-nn |
 | What each member starts with | [execution-sequence.md](execution-sequence.md) | cite |
 | Test layers, tooling, fixtures, CI gates, evidence | [testing-strategy.md](testing-strategy.md) | cite |
 | Local Supabase setup, later deployment, backup, restore and incident process | [integration-and-deployment.md](integration-and-deployment.md) | cite |
-| Conceptual ERD and RLS design | [../initial-erd.md](../initial-erd.md) | cite |
+| Agreed ERD and implemented schema | [../database-design.md](../database-design.md) | cite |
 | Security test rows (51) and evidence rules | [../security-tests.md](../security-tests.md) | cite |
 | Per-module scope, phased tasks, tests | [docs/modules/*](../modules) | cite |
 
@@ -46,6 +46,8 @@ flowchart LR
 Immediate target: localhost development and integration, followed by local production-build verification. Cloud hosting is a later PH5 decision. Next.js Client Components never connect to PostgreSQL or receive privileged Supabase keys. Server Components and Route Handlers share authorized server services; schema `app` is not exposed through public Supabase APIs. Full Supabase Docker is required infrastructure, with the existing custom username/session model retained as the only application login authority. [Local setup](../local-development.md) and [system contract](system-contract.md).
 
 One application, one npm lockfile, one SQL migration history and one database. Full infrastructure does not mean duplicating business logic in Edge Functions, PostgREST or a separate Python backend.
+
+Use the [stock shadcn component policy](../ui-components.md) and [approved design](../design/current-design.md) for all module screens. Current configuration uses no community registries.
 
 ## Shared ownership
 

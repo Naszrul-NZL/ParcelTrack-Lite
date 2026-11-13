@@ -4,12 +4,12 @@ This register separates four kinds of statement so plans cannot quietly promote 
 
 | Class | Meaning |
 | --- | --- |
-| Source | Stated by the lecturer's briefing, case study or rubric (reference files at the repository root) |
-| Confirmed | Decided by the team; baseline revised by user instruction on 22 October 2026 |
+| Source | Stated by the lecturer's briefing, case study or rubric (original files under docs/requirements) |
+| Confirmed | Decided by the team/user, including lecturer stack approval reported on 13 November 2026 |
 | Proposed | Design choice made in these plans; reviewable and changeable through the [contract change rule](system-contract.md) |
 | Open or external | Needs information or action from outside the plan; not resolved by editing documents |
 
-Status of every row is as of this document. Phase 1 local implementation is recorded in [the progress log](../phase-1-progress.md); external records are not implied by local code. Update the status column only with evidence (receipt, PR, test result).
+Status of every row is as of this document. Local implementation is recorded in [implementation status](../implementation-status.md); external records are not implied by local code. Update status with evidence such as an explicit user confirmation, receipt, PR or test result. EXT-02 records the project owner's confirmation of lecturer approval, not an invented written receipt.
 
 ## Source requirements (summary, with locations)
 
@@ -29,7 +29,7 @@ Status of every row is as of this document. Phase 1 local implementation is reco
 | SRC-12 | Module-specific key controls and suggested test inputs; testing band needs more than five input types | Rubric 2, 3 |
 | SRC-13 | Final: live demonstration (30 minutes per group, about 10 per member) and security test document by module (input, expected, actual, owner) | Case study 10 |
 | SRC-14 | Stack must be one of PHP+MySQL, Flask/Django+SQLite/MySQL, Spring Boot+MySQL | Case study 6; briefing slide 11 |
-| SRC-15 | Module allocation submitted by Week 5; starter-kit use declared with an untouched first commit | Case study 4.4; briefing slide 7 |
+| SRC-15 | Preserve assessed module ownership and declare any starter-kit use with an untouched first commit | Case study 4.4; briefing slide 7 |
 | SRC-16 | Scale: about 50 sellers, 15 riders, 2 admins, 800 parcels per day; riders on Android phones over 4G | Case study 7 |
 | SRC-17 | Every module must be tested with suitable security tools before release | Case study 11 |
 
@@ -37,8 +37,8 @@ Status of every row is as of this document. Phase 1 local implementation is reco
 
 | ID | Class | Decision | Evidence and notes | Status |
 | --- | --- | --- | --- | --- |
-| D-01 | Confirmed | Full-stack Next.js App Router/TypeScript with PostgreSQL in full Supabase Docker | User requested the Next.js documentation migration on 22 October 2026, then specified local first and full Supabase Docker; supersedes the earlier separate React/Python API plan. This remains a variation from SRC-14 | Lecturer acceptance of Next.js/PostgreSQL is unverified (EXT-02); no source requirement is silently changed |
-| D-02 | Confirmed | One npm application/lockfile; Next.js Node runtime, shared strict Zod schemas, pg, node-pg-migrate, Sharp, Argon2id and opaque server-side sessions; full official Supabase Compose stack locally | User confirmed one application stack and local Supabase Docker. Existing username/session security contract retained; bundled Supabase Auth is not a second app identity source | Planning baseline; implementation and pinned versions pending D-21 |
+| D-01 | Confirmed | Full-stack Next.js App Router/TypeScript with PostgreSQL in full Supabase Docker, local first | Selected by the team/user; lecturer approval confirmed by the project owner in chat on 13 November 2026. Original SRC-14 stack wording remains preserved in the source requirements | Approved stack; EXT-02 resolved. Cloud provider and sizing remain EXT-04 |
+| D-02 | Confirmed | One npm application/lockfile; Next.js Node runtime, shared strict Zod schemas, pg, node-pg-migrate, Sharp, Argon2id and opaque server-side sessions; full official Supabase Compose stack locally | User confirmed one application stack and local Supabase Docker. Existing username/session security contract retained; bundled Supabase Auth is not a second app identity source | Foundation implemented locally; pinned versions recorded under D-21. Business workflows and G1 acceptance remain open |
 | D-03 | Confirmed / Open | Local development first; cloud hosting deferred | User steering supersedes the earlier AWS/EC2 commitment and the tentative Vercel/managed-free recommendation. Full Supabase Docker is local infrastructure, not a hosted Free project | No cloud provider or resources selected/provisioned by this change; resolve EXT-04 for PH5 |
 | D-04 | Proposed | Proof photo readable by the parcel's Seller, the assigned Rider and Admin; never public | Brief specifies upload rights, not download rights | Proposed |
 | D-05 | Proposed | Weight 0.001 to 100.000 kg, three decimals | Brief gives no upper bound | Proposed |
@@ -57,7 +57,7 @@ Status of every row is as of this document. Phase 1 local implementation is reco
 | D-18 | Proposed | Throttle values: login hard block 5 failures per (username, source) per 15 minutes, username-only 20 failures alert without blocking, per-source 100 failures; tracking 30 per source per minute; registration 30 per source per hour; anonymous sessions created lazily; A12/A19 reads 120 per user per minute; current-password attempts 5 per user per 15 minutes; sessions: anonymous 10 minutes, idle 30 minutes, absolute 8 hours; shared mobile or office addresses make these tuning values, configurable per environment | Brief requires limits but gives no numbers | Proposed |
 | D-19 | Proposed | New password must differ from the current one; common-password list is local | P2 gives only length and uniqueness | Proposed |
 | D-20 | Proposed | Error-code registry in the contract; all modules use only registered codes | Needed for conformance test CT-03 | Proposed (contract v3) |
-| D-21 | Open | Supported pinned Node.js, Next.js, PostgreSQL, Supabase Compose/image and npm dependency versions | Record upstream provenance and versions in infra/VERSIONS.md during M1-PH1-T01; application requires no Python runtime | Pending implementation |
+| D-21 | Confirmed | Pinned Node.js, Next.js, PostgreSQL, Supabase Compose/image and npm dependency versions | [Version record](../../infra/VERSIONS.md), package-lock.json and preserved upstream Compose configuration record the local foundation. Node.js 24.14.0 is the reproducible setup/CI baseline; 24.22.1 has also been checked locally. Application requires no Python runtime | Recorded and locally exercised; clean-checkout reproduction by another owner and remote CI remain G1 evidence |
 | D-22 | Proposed | Test principal injection only into test-built service/handler dependencies; never a request/header/cookie switch | Production exports import real auth only; test modules and failpoint registries are excluded from production dependency graphs | Next.js production build negative control required |
 | D-23 | Proposed | Migration order 0001 to 0007 and `audit_event.parcel_id` foreign key added by 0003 | Breaks M1/M2 table-order cycle | Proposed (contract v3) |
 | D-24 | Proposed | `as_of` time parameter accepted only by maintenance-role functions; request paths use database `now()` | Prevents clients influencing time | Proposed (contract v3) |
@@ -66,7 +66,7 @@ Status of every row is as of this document. Phase 1 local implementation is reco
 | D-27 | Proposed | Rate-limit source derives from verified local connection/proxy; cloud forwarding trust is host-specific | Never trust arbitrary X-Forwarded-For; keep keyed source digests | Local verification first; cloud test under EXT-04 |
 | D-28 | Proposed | Registration may reveal a taken username (unavoidable usability) while login stays generic; mitigated by throttle and audit | Trade-off | Accepted trade-off, proposed |
 | D-29 | Proposed | Out of scope: redelivery after final outcome, multiple/replacement photos, bulk assignment, maps, email recovery, payments | Not in the case study | Proposed (project plan) |
-| D-30 | Proposed | Checkpoint uses seeded assignment (TMP-02), disclosed in the demo | Checkpoint plan | Proposed |
+| D-30 | Proposed | Initial PH2 delivery slice uses guarded seeded assignment (TMP-02), replaced by real Admin assignment in PH3 | Enables incremental integration without exposing fixture controls in production | Retire by M3-PH3-T04; verify M3-PH3-TC17 |
 | D-31 | Proposed | Parcels that never become terminal are anonymized 12 months after their last status change (SHOULD tier) | P3 purpose ends even for lost or cancelled parcels | Proposed |
 | D-32 | Proposed | Admin password reset (A21) with a one-time password; initial and reset passwords expire after 72 hours (SHOULD tier) | Day-to-day resets must not need operator shell access (P1) | Proposed |
 | D-33 | Proposed | Accepted residual risk: `app_runtime` keeps direct DML on `auth_session` and `rate_limit_bucket`; a stolen runtime credential could forge a session. Mitigated by credential custody, short lifetimes and the account-table protections | Review finding R3-05 | Accepted, proposed |
@@ -81,14 +81,13 @@ Status of every row is as of this document. Phase 1 local implementation is reco
 
 | ID | Dependency | Needed by | Owner to chase | Status |
 | --- | --- | --- | --- | --- |
-| EXT-01 | Week 5 module allocation submission (full names, matric numbers, starter-kit declaration if any) and a retained receipt | Overdue risk: Week 5 may already have passed; act on the first day, evidence by G6 | Naszrul (M1-PH1-T13, M1-PH6-T06) | Unverified; submission status not known to the plan |
-| EXT-02 | Lecturer notice and written acceptance of Next.js/PostgreSQL and the later hosting topology; ask Week 14 date (EXT-08) | Before implementation baseline is accepted at G1; documentation updates do not constitute lecturer approval | Naszrul (M1-PH1-T13) | Not recorded |
+| EXT-02 | Lecturer approval of the selected Next.js/TypeScript/PostgreSQL/full-Supabase tech stack | Resolved; no longer blocks implementation or G1 | Naszrul / project owner | Approved — project owner confirmed lecturer approval in chat on 13 November 2026 |
 | EXT-03 | Apply PR-only branch protection (`.github/branch-protection.json`) with repository administration access; decide required checks after CI exists | PH1 CI complete; M1-PH5-T10 | Naszrul | Pending; not applied |
 | EXT-04 | Later cloud provider/account, full Supabase Docker host sizing/cost, domain/TLS, network exposure, durable storage and backup destination | Local PH1-PH4 proceed without cloud access; resolve before any PH5 provisioning | Naszrul with the team (M1-PH1-T13) | Deferred by user: local first |
-| EXT-05 | Full names and matric numbers for the allocation sheet and the test document | EXT-01, G6 | each member | Needed |
+| EXT-05 | Full names and matric numbers for the final security test document | G6 | each member | Needed |
 | EXT-06 | Private record of the incident contact channel and who holds the operations credential | Before cloud release (PH5) | Naszrul | Not recorded |
 | EXT-07 | Backup encryption key custody and the identities of recovery operators | PH5 | Syauqi with the team | Not decided |
-| EXT-08 | Week 14 calendar date (not stated in the source documents) | Needed to schedule gates backwards; no date is invented | Naszrul asks the lecturer with EXT-02 | Unknown |
+| EXT-08 | Week 14 calendar date (not stated in the source documents) | Needed to schedule gates backwards; no date is invented | Naszrul asks the lecturer; independent of the resolved stack approval | Unknown |
 
 ## How a proposal becomes a requirement
 

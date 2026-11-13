@@ -1,6 +1,6 @@
 # ParcelTrack Lite complete project plan
 
-Planning baseline revised on 22 October 2026: one full-stack Next.js/TypeScript application, PostgreSQL and private Storage in the full self-hosted Supabase Docker stack, local first. Cloud deployment is deferred. All modules have started Phase 1; [local results and remaining work](phase-1-progress.md) distinguish foundation code from later workflows. Group gates remain open. The separate React/Vite prototype is historical checkpoint evidence.
+Planning baseline updated 13 November 2026: one full-stack Next.js/TypeScript application, PostgreSQL and private Storage in the full self-hosted Supabase Docker stack, local first. Foundation code, the agreed ERD schema and stock shadcn previews exist; [implementation status](implementation-status.md) records actual results. Business workflows and group gates remain open. Cloud execution follows local acceptance.
 
 ## Plans by owner
 
@@ -12,7 +12,7 @@ Planning baseline revised on 22 October 2026: one full-stack Next.js/TypeScript 
 
 Each owner delivers their module's backend, React screens, migrations, security tests and demonstration. The group delivers one integrated application, not three applications. Each module folder contains one detailed Markdown file per phase (PH1 to PH6) with tasks, dependencies, deliverables, tests and exit criteria.
 
-Start here: [shared architecture and index](shared/README.md), [phase framework and group gates](shared/phase-framework.md), [dependency matrix](shared/dependency-matrix.md), [first execution sequence](shared/execution-sequence.md). The [shared system contract](shared/system-contract.md) is authoritative for API paths, payloads, status values, permissions and transaction rules. The [integration and deployment plan](shared/integration-and-deployment.md) defines deployment, backup and incident operations. [Initial ERD](initial-erd.md) and the [security test worksheet](security-tests.md) support these plans. The [testing strategy](shared/testing-strategy.md), [integration scenarios](shared/integration-tests.md), [workflow trace](shared/workflow-trace.md) and [traceability](shared/traceability.md) define and map the evidence. The [decision register](shared/decision-register.md) separates source requirements, confirmed decisions, proposals and external dependencies. [Independent review resolutions](review-resolutions.md) record gaps found and addressed before implementation.
+Start here: [shared architecture and index](shared/README.md), [phase framework and group gates](shared/phase-framework.md), [dependency matrix](shared/dependency-matrix.md), [first execution sequence](shared/execution-sequence.md). The [shared system contract](shared/system-contract.md) is authoritative for API paths, payloads, status values, permissions and transaction rules. The [integration and deployment plan](shared/integration-and-deployment.md) defines deployment, backup and incident operations. [Initial ERD](database-design.md) and the [security test worksheet](security-tests.md) support these plans. The [testing strategy](shared/testing-strategy.md), [integration scenarios](shared/integration-tests.md), [workflow trace](shared/workflow-trace.md) and [traceability](shared/traceability.md) define and map the evidence. The [decision register](shared/decision-register.md) separates source requirements, confirmed decisions, proposals and external dependencies. [Independent review resolutions](review-resolutions.md) record gaps found and addressed before implementation.
 
 ## Product boundary
 
@@ -22,22 +22,22 @@ Payments, courier integrations, maps/GPS, notifications, a mobile app, account r
 
 ## Architecture
 
-One Next.js application owns M1/M2/M3 pages, Route Handlers and server services. The full Supabase Docker stack runs locally with PostgreSQL, a private Storage bucket and its standard supporting services; a separate private TypeScript runner handles jobs. Cloud hosting is decided after local integration. See the [shared architecture](shared/README.md#single-architecture) and the contract for the code layout and privilege model.
+One Next.js application owns M1/M2/M3 pages, Route Handlers and server services. The full Supabase Docker stack runs locally with PostgreSQL, a private Storage bucket and its standard supporting services; a separate private TypeScript runner handles jobs. Cloud hosting is decided after local integration. Use [stock shadcn/ui first](ui-components.md) for all module interfaces. See the [shared architecture](shared/README.md#single-architecture) and the contract for the code layout and privilege model.
 
 ## Delivery phases
 
-Every module plan uses the same six phases and identifiers. The earlier labels P0 to P5 were replaced because they collided with case-study policies P1 to P5.
+Every module uses phases PH1–PH6. Policy identifiers P1–P5 refer only to the case-study policies.
 
 | Phase | Work | Group gate |
 | --- | --- | --- |
-| PH1 Foundation and shared contracts | Next.js skeleton, full local Supabase Compose, app-role bootstrap, migrations 0001-0003, harness, fixtures, constants, DTOs, auth interface, contract v3 | G1: clean checkout starts, runtime roles cannot bypass RLS, CI green |
-| PH2 Initial working checkpoint slice | M1 real login/logout; M2 parcel registered and listed under RLS; M3 assigned parcel moved to Out for Delivery; security baseline active | G2: INT-CP-01 to INT-CP-03 |
+| PH1 Foundation and shared contracts | Next.js skeleton, full local Supabase Compose, app-role bootstrap, migrations 0001-0004, harness, fixtures, constants, DTOs, auth interface, contract v4 | G1: clean checkout starts, runtime roles cannot bypass RLS, CI green |
+| PH2 Initial working slice | M1 real login/logout; M2 parcel registered and listed under RLS; M3 assigned parcel moved to Out for Delivery; security baseline active | G2: INT-13 to INT-15 |
 | PH3 Complete module functionality | All module functions and screens, public tracking, assignment/reassignment, final outcomes/photo, password and user administration | G3: successful and Failed journeys, no temporary substitutes |
 | PH4 Security, failure handling and regression | Full authorization matrix, RLS suites, races, fault injection, upload corpus, retention job, local backup/restore, CI gates | G4: all worksheet rows pass locally |
 | PH5 Integrated cloud deployment and operations | Later chosen cloud host: HTTPS, full Supabase Docker persistence, private administration, backups/jobs and repeated journeys | G5a: all roles on the live URL, restart and rollback proven; G5b: extended operations |
 | PH6 Final acceptance, evidence and demonstration | Release-candidate regression, security test document, rehearsals, individual explanations | G6: documented evidence and demonstration readiness |
 
-Details, entry and exit criteria, and the per-member milestone matrix are in the [phase framework](shared/phase-framework.md). PH2 is the 22 October checkpoint target, not the whole-project definition of done. Source documents set the final submission at Week 14; no invented calendar date is assigned here. Phases can overlap only under the framework's overlap rule; a module is not complete until its own exit criteria and the group gates pass.
+Details, entry and exit criteria, and the per-member milestone matrix are in the [phase framework](shared/phase-framework.md). PH2 proves the first integrated flows; PH3–PH6 deliver complete behavior, hardening, operations and acceptance. Source documents set the final submission at Week 14; no invented calendar date is assigned here. Phases can overlap only under the framework's overlap rule; a module is not complete until its own exit criteria and the group gates pass.
 
 Work is tiered MUST, SHOULD or STRETCH ([priority tiers and cut line](shared/phase-framework.md#priority-tiers-and-cut-line)); gates G3 to G6 pass on MUST and SHOULD, STRETCH items are reported honestly and never block. Gate G5 is split into a rubric-critical minimum G5a (HTTPS cloud deployment, all roles online, restart persistence, rollback) and extended operations G5b.
 
@@ -60,16 +60,16 @@ A criterion is checked only with a linked passing result. The group gates in the
 - [ ] No real recipient data, usable test passwords or deployment secrets are committed.
 - [ ] Each member can explain their own code and security decisions in the final demonstration (G6).
 - [ ] Unit/component, API/PostgreSQL and core browser suites pass the testing strategy gates, with operational restore/maintenance evidence before cloud release (G4, G5).
-- [ ] Naszrul's lecturer allocation-sheet submission and the variation notice are recorded with real evidence or as unverified (EXT-01, EXT-02).
+- [ ] Lecturer variation status and assessment identities are recorded accurately (EXT-02, EXT-05).
 
 ## Remaining decisions and external dependencies
 
 Tracked in the [decision register](shared/decision-register.md). In summary:
 
-1. Full-stack Next.js and PostgreSQL replace the frameworks/databases explicitly named in the brief (D-01). The team selected them; lecturer acceptance is unverified (EXT-02).
+1. Full-stack Next.js and PostgreSQL replace the frameworks/databases explicitly named in the brief (D-01). The lecturer approved the selected stack, as confirmed by the project owner on 13 November 2026 (EXT-02); this is no longer an implementation blocker.
 2. Local Next.js with full Supabase Docker is the immediate target. Cloud provider, full-stack host, sizing, budget, domain/TLS and backup destination remain deferred under EXT-04; no resources are provisioned by this work.
 3. The prepared PR-only branch protection has not been applied (EXT-03); Naszrul needs repository administration access.
-4. Full names and matric numbers are needed for the lecturer's allocation sheet and test document (EXT-05); allocation submission is unverified (EXT-01).
+4. Full names and matric numbers are needed for the final security test document (EXT-05).
 5. Open design points: secrets location (D-10), local gateway exposure and later TLS choice (D-11), runtime versions (D-21), incident contact and backup key custody (EXT-06, EXT-07).
 
 Proof read access, Failed-parcel retention, operational limits and reassignment rules are explicit design choices in the shared contract (D-04, D-06, D-18). They are the implementation baseline unless the group changes the contract through review; they are not claims that the lecturer specified those details.
@@ -86,4 +86,4 @@ Proof read access, Failed-parcel retention, operational limits and reassignment 
 | Rubric deployment/integration | PH5 and gate G5 |
 | Rubric security controls, testing and demonstration | Per-module acceptance, evidence worksheet, PH4 and PH6, [traceability sections B and C](shared/traceability.md#b-rubric-criteria) |
 
-Reference documents are included at the repository root: ParcelTrack_Lite_Case_Study.docx, Rubric_Project_STTCK3033_ParcelTrack_Lite (1).docx and ParcelTrack Lite Project Briefing.pptx. This plan covers their final-project scope; [checkpoint preparation](checkpoint-plan.md) covers the 22 October reporting separately.
+The unchanged [case study, rubric and briefing](requirements/README.md) are retained under `docs/requirements/`. They define final scope; the [traceability](shared/traceability.md) maps required behavior to tasks and tests.

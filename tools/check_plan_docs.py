@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Consistency checker for the ParcelTrack Lite planning documents.
 
-Documentation tooling only (no application code). Checks, over docs/ and README.md:
+Documentation tooling only (no application code). Checks first-party project docs:
 
 * relative Markdown links and heading anchors resolve;
 * every phase file has the 12 required sections in order and contiguous task / test IDs;
@@ -31,7 +31,7 @@ MODULES = {
 }
 PHASE_FILES = {
     1: "PH1-foundation.md",
-    2: "PH2-checkpoint-slice.md",
+    2: "PH2-initial-working-slice.md",
     3: "PH3-complete-functionality.md",
     4: "PH4-hardening-regression.md",
     5: "PH5-cloud-operations.md",
@@ -40,7 +40,7 @@ PHASE_FILES = {
 SECTIONS = [
     "1 Objective", "2 Entry criteria", "3 Dependencies", "4 Ordered tasks",
     "5 Affected components", "6 Security requirements", "7 Tests",
-    "8 Deliverables and handoffs", "9 Exit criteria", "10 Integration checkpoint",
+    "8 Deliverables and handoffs", "9 Exit criteria", "10 Integration check",
     "11 Failure risks and recovery", "12 Deferred work",
 ]
 WORKSHEET = (
@@ -55,7 +55,7 @@ FEATURES = (
     + [f"M2-F{i:02d}" for i in range(1, 5)]
     + [f"M3-F{i:02d}" for i in range(1, 6)]
 )
-ENDPOINTS = [f"A{i:02d}" for i in range(1, 21)]
+ENDPOINTS = [f"A{i:02d}" for i in range(1, 22)]
 
 errors: list[str] = []
 warnings: list[str] = []
@@ -72,6 +72,12 @@ def warn(path: Path, line: int, msg: str) -> None:
 def md_files() -> list[Path]:
     files = sorted(DOCS.rglob("*.md"))
     files.append(ROOT / "README.md")
+    for name in ("AGENTS.md", "DESIGN.md"):
+        if (ROOT / name).exists():
+            files.append(ROOT / name)
+    files.extend((ROOT / "db" / "drafts").glob("*.md"))
+    files.extend((ROOT / "src" / "features").glob("*/README.md"))
+    files.extend([ROOT / "infra" / "VERSIONS.md", ROOT / "infra" / "supabase" / "README.md"])
     return files
 
 
@@ -168,12 +174,12 @@ def parse_phase_files():
                 err(path, 1, f"sections must be exactly {SECTIONS}; found {found}")
             tnums, cnums = [], []
             for i, l in enumerate(lines, 1):
-                mt = re.match(rf"^\| ({m}-PH{p}-T(\d\d))( \(CP\))? \|", l)
+                mt = re.match(rf"^\| ({m}-PH{p}-T(\d\d)) \|", l)
                 if mt:
                     cols = split_row(l)
                     if len(cols) != 5:
                         err(path, i, f"task row needs 5 columns, has {len(cols)}")
-                    tasks[mt.group(1)] = {"path": path, "line": i, "cp": bool(mt.group(3)), "text": l}
+                    tasks[mt.group(1)] = {"path": path, "line": i, "text": l}
                     tnums.append(int(mt.group(2)))
                 mc = re.match(rf"^\| ({m}-PH{p}-TC(\d\d)) \|", l)
                 if mc:
@@ -260,7 +266,7 @@ def check_references(files, tasks, tcs, handoffs, tmps, decisions, exts, ints) -
             for x in re.findall(r"EXT-(\d\d)", raw):
                 if f"EXT-{x}" not in exts:
                     err(f, i, f"undefined external dependency EXT-{x}")
-            for n in re.findall(r"INT-(CP-\d\d|\d\d)", raw):
+            for n in re.findall(r"INT-(\d\d)", raw):
                 if f"INT-{n}" not in ints:
                     err(f, i, f"undefined integration scenario INT-{n}")
             for g in re.findall(r"(?<![\w-])G([0-9]+)(?![\w.-])", raw):
@@ -339,7 +345,7 @@ def check_handoffs(tasks, tcs):
             np_ = min(phase_of(x) for x in n_ids)
             if np_ < dp and subst.strip().lower() in ("none", "none."):
                 err(path, i, f"{hid}: consumer phase PH{np_} precedes producer phase PH{dp} with no substitute")
-        if not p_ids and not re.search(r"INT-|CP-", proof):
+        if not p_ids and not re.search(r"INT-", proof):
             err(path, i, f"{hid}: no proving test case listed")
     return ids
 
@@ -372,7 +378,7 @@ def check_decisions():
 def check_integration_ids():
     path = DOCS / "shared" / "integration-tests.md"
     text = path.read_text(encoding="utf8")
-    return set(re.findall(r"^\| (INT-(?:CP-)?\d\d) \|", text, flags=re.M))
+    return set(re.findall(r"^\| (INT-\d\d) \|", text, flags=re.M))
 
 
 # ---------------------------------------------------------------- traceability coverage
@@ -401,16 +407,6 @@ def check_traceability() -> None:
         for feat in [x for x in FEATURES if x.startswith(m)]:
             if feat not in tp:
                 err(DOCS / "modules" / folder / "test-plan.md", 1, f"{feat} missing from test plan")
-
-
-def check_tasks_traced(tasks) -> None:
-    """Every (CP) marker in PH1/PH2 must appear in the execution sequence or framework."""
-    exec_text = (DOCS / "shared" / "execution-sequence.md").read_text(encoding="utf8")
-    for tid, info in tasks.items():
-        if info["cp"] and tid not in exec_text:
-            ids = {r for r, _ in expand_ids(exec_text)}
-            if tid not in ids:
-                warn(info["path"], info["line"], f"(CP) task {tid} not mentioned in execution-sequence.md")
 
 
 # ---------------------------------------------------------------- generated index
@@ -456,7 +452,6 @@ def main() -> int:
     check_short_ids_in_phase_files(tasks, tcs)
     check_references(files, tasks, tcs, handoffs, tmps, decisions, exts, ints)
     check_traceability()
-    check_tasks_traced(tasks)
     print(f"phase files: {len(PHASE_FILES) * len(MODULES)}; tasks: {len(tasks)}; test cases: {len(tcs)}; "
           f"handoffs: {len(handoffs)}; substitutes: {len(tmps)}; decisions: {len(decisions)}; "
           f"external: {len(exts)}; integration scenarios: {len(ints)}")

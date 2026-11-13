@@ -1,6 +1,6 @@
 # Module 1 test plan
 
-Owner: Naszrul. Coverage plan for M1 linked to phases, tasks and requirements. Every test below is planned; none has run. A phase cannot pass because its screens render or because test counts look high: each listed case must show its expected outcome with evidence. Test case (TC) definitions live in the phase files; the index at the end is generated from them by `tools/check_plan_docs.py`.
+Owner: Naszrul. Coverage plan for M1 linked to phases, tasks and requirements. This is the planned coverage matrix; [implementation status](../../implementation-status.md) records executable results. Mark a case passed only when its exact inputs and outcomes have evidence. A phase cannot pass because its screens render or because test counts look high: each listed case must show its expected outcome with evidence. Test case (TC) definitions live in the phase files; the index at the end is generated from them by `tools/check_plan_docs.py`.
 
 Related: [testing strategy](../../shared/testing-strategy.md), [integration scenarios](../../shared/integration-tests.md), [traceability](../../shared/traceability.md), [security worksheet](../../security-tests.md).
 
@@ -62,7 +62,7 @@ Rubric input types for criterion 3 (more than five required): SQL injection in u
 | --- | --- | --- |
 | PH1 | server-lint-type, server-unit, db-migrations, server-integration (harness), ci-contract, app-check, local-stack-smoke, secret-scan | G1 items 1, 2, 3, 6 |
 | PH2 | + server-integration (real PostgreSQL, runtime roles), e2e-core (login journeys), authz-matrix | Worksheet rows from M1-PH2-T11 with actual results |
-| PH3 | + ci-contract (CT-03 for A01-A09, A20), runner self-test | TMP-01 and TMP-03 gone; INT-01, INT-05, INT-06 legs |
+| PH3 | + ci-contract (CT-03 for A01-A09, A20, A21), runner self-test | TMP-01 and TMP-03 gone; INT-01, INT-05, INT-06 legs |
 | PH4 | + race suite, canary scan, dependency-audit blocking, coverage gate (85 percent line, 80 percent branch backend; 80/75 frontend) | M1-01 to M1-12 consolidated; incident tabletop |
 | PH5 | + live-URL smoke, first-boot and restore operations tests | HTTPS cookie flags, port scan, rollback rehearsal, restore session check |
 | PH6 | full regression on release candidate | Final test document M1 section |
@@ -87,28 +87,28 @@ Rubric input types for criterion 3 (more than five required): SQL injection in u
 | M1-PH1-TC13 | PH1 | Unit | S-08 | [PH1-foundation.md](phases/PH1-foundation.md) |
 | M1-PH1-TC14 | PH1 | Integration (RLS-01, RLS-06 prep) | RLS-01, RLS-06 | [PH1-foundation.md](phases/PH1-foundation.md) |
 | M1-PH1-TC15 | PH1 | Integration | S-02, S-08 | [PH1-foundation.md](phases/PH1-foundation.md) |
-| M1-PH2-TC01 | PH2 | Integration (IT-A02) | S-02 (local), M1-03 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC02 | PH2 | Integration (IT-A02) | M1-07 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC03 | PH2 | Integration (IT-A04) | M1-01 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC04 | PH2 | Integration | M1-04, P5 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC05 | PH2 | Unit and integration (UT-A05) | M1-04 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC06 | PH2 | Integration (IT-A02) | M1-07 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC07 | PH2 | Integration (IT-A02) | S-01 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC08 | PH2 | Integration (IT-A03) | M1-05 (prep), P1 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC09 | PH2 | Integration (RLS-04 link) | M1-09 prep, RLS-04 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC10 | PH2 | Integration | M1-09 prep | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC11 | PH2 | Unit (UT-A02) | S-02 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC12 | PH2 | Integration (IT-A04) | S-05, P5 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC13 | PH2 | Unit (UT-A04) | S-04 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC14 | PH2 | Component (CMP-A02) | M1-F02 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC15 | PH2 | Browser (E2E-A01) | M1-F02, S-08 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC16 | PH2 | Integration / static | TMP-01 retirement | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC17 | PH2 | Integration | M1-03 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC18 | PH2 | Integration (IT-A01 matrix) | authz matrix | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC19 | PH2 | Integration | S-01, rate limits | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC20 | PH2 | Integration (UT-A05) | M1-04 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC21 | PH2 | Integration (capacity) | M1-04, P4 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
-| M1-PH2-TC22 | PH2 | Integration (IT-A01) | M1-F03 | [PH2-checkpoint-slice.md](phases/PH2-checkpoint-slice.md) |
+| M1-PH2-TC01 | PH2 | Integration (IT-A02) | S-02 (local), M1-03 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC02 | PH2 | Integration (IT-A02) | M1-07 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC03 | PH2 | Integration (IT-A04) | M1-01 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC04 | PH2 | Integration | M1-04, P5 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC05 | PH2 | Unit and integration (UT-A05) | M1-04 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC06 | PH2 | Integration (IT-A02) | M1-07 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC07 | PH2 | Integration (IT-A02) | S-01 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC08 | PH2 | Integration (IT-A03) | M1-05 (prep), P1 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC09 | PH2 | Integration (RLS-04 link) | M1-09 prep, RLS-04 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC10 | PH2 | Integration | M1-09 prep | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC11 | PH2 | Unit (UT-A02) | S-02 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC12 | PH2 | Integration (IT-A04) | S-05, P5 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC13 | PH2 | Unit (UT-A04) | S-04 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC14 | PH2 | Component (CMP-A02) | M1-F02 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC15 | PH2 | Browser (E2E-A01) | M1-F02, S-08 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC16 | PH2 | Integration / static | TMP-01 retirement | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC17 | PH2 | Integration | M1-03 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC18 | PH2 | Integration (IT-A01 matrix) | authz matrix | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC19 | PH2 | Integration | S-01, rate limits | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC20 | PH2 | Integration (UT-A05) | M1-04 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC21 | PH2 | Integration (capacity) | M1-04, P4 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
+| M1-PH2-TC22 | PH2 | Integration (IT-A01) | M1-F03 | [PH2-initial-working-slice.md](phases/PH2-initial-working-slice.md) |
 | M1-PH3-TC01 | PH3 | Integration (IT-A01) | M1-02, M1-F01 | [PH3-complete-functionality.md](phases/PH3-complete-functionality.md) |
 | M1-PH3-TC02 | PH3 | Integration (IT-A01) | M1-08 | [PH3-complete-functionality.md](phases/PH3-complete-functionality.md) |
 | M1-PH3-TC03 | PH3 | Integration (IT-A01) | M1-F01 | [PH3-complete-functionality.md](phases/PH3-complete-functionality.md) |
@@ -173,7 +173,7 @@ Rubric input types for criterion 3 (more than five required): SQL injection in u
 | M1-PH6-TC02 | PH6 | Evidence review | rubric 3 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |
 | M1-PH6-TC03 | PH6 | Rehearsal | rubric 4 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |
 | M1-PH6-TC04 | PH6 | Peer Q&A | rubric 4 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |
-| M1-PH6-TC05 | PH6 | Evidence review | EXT-01, EXT-02 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |
+| M1-PH6-TC05 | PH6 | Evidence review | EXT-05, EXT-02 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |
 | M1-PH6-TC06 | PH6 | Scan | P4, S-03 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |
 | M1-PH6-TC07 | PH6 | Rehearsal | rubric 4 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |
 | M1-PH6-TC08 | PH6 | Record check | G6.5 | [PH6-final-acceptance.md](phases/PH6-final-acceptance.md) |

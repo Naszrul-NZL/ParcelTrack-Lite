@@ -1,6 +1,6 @@
 # Integration release and deployment operations plan
 
-Baseline revised on 22 October 2026: **local first, one full-stack Next.js application and the full self-hosted Supabase Docker stack**. No application migration, containers, cloud resources or release gates are completed by these documentation changes. The existing `checkpoint-demo/` is a separate browser-only prototype. See the [local setup plan](../local-development.md), [system contract](system-contract.md) and [testing strategy](testing-strategy.md).
+Baseline updated 13 November 2026: **local first, one full-stack Next.js application and the full self-hosted Supabase Docker stack**. The root app and local foundation exist; [implementation status](../implementation-status.md) records verified behavior. Cloud resources and release gates remain pending. Use the [local runbook](../local-development.md), [system contract](system-contract.md) and [testing strategy](testing-strategy.md).
 
 ## Shared foundation and handoff order
 
@@ -69,4 +69,4 @@ The [integration scenarios](integration-tests.md), [security worksheet](../secur
 
 Demonstrate Seller, Rider, Admin and public journeys with synthetic users/parcels/images. Check phone-width and keyboard access. Record measured response times, database pool use, image memory and storage growth on the actual machine. The source's 50 Sellers, 15 Riders, 2 Admins and 800 parcels/day is a later capacity baseline, not an assertion that a laptop or free host meets it.
 
-Each member supplies more than five distinct security input types with expected/actual results and safe evidence. Rehearse the approximately 30-minute group demo. Local-first changes the implementation order, not the source's cloud criterion: final cloud demonstration and lecturer acceptance of the alternate stack remain external requirements. No Week 14 calendar date is invented.
+Each member supplies more than five distinct security input types with expected/actual results and safe evidence. Rehearse the approximately 30-minute group demo. Local-first changes the implementation order, not the source's cloud criterion: the final cloud demonstration remains required. The selected tech stack has lecturer approval (EXT-02). No Week 14 calendar date is invented.
