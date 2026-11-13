@@ -74,7 +74,7 @@ npm run fixtures:files
 npm run test:spike
 ```
 
-Test configuration is `.env.test.local` and `.local/test/`; test and development use separate credentials, ports and volumes. Integration tests assert real restricted roles; no HTTP header supplies a test identity. Current suites run sequentially with read-only seed data and unique Storage probe keys. Per-test cloned databases and the complete HTTP auth harness remain open work.
+Test configuration is `.env.test.local` and `.local/test/`; test and development use separate credentials, ports and volumes. Integration tests assert real restricted roles; no HTTP header supplies a test identity. New service suites use the [isolated database/Storage harness](shared/backend-foundation.md#isolated-test-cases): each case clones a migrated template and cleans its own sessions, files and objects. Older low-level probes retain rollback/scratch isolation and the suite-wide parallel setting remains off. Complete real HTTP authentication journeys and H20 `login_as` remain open work.
 
 For browser checks, build the app, then run the following. Playwright starts the production app automatically and stops the process it owns afterwards. It can also reuse a server you already started locally:
 

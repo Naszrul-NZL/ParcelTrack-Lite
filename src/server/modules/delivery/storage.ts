@@ -15,6 +15,24 @@ export function makeStorageKey(parcelId:string,extension:'jpg'|'png') {
   if (!STORAGE_KEY.test(key)) throw new AppError('VALIDATION_ERROR');
   return key;
 }
+async function missingObject(response: Response) {
+  if (![400,404].includes(response.status) || !response.body) return false;
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    while (true) {
+      const part = await reader.read();
+      if (part.done) break;
+      size += part.value.length;
+      if (size > 4096) return false;
+      chunks.push(part.value);
+    }
+    const error = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    return error?.code === 'NoSuchKey' && String(error.statusCode) === '404';
+  } catch { return false; }
+  finally { await reader.cancel().catch(() => {}); }
+}
 export class SupabaseProofStore implements ProofStore {
   constructor(private url:string,private credential:string,private bucket='delivery-proofs',private transport:typeof fetch=fetch) {}
   private path(key:string) { if (!STORAGE_KEY.test(key)) throw new AppError('VALIDATION_ERROR'); return this.url+'/storage/v1/object/'+encodeURIComponent(this.bucket)+'/'+key; }
@@ -28,9 +46,21 @@ export class SupabaseProofStore implements ProofStore {
     const r=await this.call(path,{method:'POST',headers:{'Content-Type':mediaType,'x-upsert':'false'},body:Buffer.from(bytes)});
     if (!r.ok) throw new AppError('STORAGE_UNAVAILABLE');
   }
-  async open(key:string) { const r=await this.call(this.path(key)); if (!r.ok) throw new AppError(r.status===404?'NOT_FOUND':'STORAGE_UNAVAILABLE'); const b=new Uint8Array(await r.arrayBuffer()); if(b.length>LIMITS.proofBytes)throw new AppError('PROOF_TOO_LARGE'); return b; }
+  async open(key:string) { const r=await this.call(this.path(key)); if (!r.ok) throw new AppError(await missingObject(r)?'NOT_FOUND':'STORAGE_UNAVAILABLE'); const b=new Uint8Array(await r.arrayBuffer()); if(b.length>LIMITS.proofBytes)throw new AppError('PROOF_TOO_LARGE'); return b; }
   async delete(key:string) { this.path(key); const r=await this.call(this.url+'/storage/v1/object/'+encodeURIComponent(this.bucket),{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({prefixes:[key]})}); if (!r.ok) throw new AppError('STORAGE_UNAVAILABLE'); }
-  async exists(key:string) { const r=await this.call(this.path(key),{method:'HEAD'}); if(r.status===404)return false; if(!r.ok)throw new AppError('STORAGE_UNAVAILABLE'); return true; }
+  async exists(key:string) {
+    const url=this.path(key);
+    const response=await this.call(url,{method:'HEAD'});
+    if(response.ok)return true;
+    // The pinned self-hosted API sends HEAD 400 for missing objects, without a body.
+    // Probe one byte to distinguish NoSuchKey from authorization/service failures.
+    if(response.status===400 || response.status===404){
+      const probe=await this.call(url,{headers:{Range:'bytes=0-0'}});
+      if(probe.ok){await probe.body?.cancel();return true;}
+      if(await missingObject(probe))return false;
+    }
+    throw new AppError('STORAGE_UNAVAILABLE');
+  }
   async list(parcelId:string,offset=0):Promise<{name:string;created_at:string}[]> {
     if(!/^[1-9][0-9]{0,17}$/.test(parcelId))throw new AppError('VALIDATION_ERROR');
     const r=await this.call(this.url+'/storage/v1/object/list/'+encodeURIComponent(this.bucket),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prefix:parcelId,limit:100,offset,sortBy:{column:'name',order:'asc'}})});

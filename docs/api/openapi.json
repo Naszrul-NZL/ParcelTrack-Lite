@@ -7,7 +7,8 @@
   "paths": {
     "/api/v1/health": {
       "get": {
-        "description": "Phase 1 liveness only; domain endpoints arrive in later phases.",
+        "operationId": "HEALTH",
+        "description": "Application liveness.",
         "responses": {
           "200": {
             "description": "Application is running."

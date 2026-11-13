@@ -27,6 +27,8 @@ Owners are already assigned. Begin with the [contributor starting point](docs/sh
 
 The [implemented frontend foundation](docs/shared/frontend-foundation.md) provides Airway light/dark themes, local fonts, shared shadcn controls, status presentation, the parcel docket and field feedback. Module owners can compose these without independently changing the global theme or shell.
 
+The [shared backend/test foundation](docs/shared/backend-foundation.md) provides protected transactions/CSRF checks, safe Route Handler responses, isolated fixture databases and API/import drift checks. Use these helpers rather than writing module-specific authorization or reset scripts. Real login/session issuance remains H20 work.
+
 ## Shared implementation references
 
 - [Architecture and document index](docs/shared/README.md)

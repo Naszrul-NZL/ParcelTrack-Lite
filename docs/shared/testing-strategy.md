@@ -67,6 +67,8 @@ Fixtures include one Admin, two Sellers, two Riders, inactive/must-change accoun
 
 Requests commit independently; an outer rollback does not isolate them. Reset only disposable application data and private test bucket objects through a guarded fixture credential. Never reset development volumes or vendor schemas. Independent parallel suites get separate full stacks; race tests intentionally share one database and use barriers. Demonstrate isolation before enabling parallel suites. Temporary local files serve only bounded staging/unit doubles; real proof persistence uses the Storage API. Test principal/failpoint injection lives only in test imports and cannot be enabled through production requests or flags.
 
+Implemented locally: the [backend/test foundation](backend-foundation.md) provides per-case clones from a freshly migrated, sealed application template inside the isolated test stack, restricted-role checkout checks, scoped real Storage keys and cleanup on success/failure. HAR-01 tests also demonstrate concurrent case isolation. Existing suite-wide parallelism is unchanged, and full HTTP role journeys/failpoints remain pending. The temporary session helper is TMP-04, not a principal override or proof of real login.
+
 ## Backend unit coverage
 
 Owners use table-driven tests for valid, invalid and boundary cases. Test observable decisions rather than reproducing implementation code in assertions.

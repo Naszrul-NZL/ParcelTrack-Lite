@@ -14,7 +14,7 @@ Airway is implemented on Home, public tracking and Sign in. These screens retain
 | Parcel document | `src/components/parcel-docket.tsx` | Presentational component with typed number, status and status/time history. It fetches nothing and renders no recipient, actor or proof fields |
 | Field feedback | `src/components/field-feedback.tsx` | Supply an ID; associate it through the input's `aria-describedby` and set `aria-invalid` when needed. Errors announce through `role=alert` |
 | Browser API/session foundation | `src/shared/api-client.ts`, `src/features/auth/session-provider.tsx` | Same-origin, no unsafe automatic retries. SessionProvider depends on M1's planned CSRF/me endpoints; do not mount it globally against missing routes |
-| Server authorization/transactions | `src/server/modules/auth/principal.ts`, `src/server/core/db.ts` | Server-only. M1 still owns real session/CSRF issuance and protected service integration; client UI never supplies authoritative roles |
+| Server authorization/transactions | `src/server/core/authorized.ts`, `handler.ts` and `src/server/modules/auth/principal.ts` | Consume the [shared backend boundary](backend-foundation.md). M1 still owns real session/CSRF issuance; client UI never supplies authoritative roles |
 
 Use the [component policy](../ui-components.md), [design guide](../../DESIGN.md) and [design contribution guide](../design/CONTRIBUTING.md) for composition and review.
 

@@ -1,0 +1,26 @@
+export const API_PREFIX = '/api/v1';
+export const API_CONTRACT = [
+  { id: 'HEALTH', owner: 'shared', method: 'GET', path: '/health' },
+  { id: 'A01', owner: 'M1', method: 'GET', path: '/auth/csrf' },
+  { id: 'A02', owner: 'M1', method: 'POST', path: '/auth/register' },
+  { id: 'A03', owner: 'M1', method: 'POST', path: '/auth/login' },
+  { id: 'A04', owner: 'M1', method: 'POST', path: '/auth/logout' },
+  { id: 'A05', owner: 'M1', method: 'GET', path: '/auth/me' },
+  { id: 'A06', owner: 'M1', method: 'POST', path: '/auth/password' },
+  { id: 'A07', owner: 'M1', method: 'GET', path: '/admin/users' },
+  { id: 'A08', owner: 'M1', method: 'POST', path: '/admin/riders' },
+  { id: 'A09', owner: 'M1', method: 'PATCH', path: '/admin/users/{userId}/status' },
+  { id: 'A10', owner: 'M2', method: 'POST', path: '/parcels' },
+  { id: 'A11', owner: 'M2', method: 'GET', path: '/seller/parcels' },
+  { id: 'A12', owner: 'M2', method: 'GET', path: '/parcels/{parcelId}' },
+  { id: 'A13', owner: 'M2', method: 'POST', path: '/public/tracking' },
+  { id: 'A14', owner: 'M3', method: 'GET', path: '/admin/parcels' },
+  { id: 'A15', owner: 'M3', method: 'PATCH', path: '/admin/parcels/{parcelId}/assignment' },
+  { id: 'A16', owner: 'M3', method: 'GET', path: '/rider/parcels' },
+  { id: 'A17', owner: 'M3', method: 'POST', path: '/rider/parcels/{parcelId}/status' },
+  { id: 'A18', owner: 'M3', method: 'GET', path: '/admin/dashboard' },
+  { id: 'A19', owner: 'M3', method: 'GET', path: '/parcels/{parcelId}/proof' },
+  { id: 'A20', owner: 'M1', method: 'GET', path: '/admin/audit' },
+  { id: 'A21', owner: 'M1', method: 'POST', path: '/admin/users/{userId}/password-reset' },
+] as const;
+export type EndpointId = typeof API_CONTRACT[number]['id'];

@@ -2,6 +2,8 @@
 
 Owner: Syauqi (Qee110). Phase PH1 of [phase framework](../../../shared/phase-framework.md). Status: In progress locally, 13 November 2026; foundation code/tests exist, remaining cases and review/CI pending. See [actual evidence](../../../implementation-status.md).
 
+The shared follow-up supplies the [isolated backend/test harness](../../../shared/backend-foundation.md): per-case database clones, role assertions and failure cleanup are proved locally. Complete the remaining real HTTP/failpoint, resource and owner-review evidence before marking this phase complete.
+
 ## 1 Objective
 
 Syauqi delivers what lets three people test the same system independently: a real-PostgreSQL test harness that asserts runtime roles and isolates each test, Playwright and harmless file fixtures, the pure (database-free) state machine and assignment rules with exhaustive unit tests, a private `ProofStore` and image-handling decision, the backup/maintenance coordination design, and drafts of the delivery migrations and function signatures that are merged later.
