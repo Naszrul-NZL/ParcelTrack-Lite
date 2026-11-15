@@ -17,4 +17,4 @@ for(const file of new Set(files)){
 }
 if(bad)process.exitCode=1;
 else console.log('Generated local credentials absent from Git-visible files'+(process.argv.includes('--built')?' and browser assets.':'.'));
-// This exact-value local check supplements, rather than replaces, the planned history-aware scanner.
+// Exact generated-value checks complement the pattern-based tree/history Gitleaks scan.

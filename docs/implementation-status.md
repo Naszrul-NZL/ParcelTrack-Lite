@@ -1,6 +1,8 @@
 # Current implementation status
 
-Updated 13 November 2026. All three modules have local foundation code; G1 review and remaining checks are pending. No group gate is signed off. Remote CI results, owner approvals, branch protection and cloud deployment remain unverified or pending. This record distinguishes executable work from the broader [project plan](project-plan.md).
+Updated 15 November 2026. All three modules have local foundation code; G1 review and remaining checks are pending. No group gate is signed off. Baseline remote CI passed; owner approvals, branch protection and cloud deployment remain unverified or pending. This record distinguishes executable work from the broader [project plan](project-plan.md).
+
+The [issue #5 CI evidence](evidence/m1-ph1-ci.md) records the merged baseline and its successful remote workflow, new pinned tree/history secret scanning with disposable planted-secret controls, named PH1 CI jobs and repeat local application/database/browser/persistence checks. The follow-up PR's remote results and owner contract/handoff acceptance remain pending until observed. This work does not introduce real login or complete G1.
 
 ## Implemented locally
 

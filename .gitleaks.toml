@@ -1,0 +1,30 @@
+title = "ParcelTrack Lite secret scanning"
+
+[extend]
+useDefault = true
+
+# These are inert upstream/documentation strings, restricted by rule, path and match.
+# No directory or historical commit is excluded from scanning.
+[[allowlists]]
+description = "Upstream S3 prerequisite variable names"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''(^|/)infra/supabase/vendor/tests/test-s3-backend\.sh$''']
+regexTarget = "match"
+regexes = ['''^MINIO_ROOT_PASSWORD, GLOBAL_S3_BUCKET$''']
+
+[[allowlists]]
+description = "RFC 6455 sample WebSocket handshake nonce in upstream tests"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''(^|/)infra/supabase/vendor/tests/test-auth-keys\.sh$''']
+regexTarget = "match"
+regexes = ['''^Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ=="$''']
+
+[[allowlists]]
+description = "Historical checkpoint prose naming the former Python dependencies"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''(^|/)deliverables/week-5-checkpoint/report-source\.md$''', '''(^|/)tools/build_checkpoint_report\.py$''']
+regexTarget = "match"
+regexes = ['''^FastAPI, SQLAlchemy/psycopg $''']

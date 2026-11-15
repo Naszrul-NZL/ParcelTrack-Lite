@@ -18,6 +18,7 @@ Current local foundation, updated 13 November 2026. Exact npm versions and trans
 | Argon2 | 0.45.1 |
 | Vitest | 5.0.5 |
 | Playwright | 1.64.1 |
+| Gitleaks | 8.30.1; Linux/Windows x64 release archive checksums pinned in `scripts/gitleaks.mjs` |
 | shadcn component base | Base UI 1.9.0, generated with shadcn CLI 4.23.0 (CLI used on demand) |
 | Tailwind CSS / PostCSS adapter | 4.3.5 |
 | Full Supabase Docker upstream | b8483fc454ed2d6fb2b3637fc5da928bc9b1ff6b |
