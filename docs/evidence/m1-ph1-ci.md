@@ -44,7 +44,13 @@ Environment: Windows, Node.js 24.14.0, npm 10.9.9, Docker Engine 29.7.2 and Comp
 | `npm audit --omit=dev --audit-level=high` | Zero runtime dependency findings |
 | `python tools/check_plan_docs.py` | Zero errors/warnings |
 
-These local runs use an existing checkout and test volumes. They do not establish another owner's clean-checkout reproduction. The new PR's clean-runner checks and final commit evidence are recorded when observed; until then they remain pending.
+These local runs use an existing checkout and test volumes. They do not establish another owner's clean-checkout reproduction.
+
+## Remote implementation verification
+
+[Draft PR #15](https://github.com/Naszrul-NZL/ParcelTrack-Lite/pull/15) contains implementation commit `23a64ed9c94fe8f097415c6dc050e4e845424491`. Its [pull-request workflow](https://github.com/Naszrul-NZL/ParcelTrack-Lite/actions/runs/43730903905) passed all nine checks: `secret-scan`, `ci-contract`, `server-lint-type`, `server-unit`, `app-check`, `dependency-audit`, `db-migrations`, `server-integration` and `local-stack-smoke`. This proves automated clean-runner setup, Linux scanner controls, application/browser checks, real restricted-role integration, repeated migrations/fixtures and persistence across full-stack container recreation for that implementation commit. The PR checks remain the source for subsequent documentation-only commits.
+
+This is automated evidence, not a consumer's own checkout or a contract approval. The PR remains draft for owner review and handoff acceptance; issue #5 and G1 remain open.
 
 ## Pending acceptance and contract review
 
