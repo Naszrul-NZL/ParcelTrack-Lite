@@ -18,6 +18,8 @@
     "test:spike": "tsx --conditions=react-server scripts/image-spike.ts",
     "fixtures:files": "tsx scripts/file-fixtures.ts",
     "security:local": "node scripts/check-local-secrets.mjs --built",
+    "security:scan": "node scripts/gitleaks.mjs scan",
+    "security:controls": "node scripts/gitleaks.mjs controls",
     "test:persistence": "tsx --conditions=react-server scripts/persistence-probe.ts",
     "local:init": "node scripts/local-config.mjs",
     "local:up": "node scripts/supabase.mjs up",

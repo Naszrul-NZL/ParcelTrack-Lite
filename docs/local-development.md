@@ -56,7 +56,7 @@ After migrations, `npm run db:fixtures` explicitly seeds seven synthetic account
 
 ## Tests
 
-`npm run check` runs type checking, lint, unit/component tests, SQL hardening lint and shared-schema/OpenAPI drift checks. After a build, `npm run security:local` checks generated local credential values against Git-visible files and browser assets; this supplements the planned history-aware scanner. `npm audit --audit-level=high` checks dependencies. The snapshot lists only the implemented health route; domain endpoints will be added with their implementations.
+`npm run check` runs type checking, lint, unit/component tests, SQL hardening lint and shared-schema/OpenAPI drift checks. After a build, `npm run security:local` checks generated local credential values against Git-visible files and browser assets. `npm run security:scan` adds pinned Gitleaks checks for Git-visible files and full history; `npm run security:controls` proves detection with nonfunctional canaries in disposable repositories. These commands download a checksum-verified release to ignored `.local/tools/` and support Windows x64 and Linux x64 with Git and `tar` installed. A shallow clone must fetch full history first. Raw scanner reports are discarded, and canaries never enter the project history. See the [CI evidence](evidence/m1-ph1-ci.md) for exact inert exceptions and remaining owner acceptance. `npm audit --audit-level=high` checks dependencies. The snapshot lists only the implemented health route; domain endpoints will be added with their implementations.
 
 Prepare a separate full test stack:
 

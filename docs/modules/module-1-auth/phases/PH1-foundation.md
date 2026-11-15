@@ -78,6 +78,10 @@ Independent right now: T01-T05, T10, T11 (no other deliverable needed).
 
 H01 (Next.js/full Supabase skeleton, to all), H03 (migration 0002 and `lock_active_actor`, to Zikri and Syauqi), H04 (auth interface and TMP-01, to all), H05 (error/log/no-store conventions, to all), H06 (frontend client, to all), H14 (password service, to fixture loader). Each handoff is accepted by the consumer commenting on the merged PR after running a smoke import/call (see [dependency matrix](../../../shared/dependency-matrix.md)).
 
+### Current CI and acceptance evidence
+
+The [15 November completion evidence](../../../evidence/m1-ph1-ci.md) tracks issue #5/PR #15, named PH1 checks, tree/history/merge scanning, both actual intentionally failing remote canary branches, independent fresh-checkout setup and producer/consumer execution. One subagent critique found merge-history and random-fixture issues, both fixed and rechecked. The user explicitly waived separate owner reviews for issue #5/PR #15 on 15 November; that narrow exception replaces the T12 review hold for this issue without inventing teammate approvals. Current PR checks supply final-head verification. Wider G1 requirements and unrelated module handoffs remain open.
+
 ## 9 Exit criteria
 
 - T01-T11 merged; T12 approved; T13 recorded. CP subset: T01, T02, T03, T04, T05, T06, T07, T08, T09, T10.

@@ -173,7 +173,7 @@ Every security worksheet ID must also be mapped to an automated test name, or a 
 
 ## CI and release gates
 
-The current workflow has `app-check` and `server-integration` jobs. `app-check` includes the Airway token/contrast guard, production build and desktop/phone preview browser suite; Playwright manages its local server without a database for these previews. The named role/security/release jobs below remain planned where not yet implemented. Preview checks do not supply authenticated journey evidence.
+The workflow exposes the PH1 checks below, reusing the full Supabase setup as a matrix for `db-migrations`, `server-integration` and `local-stack-smoke`. `ci-contract` includes the Airway token/contrast guard; `app-check` includes component tests, the production build and desktop/phone preview browser suite. Playwright manages its local preview server. `secret-scan` runs pinned Gitleaks over Git-visible files and full history, plus disposable planted-secret controls; the exact local generated-credential check remains in the build jobs. `local-stack-smoke` also proves repeat setup, database/Storage persistence across container recreation and production foundation browser cases. See the [M1 CI evidence](../evidence/m1-ph1-ci.md) for actual results and pending acceptance. Named PH2 role journeys and later security/release tools remain planned. Preview checks do not supply authenticated journey evidence.
 
 Every PR runs the jobs below (names are recorded in M1-PH1-T11 so branch protection can require them later). Slower suites (scale plan checks, full browser matrix, operations drills, security-tool scans) run nightly or on demand until G3 and before every release.
 

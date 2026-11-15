@@ -5,6 +5,68 @@ on:
 permissions:
   contents: read
 jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.14.0'
+      - run: npm run security:controls
+      - run: npm run security:scan
+  server-lint-type:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.14.0'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+  server-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.14.0'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run --project unit
+  ci-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.14.0'
+          cache: npm
+      - run: npm ci
+      - run: npm run sql:lint
+      - run: npm run contract:check
+      - run: npm run design:check
+      - run: python tools/check_plan_docs.py
+  dependency-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.14.0'
+          cache: npm
+      - run: npm ci
+      - name: Report dependencies (blocking policy begins in PH4)
+        continue-on-error: true
+        run: npm audit --audit-level=high
   app-check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -17,14 +79,17 @@ jobs:
       - run: npm ci
       - run: node scripts/prepare-env-template.mjs
       - run: npm run local:init
-      - run: npm run check
+      - run: npx vitest run --project component
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - run: npm run security:local
-      - run: npm audit --audit-level=high
-      - run: python tools/check_plan_docs.py
   server-integration:
+    name: ${{ matrix.check }}
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [db-migrations, server-integration, local-stack-smoke]
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -46,6 +111,35 @@ jobs:
       - run: npm run db:fixtures
       - run: npm run db:verify
       - run: npm run storage:init
-      - run: npm run test:integration
+      - if: matrix.check == 'server-integration'
+        run: npm run test:integration
+      - if: matrix.check == 'local-stack-smoke'
+        run: npm run test:persistence -- --capture
+      - if: matrix.check == 'local-stack-smoke'
+        run: npm run local:init
+      - if: matrix.check == 'local-stack-smoke'
+        run: npm run db:bootstrap
+      - if: matrix.check == 'local-stack-smoke'
+        run: npm run db:migrate
+      - if: matrix.check == 'local-stack-smoke'
+        run: npm run db:fixtures
+      - if: matrix.check == 'local-stack-smoke'
+        run: npm run local:down
+      - if: matrix.check == 'local-stack-smoke'
+        run: npm run local:up
+      - if: matrix.check == 'local-stack-smoke'
+        run: npm run test:persistence
+      - if: matrix.check == 'local-stack-smoke'
+        run: npm run db:verify
+      - if: matrix.check == 'local-stack-smoke'
+        run: npm run build
+      - if: matrix.check == 'local-stack-smoke'
+        run: npx playwright install --with-deps chromium
+      - if: matrix.check == 'local-stack-smoke'
+        run: npx playwright test tests/e2e/foundation.spec.ts
+        env:
+          PTL_BASE_URL: http://localhost:3100
+      - if: matrix.check == 'local-stack-smoke'
+        run: npm run security:local
       - if: always()
         run: npm run local:down

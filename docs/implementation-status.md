@@ -1,6 +1,8 @@
 # Current implementation status
 
-Updated 13 November 2026. All three modules have local foundation code; G1 review and remaining checks are pending. No group gate is signed off. Remote CI results, owner approvals, branch protection and cloud deployment remain unverified or pending. This record distinguishes executable work from the broader [project plan](project-plan.md).
+Updated 15 November 2026. All three modules have local foundation code; G1 review and remaining checks are pending. No group gate is signed off. Baseline remote CI passed; owner approvals, branch protection and cloud deployment remain unverified or pending. This record distinguishes executable work from the broader [project plan](project-plan.md).
+
+The [issue #5 completion evidence](evidence/m1-ph1-ci.md) records pinned tree/history/merge secret scanning, named PH1 CI jobs, actual remote branches rejected for current/deleted canaries, fresh-checkout database/browser/persistence verification and producer/consumer execution references. [PR #15](https://github.com/Naszrul-NZL/ParcelTrack-Lite/pull/15) carries the implementation; its checks record final-head verification. On 15 November the user waived separate owner reviews for issue #5/PR #15 and requested one independent subagent critique; all findings were fixed and rechecked. This narrow waiver completes issue #5's acceptance scope while wider G1 remains open. Real login and H20 remain later work.
 
 ## Implemented locally
 
