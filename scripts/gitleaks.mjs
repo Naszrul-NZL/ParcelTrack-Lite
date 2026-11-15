@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { createHash, randomInt } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -27,13 +27,8 @@ function git(cwd, ...args) {
 }
 
 function syntheticValue() {
-  // Every character occurs once, keeping control entropy above detector thresholds.
-  const characters = [...'abcdefghijklmnopqrstuvwxyz0123456789'];
-  for (let index = characters.length - 1; index > 0; index--) {
-    const other = randomInt(index + 1);
-    [characters[index], characters[other]] = [characters[other], characters[index]];
-  }
-  return characters.join('');
+  // Fixed, nonfunctional fixture: high entropy and no pinned-rule stopword substrings.
+  return ['0123456789', 'qazwsxedcrfvtgbyhnujmikolp'].join('');
 }
 
 async function temporary(work) {
