@@ -80,7 +80,7 @@ H01 (Next.js/full Supabase skeleton, to all), H03 (migration 0002 and `lock_acti
 
 ### Current CI and acceptance evidence
 
-The [15 November CI evidence record](../../../evidence/m1-ph1-ci.md) tracks issue #5, the merged baseline workflow, pinned tree/history scanning and disposable negative controls, named PH1 check implementation and repeated local checks. All nine remote checks passed for implementation commit `23a64ed` in draft PR #15. M1-PH1-T11 has additional executable coverage; the separate remote canary-branch procedure remains explicit. M1-PH1-T12 owner reviews, handoff consumer acceptance and G1 sign-offs remain pending.
+The [15 November completion evidence](../../../evidence/m1-ph1-ci.md) tracks issue #5/PR #15, named PH1 checks, tree/history/merge scanning, both actual intentionally failing remote canary branches, independent fresh-checkout setup and producer/consumer execution. One subagent critique found merge-history and random-fixture issues, both fixed and rechecked. The user explicitly waived separate owner reviews for issue #5/PR #15 on 15 November; that narrow exception replaces the T12 review hold for this issue without inventing teammate approvals. Current PR checks supply final-head verification. Wider G1 requirements and unrelated module handoffs remain open.
 
 ## 9 Exit criteria
 
