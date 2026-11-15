@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomInt } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -24,6 +24,16 @@ function git(cwd, ...args) {
   const result = run('git', args, cwd);
   if (result.status !== 0) throw new Error('Git operation failed: ' + args[0]);
   return result.stdout;
+}
+
+function syntheticValue() {
+  // Every character occurs once, keeping control entropy above detector thresholds.
+  const characters = [...'abcdefghijklmnopqrstuvwxyz0123456789'];
+  for (let index = characters.length - 1; index > 0; index--) {
+    const other = randomInt(index + 1);
+    [characters[index], characters[other]] = [characters[other], characters[index]];
+  }
+  return characters.join('');
 }
 
 async function temporary(work) {
@@ -102,7 +112,7 @@ async function scan(executable, repository, mode) {
       '--config', path.join(root, '.gitleaks.toml'), '--gitleaks-ignore-path', directory,
       '--ignore-gitleaks-allow', '--redact=100', '--no-banner', '--no-color',
       '--exit-code', '23', '--report-format', 'json', '--report-path', report,
-      ...(mode === 'history' ? ['--log-opts=--all --full-history'] : []),
+      ...(mode === 'history' ? ['--log-opts=--all --full-history -m'] : []),
     ], directory);
     if (result.status !== 0 && result.status !== 23) throw new Error('Gitleaks scan failed (not a finding).');
     const findings = JSON.parse(await fs.readFile(report, 'utf8'));
@@ -138,12 +148,13 @@ async function controls(executable) {
     }
     const file = path.join(repository, 'canary.txt');
     // Construct a nonfunctional provider-shaped value only in the throwaway repository.
-    const canary = ['gh', 'p_'].join('') + randomBytes(27).toString('hex').slice(0, 36);
+    const canary = ['gh', 'p_'].join('') + syntheticValue();
     await fs.writeFile(file, 'token = "' + canary + '"\n');
     const genericFile = path.join(upstream, 'test-auth-keys.sh');
-    await fs.appendFile(genericFile, 'api_key = "' + randomBytes(24).toString('hex') + '"\n');
+    await fs.appendFile(genericFile, 'api_key = "' + syntheticValue() + '"\n');
     const treeFindings = await scan(executable, repository, 'tree');
-    if (!treeFindings.some(f => f.rule === 'github-pat') || !treeFindings.some(f => f.rule === 'generic-api-key')) {
+    if (!treeFindings.some(f => f.rule === 'github-pat' && f.file === 'canary.txt') ||
+        !treeFindings.some(f => f.rule === 'generic-api-key' && f.file.replaceAll('\\', '/') === 'infra/supabase/vendor/tests/test-auth-keys.sh')) {
       throw new Error('Working-tree negative control or allowlist boundary was not detected.');
     }
     if ((await scan(executable, repository, 'history')).length) throw new Error('Uncommitted value leaked into history control.');
@@ -158,6 +169,40 @@ async function controls(executable) {
       throw new Error('Deleted-history negative control was not detected.');
     }
     console.log('PASS: clean tree/history; working-tree canary rejected; deleted-history canary rejected.');
+  });
+  await temporary(async repository => {
+    git(repository, 'init', '--quiet', '--initial-branch=main');
+    git(repository, 'config', 'user.name', 'Scanner merge control');
+    git(repository, 'config', 'user.email', 'scanner@example.invalid');
+    const commit = message => git(repository, '-c', 'core.hooksPath=', '-c', 'commit.gpgsign=false', 'commit', '--quiet', '-am', message);
+    const file = path.join(repository, 'resolution.txt');
+    await fs.writeFile(file, 'Base content.\n');
+    git(repository, 'add', '.');
+    commit('Merge control base');
+    git(repository, 'switch', '--quiet', '-c', 'side');
+    await fs.writeFile(file, 'Side content.\n');
+    commit('Side edit');
+    git(repository, 'switch', '--quiet', 'main');
+    await fs.writeFile(file, 'Main content.\n');
+    commit('Main edit');
+    const merge = run('git', ['-c', 'core.hooksPath=', 'merge', '--no-ff', '--no-commit', 'side'], repository);
+    if (merge.status !== 1 || !(await fs.readFile(file, 'utf8')).includes('<<<<<<<')) {
+      throw new Error('Merge control did not produce the expected conflict.');
+    }
+    const canary = ['gh', 'p_'].join('') + syntheticValue();
+    await fs.writeFile(file, 'token = "' + canary + '"\n');
+    git(repository, 'add', '.');
+    commit('Resolve with a synthetic merge-only canary');
+    if (git(repository, 'rev-list', '--parents', '-n', '1', 'HEAD').trim().split(/\s+/).length !== 3) {
+      throw new Error('Merge control must have two parents.');
+    }
+    await fs.unlink(file);
+    commit('Remove merge-only canary');
+    if ((await scan(executable, repository, 'tree')).length) throw new Error('Merge control tree must be clean.');
+    if (!(await scan(executable, repository, 'history')).some(f => f.rule === 'github-pat' && f.file === 'resolution.txt')) {
+      throw new Error('Deleted merge-only canary was not detected.');
+    }
+    console.log('PASS: deleted merge-resolution canary rejected from history.');
   });
 }
 
