@@ -18,6 +18,10 @@ The [Airway guide](../DESIGN.md) now has an [implemented frontend foundation](sh
 
 The app currently exposes `/api/v1/health`. Real login, registration, logout, CSRF/rate-limit endpoints, parcel creation/search/tracking, assignment, Rider updates, proof access and dashboards remain PH2/PH3 work. Current preview pages do not establish authentication or save parcel data. The session provider will be connected when its endpoints exist.
 
+## M1 PH3 foundations (draft, issue not yet assigned)
+
+`db/drafts/account_functions.sql` implements and tests `register_account`, `change_password`, `set_user_active` and `admin_reset_password` against the restricted `app_runtime` role (13 integration tests: role and target rules, version conflicts, simultaneous requests, session revocation, audit, 72-hour credential expiry, grants). It is not in `db/migrations` because it follows 0007 in the registered order. Shared request schemas for A06 to A09 and A20 are in `src/shared/schemas.ts` with unit tests. No endpoint or screen exists yet; they need the M1 PH2 session code.
+
 ## Latest local verification
 
 | Check | Observed result |

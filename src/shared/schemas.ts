@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LIMITS, ROLES, STATUSES } from './constants';
+import { AUDIT_TYPES, LIMITS, ROLES, STATUSES } from './constants';
 
 const chars = (value: string) => Array.from(value).length;
 export const roleSchema = z.enum(ROLES);
@@ -23,6 +23,20 @@ export type Principal = z.infer<typeof principalSchema>;
 export const userSummarySchema = principalSchema.extend({isActive: z.boolean(), version: z.number().int().positive()});
 export const registerSchema = z.strictObject({username: usernameSchema, displayName: displayNameSchema, password: passwordSchema});
 export const loginSchema = z.strictObject({username: usernameSchema, password: z.string().refine(v => chars(v) <= 128)});
+// M1 PH3 request bodies and query strings. Strict objects reject unknown fields such as role, isActive or
+// mustChangePassword; the account role is decided by the endpoint, never by the request.
+export const createRiderSchema = z.strictObject({username: usernameSchema, displayName: displayNameSchema, initialPassword: passwordSchema});
+export const changePasswordSchema = z.strictObject({currentPassword: z.string().min(1).refine(v => chars(v) <= LIMITS.passwordMax), newPassword: passwordSchema});
+export const userStatusSchema = z.strictObject({isActive: z.boolean(), expectedVersion: z.number().int().positive()});
+const pageSchema = z.coerce.number().int().min(1).max(100_000).default(1);
+// A list never errors on an oversized page: it is served at the cap.
+const pageSizeSchema = z.coerce.number().int().min(1).transform(v => Math.min(v, 100)).default(20);
+export const userListQuerySchema = z.strictObject({
+  role: roleSchema.optional(),
+  isActive: z.enum(['true', 'false']).transform(v => v === 'true').optional(),
+  page: pageSchema, pageSize: pageSizeSchema,
+});
+export const auditQuerySchema = z.strictObject({eventType: z.enum(AUDIT_TYPES).optional(), parcelId: idSchema.optional(), page: pageSchema, pageSize: pageSizeSchema});
 export const parcelInputSchema = z.strictObject({
   recipientName: z.string().trim().refine(v => chars(v) >= 1 && chars(v) <= 120),
   recipientPhone: phoneSchema,
