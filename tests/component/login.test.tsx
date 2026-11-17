@@ -218,7 +218,7 @@ describe('M1-PH2-T10 route guard, sign-out and identity change', () => {
   });
 
   it('asks the server again when a page is restored from the back/forward cache', async () => {
-    const me = vi.fn<Route>().mockResolvedValueOnce(Response.json(seller)).mockResolvedValueOnce(failure(401, 'UNAUTHENTICATED'));
+    const me = vi.fn<Route>().mockResolvedValueOnce(Response.json(seller)).mockResolvedValueOnce(Response.json(seller)).mockResolvedValueOnce(failure(401, 'UNAUTHENTICATED'));
     guarded({ 'GET /auth/me': me, 'GET /auth/csrf': () => Response.json({ csrfToken: 'csrf-1' }) });
     expect(await screen.findByText('Private for seller.a')).toBeInTheDocument();
     await act(async () => {
@@ -241,7 +241,7 @@ describe('M1-PH2-T10 route guard, sign-out and identity change', () => {
     function Counter() { useState(() => { mounts += 1; }); return null; }
     const first = { ...seller, id: '7' };
     const second = { ...seller, id: '8', username: 'seller.b' };
-    const me = vi.fn<Route>().mockResolvedValueOnce(Response.json(first)).mockResolvedValueOnce(Response.json(second));
+    const me = vi.fn<Route>().mockResolvedValueOnce(Response.json(first)).mockResolvedValueOnce(Response.json(first)).mockResolvedValueOnce(Response.json(second)).mockResolvedValueOnce(Response.json(second));
     const api = server({ 'GET /auth/me': me, 'GET /auth/csrf': () => Response.json({ csrfToken: 'c' }) });
     render(<SessionProvider fetcher={api.fetcher}><RouteGuard role="SELLER"><Counter /></RouteGuard></SessionProvider>);
     await waitFor(() => expect(mounts).toBe(1));
