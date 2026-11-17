@@ -4,7 +4,7 @@ The shared infrastructure below is implemented locally and tested. Module owners
 
 | Planned work | Available implementation | Remaining boundary |
 | --- | --- | --- |
-| H04 / M1-PH1-T08 and M1-PH2-T08 shared authorization | `src/server/core/authorized.ts`: `principalUow` and `createPrincipalUow`; session resolution in `src/server/modules/auth/session-context.ts`; CSRF check in `csrf.ts` | Real session creation, renewal, login/logout and CSRF bootstrap are still H20 work. Business functions still acquire/recheck actor and parcel locks |
+| H04 / M1-PH1-T08 and M1-PH2-T08 shared authorization | `src/server/core/authorized.ts`: `principalUow` and `createPrincipalUow`; session resolution in `src/server/modules/auth/session-context.ts`; CSRF check in `csrf.ts` | Real session creation, renewal, login/logout and CSRF bootstrap are implemented in `sessions.ts` and `service.ts` (H20, pending merge and consumer acceptance). Business functions still acquire/recheck actor and parcel locks |
 | H05 / shared safe responses | `src/server/core/handler.ts`: `apiHandler` | Endpoint owns body caps, input validation, safe DTO conversion and its business error/response tests |
 | H10 / M3-PH1-T01 isolation | `tests/harness/isolated-database.ts`: migrated template, per-case clones, checked runtime pools, private temporary directories, tracked Storage keys, deterministic clock and fixture sessions | Legacy low-level probes still use their existing scratch/rollback patterns. Real HTTP role journeys, controlled failpoints and H20 `login_as` remain to be completed |
 | H08/H12 / CT-01 and CT-02 contract checks | `src/shared/api-contract.ts`, `scripts/contract-inventory.ts`, `npm run contract:check` | Route/method/owner and import-boundary coverage is implemented. Complete endpoint-specific payload/status/error conformance remains required with each real route |
@@ -37,6 +37,20 @@ Use `{roles: ['SELLER']}`, `{roles: ['RIDER']}` or `{roles: ['ADMIN']}` for role
 M1's auth endpoints have their own anonymous/session lifecycle rules. The generic business wrapper denies must-change accounts; the allowlisted account endpoints may explicitly use `requireAuthenticated(request, {allowPasswordChange: true})`. Public tracking A13 is anonymous and token-CSRF-exempt, so it uses its own origin/limiter boundary rather than `principalUow`.
 
 `createPrincipalUow(pool, settings)` binds the same behavior to an explicitly supplied restricted pool in tests. It accepts no injected principal, test header or request flag. Production entry points use `principalUow` with application settings. Session issuance/touch remains M1 work; this helper does not refresh or create a session.
+
+## Real login in tests: `login_as`
+
+`tests/harness/login-as.ts` signs in through the real A01 and A03 handlers against the case's database and returns the cookie jar and CSRF token. Use it in place of `database.session(...)` in slice tests (it retires TMP-04 once consumers switch).
+
+```tsx
+import { loginAs } from '../harness/login-as';
+
+const seller = await loginAs(database, 'SELLER');        // or an account name such as 'seller.b'
+const request = seller.request('/parcels', { method: 'POST', body: JSON.stringify(input) });
+// request carries the cookie, a same-origin Origin header and X-CSRF-Token for unsafe methods.
+```
+
+`authHandlers(database, { source, clock })` exposes the four auth handlers for tests that need failures, other source addresses or a controlled limiter clock. Register your endpoint's rows in `tests/integration/authz_matrix` (`*.rows.ts`); the matrix test fails if an implemented endpoint has no row. `tests/unit/test-shortcuts.test.ts` fails if any integration test can import the principal override module.
 
 ## Isolated test cases
 

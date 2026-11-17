@@ -25,3 +25,7 @@ Recorded 17 November 2026. Baseline `571c4a5f8a000f6ba3aacde59e3c7320457040eb`. 
 G1 and G2 remain pending. The `0006` draft is outside the registered migration directory, the Rider handlers and page are unmounted, and TMP-02/TMP-04 are confined to the isolated tests. The authorization tests invoke the same handler functions with real database fixture sessions once Supabase is running. Live login acceptance uses H20.
 
 Before mounting A17, reconcile the HTTP server's 60-second request limit with the database's 15-second idle-in-transaction limit. The handler currently reads the request body inside the authenticated transaction.
+
+## Integration with PR #17
+
+PR #16 now includes the session/login branch and its session review fixes, so merge PR #17 first. The contract generator preserves both the login schemas and Rider multipart schema. The shared database harness uses PR #17's bounded teardown retry while retaining this branch's audit-isolation and overlapping-connection tests. The Rider routes, page and draft migration remain unmounted pending the handoffs above.

@@ -5,6 +5,50 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/v1/auth/csrf": {
+      "get": {
+        "operationId": "A01",
+        "description": "Implemented route; endpoint-specific request/response coverage remains required.",
+        "responses": {
+          "default": {
+            "description": "See the shared system contract and endpoint tests."
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "A03",
+        "description": "Implemented route; endpoint-specific request/response coverage remains required.",
+        "responses": {
+          "default": {
+            "description": "See the shared system contract and endpoint tests."
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "A04",
+        "description": "Implemented route; endpoint-specific request/response coverage remains required.",
+        "responses": {
+          "default": {
+            "description": "See the shared system contract and endpoint tests."
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "A05",
+        "description": "Implemented route; endpoint-specific request/response coverage remains required.",
+        "responses": {
+          "default": {
+            "description": "See the shared system contract and endpoint tests."
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "HEALTH",
@@ -52,6 +96,81 @@
           "displayName",
           "role",
           "mustChangePassword"
+        ],
+        "additionalProperties": false
+      },
+      "LoginRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ],
+        "additionalProperties": false
+      },
+      "LoginResponse": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,17}$"
+          },
+          "username": {
+            "type": "string",
+            "pattern": "^[a-z0-9._-]{3,50}$"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "SELLER",
+              "RIDER",
+              "ADMIN"
+            ]
+          },
+          "mustChangePassword": {
+            "type": "boolean"
+          },
+          "csrfToken": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "displayName",
+          "role",
+          "mustChangePassword",
+          "csrfToken"
+        ],
+        "additionalProperties": false
+      },
+      "CsrfResponse": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "csrfToken": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "csrfToken"
         ],
         "additionalProperties": false
       },
