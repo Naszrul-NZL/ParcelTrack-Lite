@@ -14,6 +14,33 @@ function Probe() {
 }
 afterEach(cleanup);
 
+it('stays anonymous if the session expires or another tab signs out during bootstrap', async () => {
+  let meReads = 0;
+  const fetcher = vi.fn<typeof fetch>(async input => {
+    if (String(input).endsWith('/auth/me')) return ++meReads === 1 ? Response.json(seller) : failure(401, 'UNAUTHENTICATED');
+    return Response.json({ csrfToken: 'new-anonymous-csrf' });
+  });
+  render(<SessionProvider fetcher={fetcher}><Probe /></SessionProvider>);
+  await waitFor(() => expect(session.status).not.toBe('loading'));
+  expect(session.status).toBe('anonymous');
+  expect(session.principal).toBeNull();
+  expect(session.csrfToken).toBeNull();
+});
+
+it('requires a reload instead of combining identities if another tab changes accounts during bootstrap', async () => {
+  let meReads = 0;
+  const other = { ...seller, id: '8', username: 'seller.b' };
+  const fetcher = vi.fn<typeof fetch>(async input => {
+    if (String(input).endsWith('/auth/me')) return Response.json(++meReads === 1 ? seller : other);
+    return Response.json({ csrfToken: 'other-account-csrf' });
+  });
+  render(<SessionProvider fetcher={fetcher}><Probe /></SessionProvider>);
+  await waitFor(() => expect(session.status).not.toBe('loading'));
+  expect(session.status).toBe('error');
+  expect(session.principal).toBeNull();
+  expect(session.csrfToken).toBeNull();
+});
+
 it('keeps a successful sign-in when the earlier session check returns 401', async () => {
   let finishMe!: (value: Response) => void;
   const fetcher = vi.fn<typeof fetch>(async input => {
