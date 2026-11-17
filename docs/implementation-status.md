@@ -16,7 +16,24 @@ The [issue #5 completion evidence](evidence/m1-ph1-ci.md) records pinned tree/hi
 
 The [Airway guide](../DESIGN.md) now has an [implemented frontend foundation](shared/frontend-foundation.md) for module owners to consume. The current screens use it; real authenticated role workspaces and business actions remain PH2/PH3 work.
 
-The app currently exposes `/api/v1/health`. Real login, registration, logout, CSRF/rate-limit endpoints, parcel creation/search/tracking, assignment, Rider updates, proof access and dashboards remain PH2/PH3 work. Current preview pages do not establish authentication or save parcel data. The session provider will be connected when its endpoints exist.
+The app exposes `/api/v1/health` and the M1 PH2 session endpoints A01 `GET /auth/csrf`, A03 `POST /auth/login`, A04 `POST /auth/logout` and A05 `GET /auth/me` (issues #6 and #7, branch `feat/m1-ph2-session-login`). Registration, password change, user management, parcel creation/search/tracking, assignment, Rider updates, proof access and dashboards remain PH3 or other modules' work. `/login` is the real form; `/seller/parcels`, `/rider/parcels` and `/admin/dashboard` are labeled placeholders that M2/M3 replace with their screens. Public tracking still shows sample parcels.
+
+## M1 PH2 session and login (issues #6 and #7)
+
+Implemented in `src/server/modules/auth/{sessions,rate-limit,audit,service}.ts` and `src/features/auth/`: digest-only server sessions with idle/absolute/anonymous expiry and UPDATE-only touch, lazy A01 session creation (60 per source per minute), A03 login with generic failures, session rotation, PostgreSQL rate limiting keyed by HMAC digests (5 per username and source, 20 per username alert only, 100 per source), failure counters and audit in their own transaction, success audit in the session transaction, A04/A05, the must-change allowlist, `login_as` (`tests/harness/login-as.ts`), the authorization-matrix harness (`tests/integration/authz_matrix`) and the real login form, session provider, route guard, sign-out and role landing placeholders.
+
+| Check | Result |
+| --- | --- |
+| `npm run check` | Passes: 349 unit/component tests, typecheck, lint, SQL hardening, contract snapshot and design checks |
+| Browser, no database (Chrome, desktop and phone profiles) | 16 pass; the real-login specs skip without `PTL_E2E_AUTH=1` |
+| Isolated database suite (`npm run test:integration`, test profile) | 56 pass on eight consecutive runs, including `auth-session.test.ts` (TC01 to TC12, TC17, TC19, TC20, TC22) and the `authz_matrix` rows for HEALTH and A01, A03, A04 and A05 |
+| Real-login browser specs (`tests/e2e/auth.spec.ts`, test stack on port 3100, `PTL_E2E_AUTH=1`) | 14 pass (desktop and phone): each role signs in, refreshes, signs out and cannot reuse the old cookie or see private content with Back; wrong password; denied role; must-change notice; keyboard-only at 320px |
+
+The [T13 walkthrough](evidence/m1-ph2-walkthrough.md) (24 HTTP steps against the running app) passes, and the PH2 [security worksheet](security-tests.md) rows M1-01, M1-03, M1-04, M1-07, S-01, S-04 and S-05 have recorded results within PH2 scope. `apiHandler` now logs a redacted `request_failed` line for internal errors.
+
+Run on 17 November 2026, Node.js 24.14.0, Docker Engine 29.4.0, Chrome. The integration harness now retries `DROP DATABASE ... WITH (FORCE)` briefly when a just-disconnected backend cannot yet be signalled, which had caused rare cleanup failures.
+
+Known limits. The account row is not locked `FOR UPDATE` at login: `app_runtime` has no UPDATE on `app_user` and the contract forbids widening it. The issuing transaction instead re-reads the login snapshot and inserts the session only if the account is still active at the same `session_version`; any later version change makes the session unusable. TC21's 100-concurrent-login capacity run is covered by the oversize-body and hashing-overload guards, not a 100-request run. TMP-04 (`database.session`) is still available for M2/M3 slice tests until they switch to `login_as`; the principal-override import guard is in place. A06 password change is PH3, so a must-change account sees a notice instead of a password form.
 
 ## Latest local verification
 
