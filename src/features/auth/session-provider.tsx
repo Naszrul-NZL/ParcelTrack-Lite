@@ -40,8 +40,12 @@ export function SessionProvider({ children, fetcher = fetch }: { children: React
         if (started !== epoch.current) return;
         const token = csrfResponseSchema.parse(await request('/auth/csrf')).csrfToken;
         if (started !== epoch.current) return;
+        // Another tab can replace or revoke the cookie without advancing this provider's epoch.
+        const confirmed = principalSchema.parse(await request('/auth/me'));
+        if (started !== epoch.current) return;
+        if (confirmed.id !== principal.id) throw new Error('Session identity changed during initialization.');
         csrf.current = token;
-        setState({ status: 'authenticated', principal, csrfToken: token });
+        setState({ status: 'authenticated', principal: confirmed, csrfToken: token });
       } catch (error) {
         if (started !== epoch.current) return;
         csrf.current = null;
