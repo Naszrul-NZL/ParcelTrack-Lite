@@ -1,6 +1,6 @@
 # M3 PH2: Initial working slice
 
-Owner: Syauqi. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: Planned. This initial working slice is part of the complete M3 plan.
+Owner: Syauqi. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: Draft function, Rider services and component prepared locally. See [working evidence and pending handoffs](../../../evidence/m3-issues-11-14.md).
 
 ## 1 Objective
 
