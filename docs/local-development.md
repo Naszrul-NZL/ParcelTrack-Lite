@@ -24,7 +24,7 @@ npm run storage:init
 npm run dev
 ```
 
-Open http://localhost:3000. The shell, navigation and `/api/v1/health` work. Sign-in and tracking pages describe their later-phase implementation; real login and parcel workflows are not connected yet. `npm run build` followed by `npm start` runs the production build locally instead of the development server.
+Open http://localhost:3000. The shell, navigation and `/api/v1/health` work. Sign-in works against the seeded synthetic accounts (`npm run db:fixtures`, password in the private `FIXTURE_PASSWORD` setting); tracking still shows sample parcels and parcel workflows are not connected yet. `npm run build` followed by `npm start` runs the production build locally instead of the development server.
 
 `local:init` generates credentials idempotently. Development web settings live in `.env.local`; operator settings, dashboard credentials, generated Compose and vendor settings live under `.local/development/`. Never copy operator credentials into the web environment. These files are ignored by Git. The private upstream environment template is fetched from the recorded immutable commit and checked against its checksum. The preserved upstream configuration is under `infra/supabase/vendor/`.
 

@@ -140,6 +140,11 @@ jobs:
         env:
           PTL_BASE_URL: http://localhost:3100
       - if: matrix.check == 'local-stack-smoke'
+        run: npx playwright test tests/e2e/auth.spec.ts
+        env:
+          PTL_BASE_URL: http://localhost:3100
+          PTL_E2E_AUTH: '1'
+      - if: matrix.check == 'local-stack-smoke'
         run: npm run security:local
       - if: always()
         run: npm run local:down
