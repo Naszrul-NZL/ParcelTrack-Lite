@@ -73,3 +73,53 @@ test('sign-in works with the keyboard alone on a phone-sized screen', async ({ p
   await expect(page).toHaveURL(/\/seller\/parcels$/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test('a delayed anonymous session check cannot undo a successful login', async ({ page }) => {
+  let release!: () => void;
+  const held = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/api/v1/auth/me', async route => {
+    const response = await route.fetch();
+    expect(response.status()).toBe(401);
+    await held;
+    await route.fulfill({ response });
+  }, { times: 1 });
+  try {
+    await signIn(page, 'seller.a');
+    await expect(page).toHaveURL(/\/seller\/parcels$/);
+    const sessionCheck = page.waitForResponse(response => response.url().endsWith('/api/v1/auth/me') && response.status() === 401);
+    release();
+    await sessionCheck;
+    await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Signed in as');
+    expect((await page.request.get('/api/v1/auth/me')).status()).toBe(200);
+    const logout = page.waitForResponse(response => response.url().endsWith('/api/v1/auth/logout'));
+    await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+    expect((await logout).status()).toBe(204);
+    await expect(page).toHaveURL(/\/login$/);
+  } finally { release(); }
+});
+
+test('sign-out recovers on the next click after another tab rotates the session', async ({ page, context }) => {
+  await signIn(page, 'seller.a');
+  await expect(page).toHaveURL(/\/seller\/parcels$/);
+  const other = await context.newPage();
+  await other.goto('/seller/parcels');
+  await other.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(other).toHaveURL(/\/login$/);
+  await signIn(other, 'seller.a');
+  await expect(other).toHaveURL(/\/seller\/parcels$/);
+
+  const logouts: number[] = [];
+  page.on('response', response => {
+    if (response.url().endsWith('/api/v1/auth/logout')) logouts.push(response.status());
+  });
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(page.getByText('Couldn’t sign out. Try again.', { exact: true })).toBeVisible();
+  expect(logouts).toEqual([403]);
+  expect((await page.request.get('/api/v1/auth/me')).status()).toBe(200);
+
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  expect(logouts).toEqual([403, 204]);
+  expect((await page.request.get('/api/v1/auth/me')).status()).toBe(401);
+});

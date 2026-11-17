@@ -19,10 +19,17 @@ export function SessionProvider({ children, fetcher = fetch }: { children: React
   // Bumped by sign-in/out so a slower earlier session check cannot overwrite a newer result.
   const epoch = useRef(0);
   // Built per call so the client reads the in-memory token at request time, not during render.
-  const request = useCallback(<T,>(path: string, init?: RequestInit) => createApiClient({
-    fetcher, csrf: () => csrf.current,
-    clearIdentity: () => { csrf.current = null; setState(current => current.status === 'anonymous' ? current : anonymous); },
-  })<T>(path, init), [fetcher]);
+  const request = useCallback(<T,>(path: string, init?: RequestInit) => {
+    const started = epoch.current;
+    return createApiClient({
+      fetcher, csrf: () => csrf.current,
+      clearIdentity: () => {
+        if (started !== epoch.current) return;
+        csrf.current = null;
+        setState(current => current.status === 'anonymous' ? current : anonymous);
+      },
+    })<T>(path, init);
+  }, [fetcher]);
 
   useEffect(() => {
     const check = async () => {
@@ -30,6 +37,7 @@ export function SessionProvider({ children, fetcher = fetch }: { children: React
       // Ask who is signed in first: a visitor with no session never creates one just by viewing a page.
       try {
         const principal = principalSchema.parse(await request('/auth/me'));
+        if (started !== epoch.current) return;
         const token = csrfResponseSchema.parse(await request('/auth/csrf')).csrfToken;
         if (started !== epoch.current) return;
         csrf.current = token;
@@ -48,14 +56,20 @@ export function SessionProvider({ children, fetcher = fetch }: { children: React
   }, [request]);
 
   const signIn: Session['signIn'] = useCallback(async credentials => {
-    epoch.current++;
+    const started = ++epoch.current;
     try {
-      if (!csrf.current) csrf.current = csrfResponseSchema.parse(await request('/auth/csrf')).csrfToken;
+      if (!csrf.current) {
+        const token = csrfResponseSchema.parse(await request('/auth/csrf')).csrfToken;
+        if (started !== epoch.current) return { ok: false, reason: 'unavailable' };
+        csrf.current = token;
+      }
       const { csrfToken, ...principal } = loginResponseSchema.parse(await request('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(credentials) }));
+      if (started !== epoch.current) return { ok: false, reason: 'unavailable' };
       csrf.current = csrfToken;
       setState({ status: 'authenticated', principal, csrfToken });
       return { ok: true, principal };
     } catch (error) {
+      if (started !== epoch.current) return { ok: false, reason: 'unavailable' };
       if (!(error instanceof ApiFailure)) return { ok: false, reason: 'unavailable' };
       if (error.status === 401) return { ok: false, reason: 'invalid' };
       if (error.status === 429) return { ok: false, reason: 'rate_limited', retryAfter: error.retryAfter };
@@ -67,10 +81,27 @@ export function SessionProvider({ children, fetcher = fetch }: { children: React
   }, [request]);
 
   const signOut: Session['signOut'] = useCallback(async () => {
-    epoch.current++;
-    try { await request('/auth/logout', { method: 'POST' }); }
+    const started = ++epoch.current;
+    try {
+      if (!csrf.current) {
+        const token = csrfResponseSchema.parse(await request('/auth/csrf')).csrfToken;
+        if (started !== epoch.current) return false;
+        csrf.current = token;
+        setState(current => ({ ...current, csrfToken: token }));
+      }
+      await request('/auth/logout', { method: 'POST' });
+    }
     // A 401 means the session was already gone, which is what sign-out wanted. Anything else leaves it active.
-    catch (error) { if (!(error instanceof ApiFailure && error.status === 401)) return false; }
+    catch (error) {
+      if (started !== epoch.current) return false;
+      if (error instanceof ApiFailure && error.code === 'CSRF_INVALID') {
+        // Discard the stale token; only the user's next attempt fetches a new one and sends logout again.
+        csrf.current = null;
+        setState(current => ({ ...current, csrfToken: null }));
+      }
+      if (!(error instanceof ApiFailure && error.status === 401)) return false;
+    }
+    if (started !== epoch.current) return false;
     csrf.current = null;
     setState(anonymous);
     return true;
