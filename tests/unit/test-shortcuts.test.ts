@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { PasswordService } from '@/server/modules/auth/password';
 import { apiHandler } from '@/server/core/handler';
+import { AppError } from '@/server/core/errors';
 import { assertIsolatedTestConfiguration } from '../harness/isolated-database';
 import { assertUnreachable } from '../harness/import-graph';
 import { assertRowsComplete, assertRowsCoverEndpoints } from '../integration/authz_matrix/matrix';
@@ -75,6 +76,22 @@ describe('M1-PH2-TC13 and TC21 service guardrails', () => {
     expect(JSON.parse(text)).toMatchObject({ error: { code: 'INTERNAL_ERROR' }, requestId: expect.any(String) });
     expect(response.headers.get('x-request-id')).toBe(JSON.parse(text).requestId);
     expect(text).not.toContain('CANARY');
+  });
+
+  it('logs diagnostics for an internal error without its message, stack or request data', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    try {
+      const failure = Object.assign(new Error('CANARY secret detail password=hunter2'), { code: '23505' });
+      const response = await apiHandler(() => { throw failure; })(new Request('http://localhost/', { method: 'POST', headers: { cookie: 'ptl_session_dev=CANARYCOOKIE' }, body: 'CANARYBODY' }));
+      const { requestId } = await response.json();
+      const lines = log.mock.calls.map(call => String(call[0]));
+      expect(lines).toHaveLength(1);
+      expect(JSON.parse(lines[0])).toEqual({ event: 'request_failed', requestId, code: 'INTERNAL_ERROR', errorType: 'Error', sqlState: '23505' });
+      expect(lines[0]).not.toMatch(/CANARY|hunter2/);
+      // Expected failures (401, 403, 422) are not diagnostics and stay out of the log.
+      await apiHandler(() => { throw new AppError('AUTH_INVALID'); })(new Request('http://localhost/'));
+      expect(log).toHaveBeenCalledOnce();
+    } finally { log.mockRestore(); }
   });
 
   it('answers hashing overload with BUSY instead of queueing unbounded Argon2 work', async () => {
