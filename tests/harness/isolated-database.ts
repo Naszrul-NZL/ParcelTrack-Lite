@@ -76,7 +76,8 @@ export async function createDatabaseHarness() {
     return operatorWork(async () => {
       try {
         if (!owner) await operator.query('SET ROLE migration_owner');
-        await operator.query('DROP DATABASE IF EXISTS ' + name + ' WITH (FORCE)');
+        // Pool shutdown can finish before PostgreSQL observes the socket closing.
+        await operator.query('DROP DATABASE IF EXISTS ' + name);
       } finally { await operator.query('RESET ROLE'); }
     });
   }

@@ -105,12 +105,17 @@ it('TC01–TC04/TC07/TC13 records exactly one committed Start delivery with safe
       body: buffered,
     });
     const noCsrf = startRequest(parcel.parcelId, a, 'OUT_FOR_DELIVERY', { csrf: false });
+    const wrongCsrf = startRequest(parcel.parcelId, { ...a, csrfToken: 'invalid-csrf-token' });
+    const foreignOrigin = startRequest(parcel.parcelId, a);
+    foreignOrigin.headers.set('origin', 'https://example.invalid');
     const cases = [
       [startRequest(parcel.parcelId), 401, 'UNAUTHENTICATED'],
       [startRequest(parcel.parcelId, b), 404, 'NOT_FOUND'],
       [startRequest(parcel.parcelId, admin), 403, 'FORBIDDEN'],
       [startRequest(parcel.parcelId, seller), 403, 'FORBIDDEN'],
       [noCsrf, 403, 'CSRF_INVALID'],
+      [wrongCsrf, 403, 'CSRF_INVALID'],
+      [foreignOrigin, 403, 'CSRF_INVALID'],
       [startRequest(parcel.parcelId, a, 'SHIPPED'), 422, 'VALIDATION_ERROR'],
       [startRequest(parcel.parcelId, a, 'DELIVERED'), 409, 'INVALID_TRANSITION'],
       [startRequest(parcel.parcelId, a, 'OUT_FOR_DELIVERY', { proof: true }), 422, 'PROOF_NOT_ALLOWED'],
@@ -124,6 +129,8 @@ it('TC01–TC04/TC07/TC13 records exactly one committed Start delivery with safe
     }
 
     expect(noCsrf.bodyUsed).toBe(false);
+    expect(wrongCsrf.bodyUsed).toBe(false);
+    expect(foreignOrigin.bodyUsed).toBe(false);
 
     const competing = await Promise.all([
       updateStatus(startRequest(parcel.parcelId, a), path),

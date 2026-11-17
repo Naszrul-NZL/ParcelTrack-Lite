@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiFailure } from '@/shared/api-client';
 import { RiderParcelListPage } from '@/features/delivery/rider-parcel-list-page';
@@ -26,7 +26,7 @@ it('TC08 exposes only Start delivery and refreshes the list after one successful
   expect(screen.getByRole('button', { name: /starting delivery/i })).toBeDisabled();
   expect(start).toHaveBeenCalledWith('1', 2);
   await act(async () => finish());
-  expect(await screen.findByText('Out for delivery', { exact: true })).toBeInTheDocument();
+  await waitFor(() => expect(within(screen.getByRole('listitem')).getByText('Out for delivery')).toBeInTheDocument());
   expect(screen.queryByRole('button', { name: /start delivery/i })).not.toBeInTheDocument();
   expect(screen.getByText('Delivery started.')).toBeInTheDocument();
   expect(load).toHaveBeenCalledTimes(2);
@@ -43,7 +43,7 @@ it.each([
   render(<RiderParcelListPage loadParcels={load} startDelivery={start} />);
   await user.click(await screen.findByRole('button', { name: /start delivery/i }));
   expect(await screen.findByText(message)).toBeInTheDocument();
-  expect(await screen.findByText('Out for delivery', { exact: true })).toBeInTheDocument();
+  await waitFor(() => expect(within(screen.getByRole('listitem')).getByText('Out for delivery')).toBeInTheDocument());
   expect(load).toHaveBeenCalledTimes(2);
   expect(start).toHaveBeenCalledOnce();
 });

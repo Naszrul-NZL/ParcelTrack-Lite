@@ -75,11 +75,10 @@ it('HAR-01 cleans tracked Storage objects and database connections even when a t
   await expect(stat(directory)).rejects.toMatchObject({ code: 'ENOENT' });
 });
 
-it('HAR-01 concurrent cases have distinct databases, sessions and Storage namespaces', async () => {
+it('HAR-01 concurrent cases have distinct databases and sessions', async () => {
   let arrivals = 0;
-  let release!: () => void;
-  const barrier = new Promise<void>(resolve => { release = resolve; });
-  const names = await Promise.all([0, 1].map(() => harness.run(async database => {
+  const { promise: barrier, resolve: release } = Promise.withResolvers<void>();
+  const cases = [0, 1].map(() => harness.run(async database => {
     const client = await database.pool().connect();
     try {
       await database.session('seller.a');
@@ -88,6 +87,14 @@ it('HAR-01 concurrent cases have distinct databases, sessions and Storage namesp
       expect((await client.query('SELECT count(*)::integer AS sessions FROM app.auth_session')).rows[0].sessions).toBe(1);
       return database.name;
     } finally { client.release(); }
-  })));
+  }).catch(error => {
+    release();
+    throw error;
+  }));
+  const settled = await Promise.allSettled(cases);
+  const names = settled.map(result => {
+    if (result.status === 'rejected') throw result.reason;
+    return result.value;
+  });
   expect(new Set(names).size).toBe(2);
 });
