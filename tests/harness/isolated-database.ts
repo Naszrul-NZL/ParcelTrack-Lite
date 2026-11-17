@@ -10,7 +10,7 @@ import { makeTracking } from '@/server/modules/parcels/tokens';
 import { makeStorageKey, SupabaseProofStore, type ProofStore } from '@/server/modules/delivery/storage';
 
 type RuntimeRole = 'app_runtime' | 'tracking_runtime';
-type AccountName = typeof SYNTHETIC_ACCOUNTS[number][0];
+export type AccountName = typeof SYNTHETIC_ACCOUNTS[number][0];
 type FixtureSession = { cookie: string; csrfToken: string; digest: string; userId: string };
 export type IsolatedDatabase = {
   name: string;
@@ -76,7 +76,14 @@ export async function createDatabaseHarness() {
     return operatorWork(async () => {
       try {
         if (!owner) await operator.query('SET ROLE migration_owner');
-        await operator.query('DROP DATABASE IF EXISTS ' + name + ' WITH (FORCE)');
+        // A backend whose client just disconnected can still be shutting down; FORCE then cannot signal it for a moment.
+        for (let attempt = 1; ; attempt++) {
+          try { await operator.query('DROP DATABASE IF EXISTS ' + name + ' WITH (FORCE)'); break; }
+          catch (error) {
+            if (attempt >= 8 || !/permission denied to terminate process/.test(String((error as Error).message))) throw error;
+            await new Promise(resolve => setTimeout(resolve, 250));
+          }
+        }
       } finally { await operator.query('RESET ROLE'); }
     });
   }

@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import { z } from 'zod';
-import { principalSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema } from '../src/shared/schemas';
+import { principalSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema } from '../src/shared/schemas';
 import { assertPlanEndpointParity, assertProductionImportBoundary, implementedEndpoints } from './contract-inventory';
-const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
+const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
 assertPlanEndpointParity();
 assertProductionImportBoundary();
 const paths:Record<string,Record<string,unknown>>={};

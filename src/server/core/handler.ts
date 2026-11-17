@@ -1,6 +1,7 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
-import { errorResponse } from './errors';
+import { classifyError, errorResponse } from './errors';
+import { logEvent } from './logging';
 
 export function apiHandler<Args extends unknown[]>(work: (request: Request, context: { requestId: string }, ...args: Args) => Promise<Response> | Response) {
   return async (request: Request, ...args: Args): Promise<Response> => {
@@ -11,6 +12,15 @@ export function apiHandler<Args extends unknown[]>(work: (request: Request, cont
       response.headers.set('X-Content-Type-Options', 'nosniff');
       response.headers.set('X-Request-Id', requestId);
       return response;
-    } catch (error) { return errorResponse(error, requestId); }
+    } catch (error) {
+      // Diagnostics for operators only: the request ID, the mapped code, the error class and any SQLSTATE.
+      // Messages, stacks, headers and bodies can hold secrets or personal data, so they are never logged.
+      const safe = classifyError(error);
+      if (safe.code === 'INTERNAL_ERROR') {
+        const sqlState = error && typeof error === 'object' && 'code' in error ? String(error.code).slice(0, 8) : undefined;
+        logEvent('request_failed', { requestId, code: safe.code, errorType: error instanceof Error ? error.constructor.name : typeof error, ...(sqlState ? { sqlState } : {}) });
+      }
+      return errorResponse(error, requestId);
+    }
   };
 }
