@@ -26,16 +26,23 @@ it('HAR-01 clones a clean fixture after a committed test and deletes its tempora
     await transaction(database.pool(), {}, async client => {
       expect((await client.query('SELECT token_digest FROM app.auth_session')).rows[0].token_digest).toBe(session.digest);
       await client.query("INSERT INTO app.rate_limit_bucket VALUES('probe',repeat('a',64),1,1,now()+interval '1 hour')");
+      await client.query(`
+        INSERT INTO app.audit_event (actor_id, event_type, outcome, request_id)
+        VALUES ($1, 'LOGIN_SUCCEEDED', 'SUCCESS', gen_random_uuid())
+      `, [session.userId]);
     });
     await writeFile(path.join(directory, 'private-probe.txt'), 'synthetic');
     if (process.platform !== 'win32') expect((await stat(directory)).mode & 0o777).toBe(0o700);
     expect(await counts(database)).toEqual({ sessions: 1, buckets: 1 });
+    const owner = await database.migrationClient();
+    expect((await owner.query('SELECT count(*)::integer AS events FROM app.audit_event')).rows[0].events).toBe(1);
   });
   await expect(stat(directory)).rejects.toMatchObject({ code: 'ENOENT' });
   await harness.run(async database => {
     expect(database.name).not.toBe(firstName);
     expect(await counts(database)).toEqual({ sessions: 0, buckets: 0 });
     const owner = await database.migrationClient();
+    expect((await owner.query('SELECT count(*)::integer AS events FROM app.audit_event')).rows[0].events).toBe(0);
     expect((await owner.query('SELECT datname FROM pg_database WHERE datname=$1', [firstName])).rowCount).toBe(0);
   });
 });
@@ -73,11 +80,14 @@ it('HAR-01 concurrent cases have distinct databases, sessions and Storage namesp
   let release!: () => void;
   const barrier = new Promise<void>(resolve => { release = resolve; });
   const names = await Promise.all([0, 1].map(() => harness.run(async database => {
-    await database.session('seller.a');
-    if (++arrivals === 2) release();
-    await barrier;
-    expect(await counts(database)).toEqual({ sessions: 1, buckets: 0 });
-    return database.name;
+    const client = await database.pool().connect();
+    try {
+      await database.session('seller.a');
+      if (++arrivals === 2) release();
+      await barrier;
+      expect((await client.query('SELECT count(*)::integer AS sessions FROM app.auth_session')).rows[0].sessions).toBe(1);
+      return database.name;
+    } finally { client.release(); }
   })));
   expect(new Set(names).size).toBe(2);
 });
