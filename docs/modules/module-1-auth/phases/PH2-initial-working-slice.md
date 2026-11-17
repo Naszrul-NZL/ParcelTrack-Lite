@@ -1,6 +1,6 @@
 # M1 PH2: Initial working slice
 
-Owner: Naszrul. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: Shared transaction/CSRF boundary implemented and tested locally; real session issuance/auth endpoints, UI integration and PH2 acceptance remain planned. See the [shared backend foundation](../../../shared/backend-foundation.md).
+Owner: Naszrul. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: Shared transaction/CSRF boundary implemented and tested locally. T02 to T10, T12 and TC01 to TC22 are implemented on `feat/m1-ph2-session-login` (issues #6 and #7); unit, component, isolated-database (56 tests) and real-login browser (14 tests) checks pass locally, T11 (worksheet rows) and T13 (walkthrough, see [evidence](../../../evidence/m1-ph2-walkthrough.md)) are recorded, while remote CI, consumer acceptance (H20, H21, H24) and PH2 acceptance remain pending. See [implementation status](../../../implementation-status.md#m1-ph2-session-and-login-issues-6-and-7). See the [shared backend foundation](../../../shared/backend-foundation.md).
 
 ## 1 Objective
 

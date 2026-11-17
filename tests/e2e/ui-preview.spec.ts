@@ -25,10 +25,24 @@ test('sample tracking covers empty, validation, loading, missing and delivery hi
   expect(writes).toEqual([]);
 });
 
-test('sign-in validates locally, clears passwords, and never submits credentials', async ({ page }) => {
-  const writes: string[] = [];
+test('sign-in validates locally, reports server outcomes and clears the password after each submit', async ({ page }) => {
+  // No database is needed here: the auth API is answered by the test so every outcome is deterministic.
+  const sent: { method: string; path: string; body: string | null }[] = [];
   const errors: string[] = [];
-  page.on('request', request => { if (request.method() === 'POST' || new URL(request.url()).pathname.startsWith('/api/')) writes.push(request.url()); });
+  const logins: { status: number; headers: Record<string, string>; body: unknown }[] = [
+    { status: 401, headers: {}, body: { error: { code: 'AUTH_INVALID', message: 'x' }, requestId: 'r' } },
+    { status: 429, headers: { 'Retry-After': '900' }, body: { error: { code: 'RATE_LIMITED', message: 'x' }, requestId: 'r' } },
+  ];
+  await page.route('**/api/v1/auth/**', async route => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    sent.push({ method: request.method(), path, body: request.postData() });
+    if (path.endsWith('/auth/me')) return route.fulfill({ status: 401, json: { error: { code: 'UNAUTHENTICATED', message: 'x' }, requestId: 'r' } });
+    if (path.endsWith('/auth/csrf')) return route.fulfill({ json: { csrfToken: 'test-csrf' } });
+    const next = logins.shift()!;
+    await new Promise(resolve => setTimeout(resolve, 150));
+    return route.fulfill({ status: next.status, headers: next.headers, json: next.body });
+  });
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/login?workspace=rider');
   await expect(page.getByRole('radio', { name: 'Rider', exact: true })).toBeChecked();
@@ -50,18 +64,30 @@ test('sign-in validates locally, clears passwords, and never submits credentials
   await page.getByLabel('Username', { exact: true }).fill('sample.seller');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByText('Enter your password.', { exact: true })).toBeVisible();
+  expect(sent.filter(request => request.method === 'POST')).toEqual([]);
   await page.getByLabel('Password', { exact: true }).fill('sample-password-only');
   await page.getByRole('button', { name: 'Show password', exact: true }).click();
   await expect(page.getByLabel('Password', { exact: true })).toHaveAttribute('type', 'text');
   await page.getByRole('button', { name: 'Hide password', exact: true }).click();
   await expect(page.getByLabel('Password', { exact: true })).toHaveAttribute('type', 'password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page.getByText('You’ve reached the end of the preview.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Signing in…', exact: true })).toBeDisabled();
+  await expect(page.getByText('Incorrect username or password.', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Password', { exact: true })).toHaveValue('');
-  await expect(page.getByRole('status')).toBeFocused();
+  await expect(page.getByLabel('Password', { exact: true })).toBeFocused();
+  await expect(page.getByLabel('Username', { exact: true })).toHaveValue('sample.seller');
+  await page.getByLabel('Password', { exact: true }).fill('another-sample-password');
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('Too many sign-in attempts.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Try again in 15 minutes.', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Password', { exact: true })).toHaveValue('');
+  const posts = sent.filter(request => request.method === 'POST');
+  expect(posts.map(request => request.path)).toEqual(['/api/v1/auth/login', '/api/v1/auth/login']);
+  expect(JSON.parse(posts[0].body!)).toEqual({ username: 'sample.seller', password: 'sample-password-only' });
+  expect(page.url()).not.toContain('password');
+  expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0);
   await page.getByRole('link', { name: 'Track without signing in' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Track a parcel');
-  expect(writes).toEqual([]);
   expect(errors).toEqual([]);
 });
 
