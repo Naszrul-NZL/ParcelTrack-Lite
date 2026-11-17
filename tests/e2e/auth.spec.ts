@@ -123,3 +123,49 @@ test('sign-out recovers on the next click after another tab rotates the session'
   expect(logouts).toEqual([403, 204]);
   expect((await page.request.get('/api/v1/auth/me')).status()).toBe(401);
 });
+
+for (const action of ['signs out', 'switches accounts'] as const) {
+  test(`session loading fails closed if another tab ${action} between identity and CSRF reads`, async ({ page, context }) => {
+    await signIn(page, 'seller.a');
+    await expect(page).toHaveURL(/\/seller\/parcels$/);
+    const other = await context.newPage();
+    await other.goto('/seller/parcels');
+    await expect(other.getByRole('heading', { level: 1 })).toContainText('Signed in as');
+
+    let release!: () => void;
+    const held = new Promise<void>(resolve => { release = resolve; });
+    let captured!: () => void;
+    const ready = new Promise<void>(resolve => { captured = resolve; });
+    await page.route('**/api/v1/auth/me', async route => {
+      const response = await route.fetch();
+      expect(response.status()).toBe(200);
+      captured();
+      await held;
+      await route.fulfill({ response });
+    }, { times: 1 });
+    try {
+      await page.reload();
+      await ready;
+      await other.getByRole('button', { name: 'Sign out', exact: true }).click();
+      await expect(other).toHaveURL(/\/login$/);
+      if (action === 'switches accounts') {
+        await signIn(other, 'seller.b');
+        await expect(other).toHaveURL(/\/seller\/parcels$/);
+      }
+      release();
+      if (action === 'signs out') {
+        await expect(page).toHaveURL(/\/login$/);
+        await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
+        expect((await page.request.get('/api/v1/auth/me')).status()).toBe(401);
+      } else {
+        await expect(page.getByText('We couldn’t check your session.', { exact: true })).toBeVisible();
+        const me = await page.request.get('/api/v1/auth/me');
+        expect(me.status()).toBe(200);
+        expect((await me.json()).username).toBe('seller.b');
+        await page.getByRole('button', { name: 'Reload page' }).click();
+        await expect(page.getByRole('heading', { level: 1 })).toHaveText('Signed in as seller.b.');
+      }
+      await expect(page.getByText('Signed in as seller.a.', { exact: true })).toHaveCount(0);
+    } finally { release(); }
+  });
+}
