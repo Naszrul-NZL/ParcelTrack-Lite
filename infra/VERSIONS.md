@@ -8,7 +8,7 @@ Current local foundation, updated 13 November 2026. Exact npm versions and trans
 | npm tested | 11.9.0 foundation; 10.9.9 contributor-baseline verification |
 | Docker Engine tested | 29.4.0 foundation; 29.7.2 contributor-baseline verification |
 | Docker Compose tested | 5.1.1 foundation; 5.5.1 contributor-baseline verification |
-| Next.js | 16.4.2 |
+| Next.js | 16.4.6 |
 | React / React DOM | 19.3.1 |
 | TypeScript | 6.0.3 (compatible with the current TypeScript ESLint parser) |
 | pg | 8.23.1 |
