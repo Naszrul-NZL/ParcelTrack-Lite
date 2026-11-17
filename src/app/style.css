@@ -8,6 +8,10 @@
   .site-header nav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 500; color: var(--muted-foreground); text-decoration: none; }
   .site-header nav a[aria-current="page"] { color: var(--primary); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 8px; }
   .site-header nav a:hover { color: var(--primary); }
+  .site-header nav .nav-action { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 500; color: var(--muted-foreground); cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+  .site-header nav .nav-action:hover { color: var(--primary); }
+  .site-header nav .nav-action:focus-visible { outline: 3px solid var(--ring); outline-offset: 4px; }
+  .site-header nav .nav-note { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; color: var(--destructive); }
   .theme-toggle { gap: 8px; font-weight: 500; border-color: var(--input); }
   .preview-strip { border-bottom: 1px solid var(--border); }
   .preview-strip > div { display: flex; align-items: baseline; gap: 16px; padding-block: 12px; color: var(--muted-foreground); font-size: 12px; }
@@ -111,6 +115,13 @@
   .sign-in-preview-note { padding-top: 24px; margin-top: 28px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted-foreground); }
   .sign-in-preview-note strong { color: var(--foreground); font-weight: 500; }
   .sign-in-preview-note p { margin-top: 6px; }
+  .guard-status { font-size: 14px; color: var(--muted-foreground); }
+  .guard-alert { margin-top: 24px; max-width: 560px; }
+  .guard-alert p { font-size: 14px; }
+  .workspace-page { padding-block: 64px 80px; }
+  .workspace-placeholder h1 { font-size: clamp(40px, 6vw, 64px); letter-spacing: -1px; margin-top: 12px; overflow-wrap: anywhere; }
+  .workspace-placeholder .lead { margin-top: 16px; max-width: 560px; }
+  .workspace-placeholder .guard-status { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); max-width: 560px; }
   .login-track-link { margin-top: 16px; font-size: 13px; color: var(--muted-foreground); }
   .login-track-link a { display: inline-flex; align-items: center; min-height: 44px; }
   .workspace-preview { background: var(--muted); padding: 48px 40px; display: flex; flex-direction: column; border-left: 1px solid var(--border); }

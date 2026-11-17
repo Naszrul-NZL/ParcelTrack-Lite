@@ -22,7 +22,10 @@ export const principalSchema = z.strictObject({id: idSchema, username: usernameS
 export type Principal = z.infer<typeof principalSchema>;
 export const userSummarySchema = principalSchema.extend({isActive: z.boolean(), version: z.number().int().positive()});
 export const registerSchema = z.strictObject({username: usernameSchema, displayName: displayNameSchema, password: passwordSchema});
-export const loginSchema = z.strictObject({username: usernameSchema, password: z.string().refine(v => chars(v) <= 128)});
+// Login accepts any bounded username text: a malformed name is an ordinary failed login, not a distinguishable 422.
+export const loginSchema = z.strictObject({username: z.string().min(1).max(256), password: z.string().min(1).refine(v => chars(v) <= LIMITS.passwordMax)});
+export const csrfResponseSchema = z.strictObject({csrfToken: z.string().min(1)});
+export const loginResponseSchema = principalSchema.extend({csrfToken: z.string().min(1)});
 // M1 PH3 request bodies and query strings. Strict objects reject unknown fields such as role, isActive or
 // mustChangePassword; the account role is decided by the endpoint, never by the request.
 export const createRiderSchema = z.strictObject({username: usernameSchema, displayName: displayNameSchema, initialPassword: passwordSchema});
