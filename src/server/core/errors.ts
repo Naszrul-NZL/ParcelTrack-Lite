@@ -11,7 +11,7 @@ export const ERROR_STATUS = {
 } as const;
 export type ErrorCode = keyof typeof ERROR_STATUS;
 export class AppError extends Error {
-  constructor(public code: ErrorCode, public fieldErrors?: Record<string,string>) { super(code); }
+  constructor(public code: ErrorCode, public fieldErrors?: Record<string,string>, public retryAfter?: number) { super(code); }
 }
 const sqlStates: Record<string, ErrorCode> = {PT001:'FORBIDDEN',PT002:'NOT_FOUND',PT003:'VERSION_CONFLICT',PT004:'INVALID_TRANSITION',PT005:'INVALID_ASSIGNEE',PT006:'PROOF_REQUIRED',PT007:'TARGET_NOT_ALLOWED',PT008:'PASSWORD_CHANGE_REQUIRED',PT009:'IDEMPOTENCY_CONFLICT',PT010:'REQUEST_EXPIRED',PT011:'USERNAME_TAKEN',PT012:'UNAUTHENTICATED','55P03':'BUSY','40P01':'BUSY','57014':'BUSY'};
 export function classifyError(error: unknown): AppError {
@@ -22,5 +22,7 @@ export function classifyError(error: unknown): AppError {
 }
 export function errorResponse(error: unknown, requestId = randomUUID()): Response {
   const safe = classifyError(error);
-  return Response.json({error:{code:safe.code, message: safe.code === 'INTERNAL_ERROR' ? 'Unable to complete the request.' : 'The request could not be completed.', ...(safe.fieldErrors ? {fieldErrors:safe.fieldErrors} : {})}, requestId}, {status:ERROR_STATUS[safe.code], headers:{'Cache-Control':'no-store','X-Request-Id':requestId,'X-Content-Type-Options':'nosniff'}});
+  const headers:Record<string,string> = {'Cache-Control':'no-store','X-Request-Id':requestId,'X-Content-Type-Options':'nosniff'};
+  if (safe.retryAfter !== undefined) headers['Retry-After'] = String(Math.max(1, Math.ceil(safe.retryAfter)));
+  return Response.json({error:{code:safe.code, message: safe.code === 'INTERNAL_ERROR' ? 'Unable to complete the request.' : 'The request could not be completed.', ...(safe.fieldErrors ? {fieldErrors:safe.fieldErrors} : {})}, requestId}, {status:ERROR_STATUS[safe.code], headers});
 }
