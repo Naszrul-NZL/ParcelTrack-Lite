@@ -18,9 +18,12 @@ async function readStatusFields(request: Request) {
   const reader = request.body.getReader();
   const chunks: Uint8Array[] = [];
   let bytes = 0;
+  // Release the database transaction before its 15-second idle timeout.
+  const deadline = Promise.withResolvers<never>();
+  const timer = setTimeout(() => deadline.reject(new AppError('BUSY')), 5000);
   try {
     for (;;) {
-      const chunk = await reader.read();
+      const chunk = await Promise.race([reader.read(), deadline.promise]);
       if (chunk.done) break;
       bytes += chunk.value.byteLength;
       // Releasing the reader stops application reads without cancelling Node's multipart producer.
@@ -31,6 +34,7 @@ async function readStatusFields(request: Request) {
     if (error instanceof AppError) throw error;
     throw new AppError('VALIDATION_ERROR');
   } finally {
+    clearTimeout(timer);
     reader.releaseLock();
   }
 
