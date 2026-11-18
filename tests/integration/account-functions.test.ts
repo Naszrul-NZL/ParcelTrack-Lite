@@ -170,12 +170,13 @@ describe('account_functions draft', () => {
       });
     });
 
-    it('rejects a stale version, Admin and self targets, a missing target and non-Admin actors, changing nothing', async () => {
+    it('rejects a stale or missing version, Admin and self targets, a missing target and non-Admin actors, changing nothing', async () => {
       await harness.run(async database => {
         await applyDraft(database);
         const rider = await state(database, 'rider.a');
-        const call = (actor: Actor, target: string, version: number) => code(runtime(database, actor, client => client.query('SELECT * FROM app.set_user_active($1,false,$2,$3)', [target, version, randomUUID()])));
+        const call = (actor: Actor, target: string, version: number | null) => code(runtime(database, actor, client => client.query('SELECT * FROM app.set_user_active($1,false,$2,$3)', [target, version, randomUUID()])));
         expect(await call({ name: 'admin' }, rider.id, rider.version + 1)).toBe('PT003');
+        expect(await call({ name: 'admin' }, rider.id, null)).toBe('PT003');
         expect(await call({ name: 'admin' }, database.accounts.admin, 1)).toBe('PT007');
         expect(await call({ name: 'admin' }, '999999', 1)).toBe('PT002');
         expect(await call({ name: 'seller.a' }, rider.id, rider.version)).toBe('PT001');

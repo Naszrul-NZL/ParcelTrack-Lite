@@ -100,7 +100,7 @@ BEGIN
  SELECT * INTO v_target FROM app.app_user u WHERE u.id=p_target_id FOR UPDATE;
  IF NOT FOUND THEN RAISE EXCEPTION USING ERRCODE='PT002',MESSAGE='Not found'; END IF;
  IF v_target.role='ADMIN' THEN RAISE EXCEPTION USING ERRCODE='PT007',MESSAGE='Target not allowed'; END IF;
- IF v_target.version<>p_expected_version THEN RAISE EXCEPTION USING ERRCODE='PT003',MESSAGE='Version conflict'; END IF;
+ IF v_target.version IS DISTINCT FROM p_expected_version THEN RAISE EXCEPTION USING ERRCODE='PT003',MESSAGE='Version conflict'; END IF;
  UPDATE app.app_user u SET is_active=p_is_active,version=u.version+1,session_version=u.session_version+1 WHERE u.id=p_target_id RETURNING * INTO v_target;
  DELETE FROM app.auth_session s WHERE s.user_id=p_target_id;
  INSERT INTO app.audit_event(actor_id,target_user_id,event_type,outcome,request_id,details)
