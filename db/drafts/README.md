@@ -6,6 +6,7 @@ These signatures reserve the remaining M3 surface after the planned `0005_create
 - Delivery proof table, forced RLS, private metadata grants and one-proof constraints are no longer drafts; they are in `db/sql/0004_integrated_erd.sql`.
 - 0007: `assign_parcel`, `lock_delivery_target` and the final-outcome branch of `update_delivery_status` run as `domain_writer` in Phase 3.
 - The Phase 4 `proof_maintenance_functions` revision defines `lock_parcel_for_reconcile` and `proof_key_is_referenced` with owner `maintenance_fn_owner` and execute limited to `maintenance_runtime`.
+- account_functions (M1 PH3, working draft, not a stub): `register_account`, `change_password`, `set_user_active`, `admin_reset_password`, the 72-hour `credential_expires_at` column, `get_login_snapshot` with `credential_expired`, and the directory/audit indexes. It follows 0007 in the registered order, so it is applied only by `tests/integration/account-functions.test.ts` until 0005 to 0007 merge; then it moves to `db/sql` with the next revision number.
 
 Use the common hardening template, account-before-parcel lock order, transaction-local actor/version, immutable object keys, and the documented SQLSTATE registry. See the [contract role matrix](../../docs/shared/system-contract.md) and [finalization design](0007_delivery_final.md).
 
