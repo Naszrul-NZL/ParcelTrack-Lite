@@ -1,4 +1,5 @@
 import type { EndpointId } from '@/shared/api-contract';
+import type { IsolatedDatabase } from '../../harness/isolated-database';
 import type { AuthHandlers } from '../../harness/login-as';
 
 /** H24 authorization-matrix harness v1. Each owner registers rows for the endpoints they implement. */
@@ -19,7 +20,7 @@ export type MatrixRow = {
   endpoint: EndpointId;
   label: string;
   /** Exercises the endpoint as `actor` and returns its response. */
-  call(actor: Actor, handlers: AuthHandlers): Promise<Response>;
+  call(actor: Actor, handlers: AuthHandlers, database: IsolatedDatabase): Promise<Response>;
   /** Expected HTTP status for every identity; a missing identity fails the harness. */
   expected: Record<Identity, number>;
 };

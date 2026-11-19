@@ -5,8 +5,9 @@ import { implementedEndpoints } from '../../../scripts/contract-inventory';
 import { IDENTITIES, assertRowsComplete, assertRowsCoverEndpoints, type Actor, type Identity } from './matrix';
 import { authRows } from './auth.rows';
 
-// Other modules append their rows here when their endpoints exist.
-const rows = [...authRows];
+import { parcelRows } from './parcel.rows';
+
+const rows = [...authRows, ...parcelRows];
 
 let harness: Awaited<ReturnType<typeof createDatabaseHarness>>;
 beforeAll(async () => { harness = await createDatabaseHarness(); });
@@ -39,13 +40,13 @@ describe('M1-PH2-TC18 authorization matrix', () => {
     assertRowsCoverEndpoints(implementedEndpoints(), rows);
   });
 
-  for (const row of authRows) {
+  for (const row of rows) {
     it(`${row.endpoint} ${row.label}`, async () => {
       await harness.run(async database => {
         const handlers = authHandlers(database);
         const everyone = await actors(database, handlers);
         for (const identity of IDENTITIES) {
-          const response = await row.call(everyone[identity], handlers);
+          const response = await row.call(everyone[identity], handlers, database);
           expect(response.status, `${row.endpoint} as ${identity}`).toBe(row.expected[identity]);
         }
       });

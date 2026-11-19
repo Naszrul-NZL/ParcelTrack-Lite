@@ -38,9 +38,9 @@ async function seed(db:Client){
  return {seller,rider,parcel,hash};
 }
 
-it('ERD migrations install on an empty database and create subclasses for committed new accounts',async()=>{
+it('upgrades 0004 to parcel creation without changing existing account or parcel data',async()=>{
  await scratchDatabase(async url=>{
-  await migrate(url);
+  await migrate(url, 4);
   const db=new Client({connectionString:url});await db.connect();
   try{
    const seeded=await seed(db);
@@ -50,6 +50,14 @@ it('ERD migrations install on an empty database and create subclasses for commit
    expect((await db.query('SELECT id FROM app.parcel_status_history WHERE parcel_id=$1',[seeded.parcel])).rowCount).toBe(1);
    await db.query("INSERT INTO app.delivery_proof(parcel_id,uploaded_by_id,storage_key,media_type,size_bytes) VALUES($1,$2,$3,'image/png',1)",[seeded.parcel,seeded.rider,seeded.parcel+'/'+('a'.repeat(32))+'.png']);
    await db.query('COMMIT');
+   await migrate(url, 1);
+   expect((await db.query('SELECT name FROM app.schema_migrations ORDER BY id DESC LIMIT 1')).rows)
+     .toEqual([{ name: '0005_create_parcel' }]);
+   await db.query('SET ROLE domain_writer');
+   expect((await db.query('SELECT id FROM app.parcel WHERE id = $1', [seeded.parcel])).rows).toEqual([{ id: seeded.parcel }]);
+   await db.query('RESET ROLE');
+   expect((await db.query('SELECT password_hash FROM app.app_user WHERE id = $1', [seeded.seller])).rows)
+     .toEqual([{ password_hash: seeded.hash }]);
    await migrate(url);
   }finally{await db.query('ROLLBACK');await db.end();}
  });
