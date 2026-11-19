@@ -59,6 +59,66 @@
           }
         }
       }
+    },
+    "/api/v1/parcels": {
+      "post": {
+        "operationId": "A10",
+        "description": "Register a parcel as the signed-in Seller. During PH2, a repeated client request ID returns 409.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "recipientName": {
+                    "type": "string"
+                  },
+                  "recipientPhone": {
+                    "type": "string"
+                  },
+                  "recipientAddress": {
+                    "type": "string"
+                  },
+                  "weightKg": {
+                    "type": "string",
+                    "pattern": "^(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,3})?$"
+                  },
+                  "clientRequestId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "required": [
+                  "recipientName",
+                  "recipientPhone",
+                  "recipientAddress",
+                  "weightKg",
+                  "clientRequestId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registered parcel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParcelDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe error envelope. See the system contract."
+          }
+        }
+      }
     }
   },
   "components": {
