@@ -6,10 +6,10 @@ import { csrfResponseSchema,loginResponseSchema,principalSchema,type Principal }
 export type SignInResult =
   | { ok: true; principal: Principal }
   | { ok: false; reason: 'invalid' | 'rate_limited' | 'expired' | 'busy' | 'invalid_input' | 'unavailable'; retryAfter?: number };
-type Session = SessionState & { identityKey: string; signIn(credentials: { username: string; password: string }): Promise<SignInResult>; signOut(): Promise<boolean> };
+type Session = SessionState & { request<T>(path: string, init?: RequestInit): Promise<T>; identityKey: string; signIn(credentials: { username: string; password: string }): Promise<SignInResult>; signOut(): Promise<boolean> };
 
 const anonymous: SessionState = { status: 'anonymous', principal: null, csrfToken: null };
-const Context = createContext<Session>({ ...{ status: 'loading', principal: null, csrfToken: null } as SessionState, identityKey: 'loading', signIn: async () => ({ ok: false, reason: 'unavailable' }), signOut: async () => false });
+const Context = createContext<Session>({ ...{ status: 'loading', principal: null, csrfToken: null } as SessionState, identityKey: 'loading', request: async () => { throw new Error('Session is unavailable.'); }, signIn: async () => ({ ok: false, reason: 'unavailable' }), signOut: async () => false });
 export const useSession = () => useContext(Context);
 
 export function SessionProvider({ children, fetcher = fetch }: { children: ReactNode; fetcher?: typeof fetch }) {
@@ -111,6 +111,6 @@ export function SessionProvider({ children, fetcher = fetch }: { children: React
     return true;
   }, [request]);
 
-  const value = useMemo<Session>(() => ({ ...state, identityKey: state.principal?.id ?? state.status, signIn, signOut }), [state, signIn, signOut]);
+  const value = useMemo<Session>(() => ({ ...state, identityKey: state.principal?.id ?? state.status, request, signIn, signOut }), [state, request, signIn, signOut]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
