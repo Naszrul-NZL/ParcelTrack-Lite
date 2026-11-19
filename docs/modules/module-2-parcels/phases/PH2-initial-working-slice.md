@@ -1,6 +1,6 @@
 # M2 PH2: Initial working slice
 
-Owner: Zikri. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: Planned. This initial working slice is part of the complete M2 plan.
+Owner: Zikri. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: Seller slice implemented and locally verified. Cross-owner review and integrated Rider acceptance are pending. See the [M2 PH2 evidence](../../../evidence/m2-ph2-seller-slice.md).
 
 ## 1 Objective
 
