@@ -95,6 +95,8 @@ After tests, stop the test app and `npm run local:down`, then return to developm
 Remove-Item Env:PTL_PROFILE -ErrorAction SilentlyContinue
 ```
 
+For H25, run `npm run db:fixtures -- --profile=rider-assigned` under `PTL_PROFILE=test` to add the seeded TMP-02 Rider assignment profile. It uses the same baseline Seller fixtures and keeps the existing credentials and parcel identities on repeated runs. The test harness uses the same seed function and returns a manifest with fixture key, parcel ID, tracking number, `source: 'seeded'`, and Rider username or null. Assignment history is fixture data until the real assignment workflow replaces TMP-02.
+
 ## Boundaries and later work
 
 The private `delivery-proofs` bucket enforces JPEG/PNG and 3 MiB through the supported Storage API. Validation re-encodes one JPEG/PNG frame, strips metadata/trailing bytes, and rejects over 12 MP. The future route must enforce the 4 MiB multipart-body cap and parcel authorization before privileged Storage calls. See the [storage design](modules/module-3-delivery/storage-design.md).
