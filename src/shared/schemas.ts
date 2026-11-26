@@ -58,3 +58,14 @@ export const parcelDetailSchema = parcelSummarySchema.extend({
   hasProof: z.boolean(), anonymized: z.boolean(), terminalAt: z.iso.datetime().nullable(),
 });
 export type ParcelInput = z.infer<typeof parcelInputSchema>;
+export const parcelListQuerySchema = z.strictObject({
+  page: z.string().regex(/^[1-9][0-9]*$/).transform(Number).pipe(z.number().int().max(100_000)).default(1),
+  pageSize: z.string().regex(/^[1-9][0-9]*$/).transform(value => Math.min(Number(value), 100)).default(20),
+});
+export const parcelListSchema = z.strictObject({
+  items: z.array(parcelSummarySchema), page: z.number().int().positive(),
+  pageSize: z.number().int().min(1).max(100), total: z.number().int().nonnegative(),
+});
+export type ParcelList = z.infer<typeof parcelListSchema>;
+export type ParcelSummary = z.infer<typeof parcelSummarySchema>;
+export type ParcelDetail = z.infer<typeof parcelDetailSchema>;

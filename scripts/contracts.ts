@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import { z } from 'zod';
-import { principalSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema } from '../src/shared/schemas';
+import { principalSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema } from '../src/shared/schemas';
 import { riderStatusMultipartSchema } from '../src/features/delivery/rider-contract';
 import { assertPlanEndpointParity, assertProductionImportBoundary, implementedEndpoints } from './contract-inventory';
-const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
+const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelList:parcelListSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
 assertPlanEndpointParity();
 assertProductionImportBoundary();
 const paths:Record<string,Record<string,unknown>>={};
@@ -16,6 +16,25 @@ for(const endpoint of implementedEndpoints()) {
       requestBody: { required: true, content: { 'application/json': { schema: z.toJSONSchema(parcelInputSchema, { io: 'input' }) } } },
       responses: {
         '201': { description: 'Registered parcel.', content: { 'application/json': { schema: { $ref: '#/components/schemas/ParcelDetail' } } } },
+        default: { description: 'Safe error envelope. See the system contract.' },
+      },
+    };
+    continue;
+  }
+  if (endpoint.id === 'A11' || endpoint.id === 'A12') {
+    const list = endpoint.id === 'A11';
+    paths[endpoint.path].get = {
+      operationId: endpoint.id,
+      description: list ? 'List the signed-in Seller’s parcels.' : 'Read a parcel visible to the authenticated actor.',
+      parameters: list ? [
+        { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100000, default: 1 } },
+        { name: 'pageSize', in: 'query', description: 'Values above 100 are capped at 100.', schema: { type: 'integer', minimum: 1, default: 20 } },
+      ] : [{ name: 'parcelId', in: 'path', required: true, schema: { type: 'string', pattern: '^[1-9][0-9]{0,17}$' } }],
+      responses: {
+        '200': {
+          description: list ? 'Page of Seller parcels.' : 'Private parcel detail.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/' + (list ? 'ParcelList' : 'ParcelDetail') } } },
+        },
         default: { description: 'Safe error envelope. See the system contract.' },
       },
     };
