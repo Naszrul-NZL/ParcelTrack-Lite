@@ -5,9 +5,10 @@ import { implementedEndpoints } from '../../../scripts/contract-inventory';
 import { IDENTITIES, assertRowsComplete, assertRowsCoverEndpoints, type Actor, type Identity } from './matrix';
 import { authRows } from './auth.rows';
 
+import { adminRows } from './admin.rows';
 import { parcelRows } from './parcel.rows';
 
-const rows = [...authRows, ...parcelRows];
+const rows = [...authRows, ...parcelRows, ...adminRows];
 
 let harness: Awaited<ReturnType<typeof createDatabaseHarness>>;
 beforeAll(async () => { harness = await createDatabaseHarness(); });

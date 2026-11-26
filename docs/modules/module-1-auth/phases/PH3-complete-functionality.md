@@ -1,6 +1,6 @@
 # M1 PH3: Complete module functionality
 
-Owner: Naszrul. Phase PH3 of [phase framework](../../../shared/phase-framework.md). Status: Planned. Foundations that need no sessions are drafted on `feat/m1-ph3-account-foundations`: the `account_functions` SQL draft (T02, T03, T04, T06 and the A21 reset; [db/drafts](../../../../db/drafts/account_functions.sql)) with 13 integration tests against the restricted runtime role, and the strict request schemas for A06 to A09 and A20 with the TC02, TC04 and TC12 validation tests. M1 PH2 (sessions, CSRF, login) is merged, so the endpoints, screens and the remaining tasks can now build on it; the SQL stays a draft until migrations 0005 to 0007 merge.
+Owner: Naszrul. Phase PH3 of [phase framework](../../../shared/phase-framework.md). Status: In progress. M1-PH3-T01 (A07 `GET /admin/users`) is implemented and tested; see [implementation status](../../../implementation-status.md#m1-ph3-in-progress-issue-not-yet-assigned). Foundations that need no sessions are drafted on `feat/m1-ph3-account-foundations`: the `account_functions` SQL draft (T02, T03, T04, T06 and the A21 reset; [db/drafts](../../../../db/drafts/account_functions.sql)) with 13 integration tests against the restricted runtime role, and the strict request schemas for A06 to A09 and A20 with the TC02, TC04 and TC12 validation tests. M1 PH2 (sessions, CSRF, login) is merged, so the endpoints, screens and the remaining tasks can now build on it; the SQL stays a draft until migrations 0005 to 0007 merge.
 
 ## 1 Objective
 

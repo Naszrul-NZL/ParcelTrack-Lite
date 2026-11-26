@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import { z } from 'zod';
-import { principalSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema } from '../src/shared/schemas';
+import { principalSchema,userSummarySchema,userListSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema } from '../src/shared/schemas';
 import { riderStatusMultipartSchema } from '../src/features/delivery/rider-contract';
 import { assertPlanEndpointParity, assertProductionImportBoundary, implementedEndpoints } from './contract-inventory';
-const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelList:parcelListSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
+const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,UserSummary:userSummarySchema,UserList:userListSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelList:parcelListSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
 assertPlanEndpointParity();
 assertProductionImportBoundary();
 const paths:Record<string,Record<string,unknown>>={};
@@ -35,6 +35,23 @@ for(const endpoint of implementedEndpoints()) {
           description: list ? 'Page of Seller parcels.' : 'Private parcel detail.',
           content: { 'application/json': { schema: { $ref: '#/components/schemas/' + (list ? 'ParcelList' : 'ParcelDetail') } } },
         },
+        default: { description: 'Safe error envelope. See the system contract.' },
+      },
+    };
+    continue;
+  }
+  if (endpoint.id === 'A07') {
+    paths[endpoint.path].get = {
+      operationId: endpoint.id,
+      description: 'List accounts for an Admin, newest first. The response carries only the non-secret account summary fields.',
+      parameters: [
+        { name: 'role', in: 'query', schema: { type: 'string', enum: ['SELLER', 'RIDER', 'ADMIN'] } },
+        { name: 'isActive', in: 'query', schema: { type: 'string', enum: ['true', 'false'] } },
+        { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100000, default: 1 } },
+        { name: 'pageSize', in: 'query', description: 'Values above 100 are capped at 100.', schema: { type: 'integer', minimum: 1, default: 20 } },
+      ],
+      responses: {
+        '200': { description: 'Page of account summaries.', content: { 'application/json': { schema: { $ref: '#/components/schemas/UserList' } } } },
         default: { description: 'Safe error envelope. See the system contract.' },
       },
     };

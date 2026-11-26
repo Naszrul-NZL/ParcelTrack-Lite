@@ -35,7 +35,11 @@ Run on 17 November 2026, Node.js 24.14.0, Docker Engine 29.4.0, Chrome. The inte
 
 Known limits. The account row is not locked `FOR UPDATE` at login: `app_runtime` has no UPDATE on `app_user` and the contract forbids widening it. The issuing transaction instead re-reads the login snapshot and inserts the session only if the account is still active at the same `session_version`; any later version change makes the session unusable. TC21's 100-concurrent-login capacity run is covered by the oversize-body and hashing-overload guards, not a 100-request run. TMP-04 (`database.session`) is still available for M2/M3 slice tests until they switch to `login_as`; the principal-override import guard is in place. A06 password change is PH3, so a must-change account sees a notice instead of a password form.
 
-## M1 PH3 foundations (draft, issue not yet assigned)
+## M1 PH3 (in progress, issue not yet assigned)
+
+**A07 `GET /admin/users` is implemented (M1-PH3-T01).** Admin only; filters `role`, `isActive`, `page`, `pageSize` (default 20, capped at 100); newest first with the id as tie-breaker; each item is exactly the `UserSummary` fields, and the response schema is a strict allowlist so a secret column cannot reach a client. Unknown filters, bad values and repeated keys return 422. It is the Rider picker Syauqi needs (`role=RIDER&isActive=true`). Code: `src/server/modules/auth/{users,user-handlers}.ts` and `src/app/api/v1/admin/users/route.ts`. Evidence: `tests/integration/admin-users.test.ts` (5 tests, TC09 and TC12 for this endpoint) and the A07 row in the authorization matrix; the isolated suite passes. The write endpoints (A02, A06, A08, A09, A21) wait for the `account_functions` migration, which cannot merge until 0006 and 0007 do.
+
+### Foundations (draft)
 
 `db/drafts/account_functions.sql` implements and tests `register_account`, `change_password`, `set_user_active` and `admin_reset_password` against the restricted `app_runtime` role (13 integration tests: role and target rules, version conflicts, simultaneous requests, session revocation, audit, 72-hour credential expiry, grants). It is not in `db/migrations` because it follows 0007 in the registered order. Shared request schemas for A06 to A09 and A20 are in `src/shared/schemas.ts` with unit tests. No endpoint or screen exists yet; they build on the merged M1 PH2 session code and follow in later PRs.
 
