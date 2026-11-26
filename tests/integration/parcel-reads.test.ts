@@ -13,7 +13,7 @@ const readers = (database: IsolatedDatabase) => createParcelReadHandlers(createP
   APP_ORIGIN: origin(), SESSION_COOKIE_NAME: 'ptl_session_dev',
 }));
 
-it('pages only the signed-in Seller’s parcels in stable order and caps oversized pages', async () => {
+it('M2-PH2-TC11 pages only the signed-in Seller’s parcels in stable order and caps oversized pages', async () => {
   await harness.run(async database => {
     const seed = await database.fixtureClient();
     await seed.query('SET ROLE domain_writer');
@@ -50,7 +50,7 @@ it('pages only the signed-in Seller’s parcels in stable order and caps oversiz
   });
 });
 
-it('uses RLS for private detail, gives uniform 404s and audits Admin reads', async () => {
+it('M2-PH2-TC10 uses RLS for private detail, gives uniform 404s and audits Admin reads', async () => {
   await harness.run(async database => {
     const [parcel] = await seedRiderParcels(database);
     const { detail } = readers(database);
@@ -89,5 +89,60 @@ it('uses RLS for private detail, gives uniform 404s and audits Admin reads', asy
     expect((await owner.query(`SELECT actor_id, request_id, details
       FROM app.audit_event WHERE parcel_id = $1 AND event_type = 'PARCEL_VIEWED'`, [parcel.parcelId])).rows)
       .toEqual([{ actor_id: admin.principal.id, request_id: adminRead.headers.get('x-request-id'), details: {} }]);
+  });
+});
+
+it('M2-PH2-TC17 answers SQL-injection strings in A11 and A12 parameters with 422 or 404, never wider results', async () => {
+  await harness.run(async database => {
+    const seeded = await seedRiderParcels(database);
+    // domain_writer has owner policies for every parcel; the migration owner reads nothing under forced RLS.
+    const check = await database.fixtureClient();
+    await check.query('SET ROLE domain_writer');
+    const parcelCount = async () => Number((await check.query('SELECT count(*) FROM app.parcel')).rows[0].count);
+    const before = await parcelCount();
+    expect(before).toBeGreaterThanOrEqual(seeded.length);
+    const { list, detail } = readers(database);
+    const owner = await loginAs(database, 'seller.a');
+    const other = await loginAs(database, 'seller.b');
+    // `params` carries the decoded segment, as Next.js passes it to the route handler.
+    const read = (id: string) => detail(other.request('/parcels/' + encodeURIComponent(id)), {
+      params: Promise.resolve({ parcelId: id }),
+    });
+
+    const hostileIds = [
+      `${seeded[0].parcelId} OR 1=1`, `${seeded[0].parcelId}'; DROP TABLE app.parcel; --`, `' OR ''='`,
+      '1 UNION SELECT id FROM app.app_user', '-1', '0', '1e3', '0x1', '9'.repeat(19), "1'",
+    ];
+    for (const id of hostileIds) {
+      const response = await read(id);
+      expect(response.status, id).toBe(422);
+      expect((await response.json()).error.code, id).toBe('VALIDATION_ERROR');
+    }
+    // A well-formed ID of a parcel the caller cannot see stays a plain not-found.
+    expect((await read(seeded[0].parcelId)).status).toBe(404);
+
+    const hostileQueries = [
+      'page=1%20OR%201%3D1', 'page=1;DROP%20TABLE%20app.parcel', "pageSize=20'--", 'page=-1', 'page=0',
+      'pageSize=0', 'pageSize=1e2', 'page=100001', 'page=1&page=1', 'sort=id;DROP', `page=${'9'.repeat(400)}`,
+    ];
+    for (const query of hostileQueries) {
+      const response = await list(other.request('/seller/parcels?' + query));
+      expect(response.status, query).toBe(422);
+      expect((await response.json()).error.code, query).toBe('VALIDATION_ERROR');
+    }
+    const ownIds = async (account: 'seller.a' | 'seller.b') => (await check.query<{ id: string }>(
+      'SELECT id::text AS id FROM app.parcel WHERE seller_id = $1 ORDER BY created_at DESC, id DESC',
+      [database.accounts[account]])).rows.map(row => row.id);
+    // An oversized numeric pageSize is clamped, and still returns exactly the caller's own rows in order.
+    const clamped = await list(other.request(`/seller/parcels?pageSize=${'9'.repeat(400)}`));
+    expect(clamped.status).toBe(200);
+    const clampedPage = await clamped.json();
+    const sellerB = await ownIds('seller.b');
+    expect(sellerB.length).toBeGreaterThan(0);
+    expect(clampedPage).toMatchObject({ total: sellerB.length, pageSize: 100 });
+    expect(clampedPage.items.map((item: { id: string }) => item.id)).toEqual(sellerB);
+
+    expect((await (await list(owner.request('/seller/parcels'))).json()).total).toBe((await ownIds('seller.a')).length);
+    expect(await parcelCount()).toBe(before);
   });
 });

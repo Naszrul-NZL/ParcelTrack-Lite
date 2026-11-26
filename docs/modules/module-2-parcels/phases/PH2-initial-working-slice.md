@@ -1,6 +1,6 @@
 # M2 PH2: Initial working slice
 
-Owner: Zikri. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: Seller slice implemented and locally verified. Cross-owner review and integrated Rider acceptance are pending. See the [M2 PH2 evidence](../../../evidence/m2-ph2-seller-slice.md).
+Owner: Zikri. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: Seller slice merged into `main` and verified locally. Issue #9 service cases TC10, TC11, TC15, TC16 and TC17 are recorded. Cross-owner review and integrated Rider acceptance (issue #13) are pending. See the [M2 PH2 evidence](../../../evidence/m2-ph2-seller-slice.md).
 
 ## 1 Objective
 
