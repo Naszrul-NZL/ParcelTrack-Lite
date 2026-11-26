@@ -16,7 +16,7 @@ The [issue #5 completion evidence](evidence/m1-ph1-ci.md) records pinned tree/hi
 
 The [Airway guide](../DESIGN.md) now has an [implemented frontend foundation](shared/frontend-foundation.md) for module owners to consume. The current screens use it; real authenticated role workspaces and business actions remain PH2/PH3 work.
 
-The app exposes `/api/v1/health` and the M1 PH2 session endpoints A01 `GET /auth/csrf`, A03 `POST /auth/login`, A04 `POST /auth/logout` and A05 `GET /auth/me` (issues #6 and #7, branch `feat/m1-ph2-session-login`). Registration, password change, user management, parcel creation/search/tracking, assignment, Rider updates, proof access and dashboards remain PH3 or other modules' work. `/login` is the real form; `/seller/parcels`, `/rider/parcels` and `/admin/dashboard` are labeled placeholders that M2/M3 replace with their screens. Public tracking still shows sample parcels.
+The app exposes `/api/v1/health` and the M1 PH2 session endpoints A01 `GET /auth/csrf`, A03 `POST /auth/login`, A04 `POST /auth/logout` and A05 `GET /auth/me` (issues #6 and #7, branch `feat/m1-ph2-session-login`). Seller parcel registration and private parcel reads are covered in the M2 PH2 record below. Account registration, password change, user management, parcel search, assignment, Rider updates, proof access and dashboards remain later work. `/login` is the real form. The Rider and Admin landing pages are labeled placeholders. Public tracking still shows sample parcels.
 
 ## M1 PH2 session and login (issues #6 and #7)
 
@@ -38,6 +38,12 @@ Known limits. The account row is not locked `FOR UPDATE` at login: `app_runtime`
 ## M1 PH3 foundations (draft, issue not yet assigned)
 
 `db/drafts/account_functions.sql` implements and tests `register_account`, `change_password`, `set_user_active` and `admin_reset_password` against the restricted `app_runtime` role (13 integration tests: role and target rules, version conflicts, simultaneous requests, session revocation, audit, 72-hour credential expiry, grants). It is not in `db/migrations` because it follows 0007 in the registered order. Shared request schemas for A06 to A09 and A20 are in `src/shared/schemas.ts` with unit tests. No endpoint or screen exists yet; they build on the merged M1 PH2 session code and follow in later PRs.
+
+## M2 PH2 Seller slice (issues #8–#10)
+
+Migration `0005_create_parcel` and A10 register a parcel under a real Seller session. A11 lists the current Seller's parcels. A12 serves private detail to the owner, assigned Rider, and Admin, with an audit record for Admin reads. The Seller screens use those routes and the shared Airway docket.
+
+The [Seller slice evidence](evidence/m2-ph2-seller-slice.md) records the browser walkthrough, the M2 consumer runs for H10/H20/H24, and the outstanding Rider and owner acceptance. The H25 loader is independently reviewed in PR #22. The registered Rider migration, integrated Rider journey, and group gates remain pending.
 
 ## Latest local verification
 
@@ -64,16 +70,16 @@ The shared backend/test follow-up adds the [reusable helpers](shared/backend-fou
 
 ### Foundation handoff status
 
-This is the current acceptance record for PH1 handoffs. "Present locally" means code is available for review, not that every proving case in the [handoff register](shared/dependency-matrix.md#handoff-register) has passed. Consumer acceptance and owner sign-offs are not yet recorded for any row. Later handoffs H20 onward remain planned.
+This is the current acceptance record for PH1 handoffs. "Present locally" means code is available for review, not that every proving case in the [handoff register](shared/dependency-matrix.md#handoff-register) has passed. The M2 consumer runs are recorded in the Seller slice evidence. Other consumer confirmations and owner sign-offs remain pending where listed.
 
 | Handoffs | Current local state | Remaining action / evidence |
 | --- | --- | --- |
 | H01, H03, H05, H14 (M1) | Shell/Compose, auth schema and actor/snapshot functions, error/log conventions and password service present | Naszrul checks remaining PH1 cases; consumers reproduce setup and exercise the functions/services; record PR and evidence |
-| H04, H06 (M1) | Shared session resolver, default must-change gate, role/CSRF/provenance checks, principalUow and safe API handler are tested locally; browser client/provider foundation present | Consumers can implement protected services against these exports. H20 still supplies real issuance/renewal/login/logout and CSRF bootstrap; no production endpoint may rely on fixture sessions |
+| H04, H06 (M1) | Shared session resolver, default must-change gate, role/CSRF/provenance checks, principalUow and safe API handler are tested locally; browser client/provider foundation present | Consumers can implement protected services against these exports. Real issuance, login, logout and CSRF bootstrap are on main. The M2 parcel routes consume H20 and the existing protected transaction helper |
 | H02, H07, H08, H09, H11 (M2) | Role/bootstrap, transaction helper, constants, schema through 0004 and guarded fixture loader present | Zikri verifies remaining catalog/RLS/fixture cases and unchanged applied revisions; consumers record use from their branches |
 | H12 (M2) | Shared DTOs, checked A01–A21 registry and AST-discovered health-only snapshot; plan/import drift checks pass | Keep types derived from shared schemas; endpoint-specific payload/status/error conformance remains required as real routes are added |
-| H10 (M3) | Migrated clones, temporary session rows, restricted runtime checks and scoped file/Storage cleanup have HAR-01 coverage. CI foundation browser smoke passed. [M3 evidence](evidence/m3-ph1-foundation.md) | Rerun the harness after the teardown correction and record consumer acceptance. Complete real HTTP role journeys, remaining failpoint work and TMP-04 retirement through H20. |
-| H13 (M3) | ProofStore/image pipeline, synthetic image manifest and backup-lock prototype present. [M3 evidence](evidence/m3-ph1-foundation.md) | Record image measurements with the full local stack running, remaining Storage/failure checks and design review. Full recovery scripts remain later work. |
+| H10 (M3) | Migrated clones, temporary session rows, restricted runtime checks and scoped file/Storage cleanup have HAR-01 coverage. CI foundation browser smoke passed. [M3 evidence](evidence/m3-ph1-foundation.md) | M2 consumed the harness for registration, RLS and the authorization matrix. Record other consumer confirmations, remaining failpoint work and TMP-04 retirement. |
+| H13 (M3) | ProofStore/image pipeline, synthetic image manifest and backup-lock prototype present. [M3 evidence](evidence/m3-ph1-foundation.md) | PR #21 recorded image measurements with the full local stack running. Consumer proving runs, remaining Storage/failure checks and owner review are pending. Full recovery scripts remain later work. |
 
 For each acceptance, append the handoff ID, producer PR/commit, proving test or safe evidence reference, consumer name and consumer branch/commit. Keep missing evidence explicitly pending. Full task/test definitions remain in the phase files; this table does not mark those files complete.
 

@@ -4,9 +4,9 @@ The shared infrastructure below is implemented locally and tested. Module owners
 
 | Planned work | Available implementation | Remaining boundary |
 | --- | --- | --- |
-| H04 / M1-PH1-T08 and M1-PH2-T08 shared authorization | `src/server/core/authorized.ts`: `principalUow` and `createPrincipalUow`; session resolution in `src/server/modules/auth/session-context.ts`; CSRF check in `csrf.ts` | Real session creation, renewal, login/logout and CSRF bootstrap are implemented in `sessions.ts` and `service.ts` (H20, pending merge and consumer acceptance). Business functions still acquire/recheck actor and parcel locks |
+| H04 / M1-PH1-T08 and M1-PH2-T08 shared authorization | `src/server/core/authorized.ts`: `principalUow` and `createPrincipalUow`; session resolution in `src/server/modules/auth/session-context.ts`; CSRF check in `csrf.ts` | Real session creation, renewal, login/logout and CSRF bootstrap are implemented in `sessions.ts` and `service.ts` (H20, merged in PR #17 and exercised by the [M2 consumer](../evidence/m2-ph2-seller-slice.md)). Business functions still acquire/recheck actor and parcel locks |
 | H05 / shared safe responses | `src/server/core/handler.ts`: `apiHandler` | Endpoint owns body caps, input validation, safe DTO conversion and its business error/response tests |
-| H10 / M3-PH1-T01 isolation | `tests/harness/isolated-database.ts`: migrated template, per-case clones, checked runtime pools, private temporary directories, tracked Storage keys, deterministic clock and fixture sessions | Legacy low-level probes still use their existing scratch/rollback patterns. Real HTTP role journeys, controlled failpoints and H20 `login_as` remain to be completed |
+| H10 / M3-PH1-T01 isolation | `tests/harness/isolated-database.ts`: migrated template, per-case clones, checked runtime pools, private temporary directories, tracked Storage keys, deterministic clock and fixture sessions | Legacy low-level probes still use their existing scratch/rollback patterns. M2 used H10 and H20 in its parcel integration and browser suites. Remaining journeys and controlled failpoints stay in their owning phases |
 | H08/H12 / CT-01 and CT-02 contract checks | `src/shared/api-contract.ts`, `scripts/contract-inventory.ts`, `npm run contract:check` | Route/method/owner and import-boundary coverage is implemented. Complete endpoint-specific payload/status/error conformance remains required with each real route |
 
 ## Protected module services
@@ -15,19 +15,19 @@ Wrap API entry points with `apiHandler`, then run protected database work throug
 
 The wrapper derives mutation protection from the Request method, so an endpoint cannot accidentally omit CSRF by forgetting a `write` flag. Mutations also consume the existing maintenance/advisory-lock protocol. Reads can continue during maintenance. Domain write functions remain the authoritative account/parcel lock and transition boundary; the wrapper gives them no owner-role connection.
 
-For example, the future A12 Route Handler can call its module's detail service like this after that service is implemented:
+A12 calls the shared parcel detail reader through the same transaction boundary:
 
 ```tsx
 import { apiHandler } from '@/server/core/handler';
 import { principalUow } from '@/server/core/authorized';
 import { idSchema, parcelDetailSchema } from '@/shared/schemas';
-// Import readParcelDetail from the owning module's authorized detail service.
+import { readParcelDetail } from '@/server/modules/parcels/read-service';
 
-export const GET = apiHandler(async (request, _metadata,
+export const GET = apiHandler(async (request, { requestId },
   context: { params: Promise<{ parcelId: string }> }) => {
   const id = idSchema.parse((await context.params).parcelId);
   const dto = await principalUow(request, {},
-    (client, principal) => readParcelDetail(client, principal, id));
+    (client, principal) => readParcelDetail(client, principal, id, requestId));
   return Response.json(parcelDetailSchema.parse(dto));
 });
 ```
