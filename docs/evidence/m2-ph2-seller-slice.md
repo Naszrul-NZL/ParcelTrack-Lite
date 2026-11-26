@@ -1,6 +1,6 @@
 # M2 PH2 Seller slice and shared handoffs
 
-Verified on the isolated Supabase test stack on 19 November 2026 with Node.js 24.14.0. The registration code is in [PR #23](https://github.com/Naszrul-NZL/ParcelTrack-Lite/pull/23) at `25837d0`. The read services are in [PR #24](https://github.com/Naszrul-NZL/ParcelTrack-Lite/pull/24) at `fdc9fce`. The Seller screens and real HTTP journey are on `feat/m2-seller-workspace`.
+Verified on the isolated Supabase test stack on 19 November 2026 with Node.js 24.14.0. The registration code is in [PR #23](https://github.com/Naszrul-NZL/ParcelTrack-Lite/pull/23) at `25837d0`. The read services are in [PR #24](https://github.com/Naszrul-NZL/ParcelTrack-Lite/pull/24) at `fdc9fce`. The Seller screens and real HTTP journey are in [PR #25](https://github.com/Naszrul-NZL/ParcelTrack-Lite/pull/25). All four M2 PRs, #22 to #25, are merged into `main` (`84fdce2`, `2827205`, `fc7983e`, `7808e3d`).
 
 | Check | Observed result |
 | --- | --- |
@@ -20,3 +20,17 @@ The Seller list uses flat records with tracking number, status and timestamp in 
 | H25 | [Fixture loader in PR #22](https://github.com/Naszrul-NZL/ParcelTrack-Lite/pull/22) at `d928412` | The local repeat held four profile parcel identities, seven history rows and existing account hashes unchanged. Syauqi’s consumer acceptance is tracked in issue #13. |
 
 The Seller part of INT-13 and the cross-Seller negative of INT-14 ran locally. The full group journey still needs the registered Rider migration and real Rider Start delivery. H13 acceptance and group gates still need the remaining consumer work and owner review.
+
+## Issue #9 close-out (26 November 2026)
+
+Rerun on the isolated Supabase test stack from `main` at `7808e3d`, plus the TC17 tests added by the close-out PR. Node.js 22.23.4 ran locally; CI uses Node.js 24.
+
+| Completion check | Evidence |
+| --- | --- |
+| TC10 private detail | `M2-PH2-TC10` in `tests/integration/parcel-reads.test.ts`. Seller B, a missing ID, and the unassigned Rider receive the same 404. The owner, the assigned Rider and Admin receive 200, and Admin reads are audited. |
+| TC11 Seller list | `M2-PH2-TC11` in the same file. With 25 own parcels and 5 for Seller B, page 1 returns 20 newest first, `total` is 25, `pageSize=500` is capped at 100, and Seller B's rows are absent. |
+| TC15 matrix | The A10–A12 rows in `tests/integration/authz_matrix/parcel.rows.ts` run with real sessions. |
+| TC16 fixture rerun (H25) | `npm run db:fixtures -- --profile=rider-assigned` ran twice. Both runs gave the same parcel IDs, 12 parcels, 15 history rows, 7 accounts and the same password-hash digest. |
+| TC17 SQL safety | `tests/unit/parcel-sql-safety.test.ts` parses `src/server/modules/parcels` and allows only constant SQL text in `.query(...)`. A negative control shows that it flags interpolated, concatenated and computed SQL. `M2-PH2-TC17` sends injection strings in the A12 path and A11 `page`/`pageSize`. Each returns 422, or 404 for a well-formed hidden ID. An oversized numeric `pageSize` is clamped to 100 and returns only the caller's rows. The parcel count is unchanged and no response is a 500. |
+
+The real-session requirement from H20 is met: every case above uses `loginAs`. The inactive control in the matrix still uses a fixture session, as recorded under H20 and H24. Issue #13 owns the Rider consumer acceptance of H25. Its owner confirms that from the Rider branch. Group gates are not marked complete by this issue.
