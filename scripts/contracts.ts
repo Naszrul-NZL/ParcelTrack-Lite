@@ -25,7 +25,7 @@ for(const endpoint of implementedEndpoints()) {
     const list = endpoint.id === 'A11';
     paths[endpoint.path].get = {
       operationId: endpoint.id,
-      description: list ? 'List the signed-in Seller’s parcels.' : 'Read a parcel visible to the authenticated actor.',
+      description: list ? 'List the signed-in Sellerâ€™s parcels.' : 'Read a parcel visible to the authenticated actor.',
       parameters: list ? [
         { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100000, default: 1 } },
         { name: 'pageSize', in: 'query', description: 'Values above 100 are capped at 100.', schema: { type: 'integer', minimum: 1, default: 20 } },
