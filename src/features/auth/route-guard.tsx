@@ -12,7 +12,7 @@ import { useSession } from './session-provider';
  * Client-side gate for a role workspace. It decides what to render only; every API and server service still
  * checks the session, role and CSRF token itself.
  */
-export function RouteGuard({ role, children }: { role: Role; children: ReactNode }) {
+export function RouteGuard({ role, children }: { role?: Role; children: ReactNode }) {
   const session = useSession();
   const router = useRouter();
   useEffect(() => { if (session.status === 'anonymous') router.replace('/login'); }, [session.status, router]);
@@ -31,7 +31,7 @@ export function RouteGuard({ role, children }: { role: Role; children: ReactNode
       <AlertDescription><p>An Admin set this password for you. The password change screen is not available in this build yet, so sign out and ask an Admin for help.</p><Button className="mt-3" variant="outline" size="sm" onClick={() => void session.signOut()}>Sign out</Button></AlertDescription>
     </Alert>;
   }
-  if (session.principal.role !== role) {
+  if (role && session.principal.role !== role) {
     return <Alert variant="destructive" className="guard-alert">
       <AlertTitle className="font-semibold">This workspace is for {ROLE_LABEL[role]} accounts.</AlertTitle>
       <AlertDescription><p>You’re signed in as {ROLE_LABEL[session.principal.role]}.</p><Link className={buttonVariants({ variant: 'outline', size: 'sm', className: 'mt-3' })} href={ROLE_LANDING[session.principal.role]}>Go to your workspace</Link></AlertDescription>

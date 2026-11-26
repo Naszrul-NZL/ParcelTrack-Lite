@@ -216,3 +216,40 @@
     *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
   }
 }
+
+@layer components {
+  .parcel-workspace { padding-block: clamp(32px, 6vw, 64px) 64px; }
+  .parcel-workspace-header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+  .parcel-workspace-header h1 { font-size: clamp(2.5rem, 6vw, 4rem); letter-spacing: -.02em; }
+  .parcel-workspace-header .section-label { margin-top: 8px; }
+  .seller-parcel-records { border-block-start: 1px solid var(--border); }
+  .seller-parcel-record { display: grid; align-items: center; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 16px; min-height: 64px; padding: 12px 8px; border-bottom: 1px solid var(--border); }
+  .seller-parcel-record:hover { background: var(--accent); }
+  .parcel-reference { font-family: var(--font-mono, monospace); font-size: .875rem; color: var(--primary); overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: .16em; }
+  .parcel-record-status { font-weight: 600; }
+  .parcel-record-time { color: var(--muted-foreground); font-size: .875rem; }
+  .parcel-empty { padding: 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); }
+  .parcel-empty h2, .parcel-detail-record h2 { font-size: 1.75rem; }
+  .parcel-pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .parcel-register-form { max-width: 44rem; padding: clamp(16px, 4vw, 32px); border: 1px solid var(--border); border-radius: 8px; background: var(--card); }
+  .parcel-register-form fieldset { min-width: 0; }
+  .parcel-form-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+  .parcel-field label { display: block; margin-bottom: 8px; }
+  .parcel-field-recipientAddress { grid-column: 1 / -1; }
+  .parcel-address { width: 100%; min-width: 0; resize: vertical; border: 1px solid var(--input); border-radius: 6px; background: var(--card); padding: 12px; color: var(--foreground); font-size: 1rem; }
+  .parcel-address[aria-invalid="true"] { border-color: var(--destructive); }
+  .parcel-address:focus-visible, .seller-parcel-record:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+  .parcel-register-form button { margin-top: 20px; }
+  .parcel-confirmation-docket { max-width: 38rem; }
+  .parcel-detail-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: start; gap: clamp(24px, 5vw, 48px); }
+  .parcel-detail-record { padding: 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); }
+  .parcel-detail-record dl { display: grid; gap: 16px; margin-top: 16px; }
+  .parcel-detail-record dt { color: var(--muted-foreground); font-size: .875rem; }
+  .parcel-detail-record dd { margin-top: 4px; overflow-wrap: anywhere; }
+  .parcel-recipient-address { white-space: pre-wrap; }
+
+  @media (max-width: 700px) {
+    .seller-parcel-record { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .parcel-form-fields, .parcel-detail-layout { grid-template-columns: minmax(0, 1fr); }
+  }
+}

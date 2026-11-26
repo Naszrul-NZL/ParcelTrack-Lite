@@ -17,7 +17,7 @@ export default async function RootLayout({children}:{children:React.ReactNode}) 
       <AppNavigation />
       <ThemeToggle />
     </div></header>
-    <div className="preview-strip"><div className="page-width"><strong>Early build</strong><span>Sign-in works. Parcel registration, delivery updates and Admin tools are still being built, and tracking shows sample parcels.</span></div></div>
+    <div className="preview-strip"><div className="page-width"><strong>Early build</strong><span>Sign-in and Seller parcel registration are available. Delivery updates and Admin tools are still being built. Public tracking shows sample parcels.</span></div></div>
     <main id="main" tabIndex={-1}>{children}</main>
     <footer className="site-footer"><div className="page-width"><div><strong>ParcelTrack Lite</strong><p>Parcel registration and delivery tracking for RapidExpress.</p></div><span>Classroom project / Interface preview</span></div></footer>
   </SessionProvider></ThemeProvider></body></html>;
