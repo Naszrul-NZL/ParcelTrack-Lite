@@ -104,13 +104,14 @@ it('M2-PH2-TC17 answers SQL-injection strings in A11 and A12 parameters with 422
     const { list, detail } = readers(database);
     const owner = await loginAs(database, 'seller.a');
     const other = await loginAs(database, 'seller.b');
+    // `params` carries the decoded segment, as Next.js passes it to the route handler.
     const read = (id: string) => detail(other.request('/parcels/' + encodeURIComponent(id)), {
       params: Promise.resolve({ parcelId: id }),
     });
 
     const hostileIds = [
       `${seeded[0].parcelId} OR 1=1`, `${seeded[0].parcelId}'; DROP TABLE app.parcel; --`, `' OR ''='`,
-      '1 UNION SELECT id FROM app.app_user', '-1', '0', '1e3', '0x1', '9'.repeat(19), '%27',
+      '1 UNION SELECT id FROM app.app_user', '-1', '0', '1e3', '0x1', '9'.repeat(19), "1'",
     ];
     for (const id of hostileIds) {
       const response = await read(id);
@@ -127,18 +128,21 @@ it('M2-PH2-TC17 answers SQL-injection strings in A11 and A12 parameters with 422
     for (const query of hostileQueries) {
       const response = await list(other.request('/seller/parcels?' + query));
       expect(response.status, query).toBe(422);
+      expect((await response.json()).error.code, query).toBe('VALIDATION_ERROR');
     }
-    const ownCount = async (account: 'seller.a' | 'seller.b') => Number((await check.query(
-      'SELECT count(*) FROM app.parcel WHERE seller_id = $1', [database.accounts[account]])).rows[0].count);
-    // An oversized numeric pageSize is clamped, and still returns only the caller's own rows.
+    const ownIds = async (account: 'seller.a' | 'seller.b') => (await check.query<{ id: string }>(
+      'SELECT id::text AS id FROM app.parcel WHERE seller_id = $1 ORDER BY created_at DESC, id DESC',
+      [database.accounts[account]])).rows.map(row => row.id);
+    // An oversized numeric pageSize is clamped, and still returns exactly the caller's own rows in order.
     const clamped = await list(other.request(`/seller/parcels?pageSize=${'9'.repeat(400)}`));
     expect(clamped.status).toBe(200);
     const clampedPage = await clamped.json();
-    expect(clampedPage).toMatchObject({ total: await ownCount('seller.b'), pageSize: 100 });
-    const seededIds = new Set(seeded.map(parcel => parcel.parcelId));
-    expect(clampedPage.items.filter((item: { id: string }) => seededIds.has(item.id))).toEqual([]);
+    const sellerB = await ownIds('seller.b');
+    expect(sellerB.length).toBeGreaterThan(0);
+    expect(clampedPage).toMatchObject({ total: sellerB.length, pageSize: 100 });
+    expect(clampedPage.items.map((item: { id: string }) => item.id)).toEqual(sellerB);
 
-    expect((await (await list(owner.request('/seller/parcels'))).json()).total).toBe(await ownCount('seller.a'));
+    expect((await (await list(owner.request('/seller/parcels'))).json()).total).toBe((await ownIds('seller.a')).length);
     expect(await parcelCount()).toBe(before);
   });
 });
