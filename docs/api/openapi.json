@@ -155,7 +155,7 @@
     "/api/v1/seller/parcels": {
       "get": {
         "operationId": "A11",
-        "description": "List the signed-in Seller�s parcels.",
+        "description": "List the signed-in Seller’s parcels.",
         "parameters": [
           {
             "name": "page",
