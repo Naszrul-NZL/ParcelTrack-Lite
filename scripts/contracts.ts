@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { z } from 'zod';
-import { principalSchema,userSummarySchema,userListSchema,userStatusSchema,registerSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema } from '../src/shared/schemas';
+import { principalSchema,userSummarySchema,userListSchema,userStatusSchema,registerSchema,changePasswordSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema } from '../src/shared/schemas';
 import { riderListSchema,riderStatusMultipartSchema } from '../src/features/delivery/rider-contract';
 import { assertPlanEndpointParity, assertProductionImportBoundary, implementedEndpoints } from './contract-inventory';
 const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,UserSummary:userSummarySchema,UserList:userListSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelList:parcelListSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema,RiderList:riderListSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
@@ -47,6 +47,18 @@ for(const endpoint of implementedEndpoints()) {
       requestBody: { required: true, content: { 'application/json': { schema: z.toJSONSchema(registerSchema, { io: 'input' }) } } },
       responses: {
         '201': { description: 'The new Seller account.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Principal' } } } },
+        default: { description: 'Safe error envelope. See the system contract.' },
+      },
+    };
+    continue;
+  }
+  if (endpoint.id === 'A06') {
+    paths[endpoint.path].post = {
+      operationId: endpoint.id,
+      description: 'Change the signed-in account’s own password. Also allowed while the account must change it. Wrong current-password attempts are limited per account. On success every session of the account, including this one, is ended and nobody is signed in again.',
+      requestBody: { required: true, content: { 'application/json': { schema: z.toJSONSchema(changePasswordSchema, { io: 'input' }) } } },
+      responses: {
+        '204': { description: 'Password changed and all sessions ended. The session cookie is cleared.' },
         default: { description: 'Safe error envelope. See the system contract.' },
       },
     };

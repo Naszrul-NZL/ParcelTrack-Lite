@@ -18,6 +18,8 @@ export const RATE_RULES = {
   anonymousSession: { type: 'anonymous_session', limit: 60, windowSeconds: 60 },
   // The limit is configurable (REGISTRATION_LIMIT_PER_HOUR); this is the contract default (D-18).
   registration: { type: 'registration', limit: 30, windowSeconds: 60 * 60 },
+  // Wrong current-password attempts on A06, per account (D-18): the sixth attempt in a window is refused outright.
+  passwordAttempt: { type: 'password_attempt', limit: 5, windowSeconds: FIFTEEN_MINUTES },
 } as const satisfies Record<string, RateRule>;
 
 function expandIPv6(address: string): string[] | null {

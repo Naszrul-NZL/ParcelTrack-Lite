@@ -36,6 +36,7 @@ export function authHandlers(database: IsolatedDatabase, options: HandlerOptions
     logout: apiHandler((request, context) => service.logout(request, context)),
     me: apiHandler(request => service.me(request)),
     register: apiHandler((request, context) => service.register(request, context)),
+    changePassword: apiHandler((request, context) => service.changePassword(request, context)),
   };
 }
 export type AuthHandlers = ReturnType<typeof authHandlers>;
