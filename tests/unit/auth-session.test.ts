@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AppError, errorResponse } from '@/server/core/errors';
+import { parseSettings } from '@/server/core/settings';
 import { recordAudit } from '@/server/modules/auth/audit';
 import { RATE_RULES, RateLimiter, normalizeSource } from '@/server/modules/auth/rate-limit';
 import { expiredCookie, newToken, readCookieToken, sessionCookie, tokenDigest } from '@/server/modules/auth/sessions';
@@ -104,5 +105,19 @@ describe('RATE_LIMITED responses', () => {
     expect(response.headers.get('retry-after')).toBe('1');
     expect(errorResponse(new AppError('RATE_LIMITED', undefined, 61.4)).headers.get('retry-after')).toBe('62');
     expect(errorResponse(new AppError('AUTH_INVALID')).headers.get('retry-after')).toBeNull();
+  });
+});
+
+describe('M1-PH3-T03 registration limit setting', () => {
+  const configured = {
+    APP_ENV: 'development', APP_ORIGIN: 'http://localhost:3000', APP_DATABASE_URL: 'postgresql://restricted@localhost/test', TRACKING_DATABASE_URL: 'postgresql://tracking@localhost/test',
+    SUPABASE_INTERNAL_URL: 'http://localhost:8000', STORAGE_SERVICE_KEY: 'a'.repeat(40), FINGERPRINT_KEY: 'b'.repeat(40), RATE_LIMIT_KEY: 'c'.repeat(40), SESSION_COOKIE_NAME: 'ptl_session_dev',
+  };
+  it('defaults to the contract value of 30 per source per hour and accepts a configured value', () => {
+    expect(parseSettings(configured).REGISTRATION_LIMIT_PER_HOUR).toBe(30);
+    expect(parseSettings({ ...configured, REGISTRATION_LIMIT_PER_HOUR: '10' }).REGISTRATION_LIMIT_PER_HOUR).toBe(10);
+  });
+  it('refuses a limit that would disable the control or is not a whole number', () => {
+    for (const bad of ['0', '-1', '1001', '2.5', 'many']) expect(() => parseSettings({ ...configured, REGISTRATION_LIMIT_PER_HOUR: bad }), bad).toThrow('Required application configuration');
   });
 });

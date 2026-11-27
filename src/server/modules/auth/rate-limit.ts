@@ -16,6 +16,8 @@ export const RATE_RULES = {
   loginSource: { type: 'login_fail_source', limit: 100, windowSeconds: FIFTEEN_MINUTES },
   throttleAudit: { type: 'login_throttle_audit', limit: 1, windowSeconds: FIFTEEN_MINUTES },
   anonymousSession: { type: 'anonymous_session', limit: 60, windowSeconds: 60 },
+  // The limit is configurable (REGISTRATION_LIMIT_PER_HOUR); this is the contract default (D-18).
+  registration: { type: 'registration', limit: 30, windowSeconds: 60 * 60 },
 } as const satisfies Record<string, RateRule>;
 
 function expandIPv6(address: string): string[] | null {

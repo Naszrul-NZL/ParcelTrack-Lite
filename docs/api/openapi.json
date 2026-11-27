@@ -173,6 +173,56 @@
         }
       }
     },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "A02",
+        "description": "Register a Seller account. The role is always Seller; the request cannot choose it. The new account is not signed in. Requires the CSRF token from A01 and is limited per source address.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9._-]{3,50}$"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "displayName",
+                  "password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The new Seller account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Principal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe error envelope. See the system contract."
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "HEALTH",

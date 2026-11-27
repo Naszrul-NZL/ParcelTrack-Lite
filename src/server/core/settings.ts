@@ -12,6 +12,7 @@ const shape = z.object({
   PROOF_BUCKET: z.string().default('delivery-proofs'),
   DB_POOL_MAX: z.coerce.number().int().min(1).max(20).default(4),
   HASH_CONCURRENCY: z.coerce.number().int().min(1).max(8).default(2),
+  REGISTRATION_LIMIT_PER_HOUR: z.coerce.number().int().min(1).max(1000).default(30),
 });
 export type Settings = z.infer<typeof shape>;
 export function parseSettings(env: Record<string,string|undefined>): Settings {

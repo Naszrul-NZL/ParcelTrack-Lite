@@ -6,10 +6,19 @@ const everyone = (status: number, overrides: Partial<Record<Identity, number>> =
 });
 const signedIn = (overrides: Partial<Record<Identity, number>> = {}) => everyone(200, { anonymous: 401, inactive: 401, ...overrides });
 
-/** M1 rows: shared health plus A01, A03, A04 and A05. */
+/** M1 rows: shared health plus A01, A02, A03, A04 and A05. */
 export const authRows: MatrixRow[] = [
   { endpoint: 'HEALTH', label: 'GET /health', expected: everyone(200), call: async actor => health(actor.request('/health')) },
   { endpoint: 'A01', label: 'GET /auth/csrf', expected: everyone(200), call: (actor, handlers) => handlers.csrf(actor.request('/auth/csrf')) },
+  {
+    // Public: any identity with a live session and its CSRF token may register another Seller. The inactive identity's
+    // session is already dead, so its CSRF check fails first.
+    endpoint: 'A02', label: 'POST /auth/register with a fresh username',
+    expected: everyone(201, { inactive: 403 }),
+    call: (actor, handlers) => handlers.register(actor.request('/auth/register', {
+      method: 'POST', body: JSON.stringify({ username: 'new.' + actor.identity, displayName: 'Matrix ' + actor.identity, password: 'a-sufficiently-long-secret' }),
+    })),
+  },
   {
     // The anonymous identity signs in with a wrong password. The inactive identity's session is already dead, so the
     // CSRF check on its stale cookie fails first. Everyone else signs in again and gets a rotated session.
