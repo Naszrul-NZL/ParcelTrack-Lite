@@ -23,9 +23,9 @@ Example of a concrete dependency: Zikri's protected parcel-registration endpoint
 | 2 | `0002_auth_core` (account tables, `system_state`, foundation functions `lock_active_actor` and `get_login_snapshot`) | Naszrul M1-PH1-T06, T07 | 0001, function-owner roles | `audit_event.parcel_id` is plain bigint here |
 | 3 | `0003_parcels` (tables, RLS, all runtime-role and owner-role policies, grants, `audit_event.parcel_id` FK) | Zikri M2-PH1-T05 | 0002 | Complete in PH1; M2-PH2-T01 only verifies it |
 | 4 | `0004_integrated_erd` | Shared schema | 0003 | Implemented: subclass tables/backfill/triggers, role-specific FKs, delivery proof with RLS/grants, initial-history enforcement |
-| 5 | `0005_create_parcel` | Zikri M2-PH2-T02 | 0004 | Planned function revision; existing revisions remain unchanged |
-| 6 | `0006_delivery_functions` (`update_delivery_status`, start branch) | Syauqi M3-PH2-T02 | 0005 | Planned; uses grants and policies in 0003/0004 |
-| 7 | `0007_delivery_final` (`assign_parcel`, `lock_delivery_target`, final branch, reconcile helper) | Syauqi M3-PH3-T01 | 0006 | Planned finalization using the proof schema already implemented in 0004 |
+| 5 | `0005_create_parcel` | Zikri M2-PH2-T02 | 0004 | Implemented: `create_parcel` |
+| 6 | `0006_delivery_functions` (`update_delivery_status`, start branch) | Syauqi M3-PH2-T02 | 0005 | Implemented; uses grants and policies in 0003/0004 |
+| 7 | `0007_delivery_final` (`assign_parcel`, `lock_delivery_target`, `lock_assignee`, final branch) | Syauqi M3-PH3-T01 | 0006 | Implemented finalization using the proof schema in 0004; reconcile helpers stay in `proof_maintenance_functions` |
 | later | `tracking_lookup`, `retention_functions` (Zikri); `proof_maintenance_functions` (Syauqi); `account_functions`, `session_cleanup_functions`, `ops_functions` (Naszrul) | owner of the function | 0007 | Additive; single head enforced by Zikri |
 
 ## Handoff register
