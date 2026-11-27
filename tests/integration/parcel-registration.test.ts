@@ -20,7 +20,7 @@ const registration = (database: IsolatedDatabase, tracking = makeTracking) =>
     APP_ORIGIN: origin(), SESSION_COOKIE_NAME: 'ptl_session_dev',
   }), () => process.env.FINGERPRINT_KEY!, tracking);
 
-it('commits a Seller parcel, first history and redacted audit together and rejects a duplicate request', async () => {
+it('commits a Seller parcel, first history and redacted audit together and replays a repeated request', async () => {
   await harness.run(async database => {
     const seller = await loginAs(database, 'seller.a');
     const register = registration(database);
@@ -42,9 +42,12 @@ it('commits a Seller parcel, first history and redacted audit together and rejec
       .toEqual([{ changed_by_id: seller.principal.id, status: 'REGISTERED' }]);
     expect((await owner.query("SELECT actor_id, details, request_id FROM app.audit_event WHERE parcel_id = $1 AND event_type = 'PARCEL_REGISTERED'", [parcel.id])).rows)
       .toEqual([{ actor_id: seller.principal.id, details: {}, request_id: created.headers.get('x-request-id') }]);
+    // M2-PH3-T01: the same request again returns the original parcel without writing anything new.
     const duplicate = await register(seller.request('/parcels', init(body)));
-    expect(duplicate.status).toBe(409);
-    expect(await duplicate.json()).toMatchObject({ error: { code: 'IDEMPOTENCY_CONFLICT' } });
+    expect(duplicate.status).toBe(200);
+    expect(await duplicate.json()).toEqual(parcel);
+    expect((await owner.query("SELECT count(*)::int AS count FROM app.audit_event WHERE parcel_id = $1 AND event_type = 'PARCEL_REGISTERED'", [parcel.id])).rows)
+      .toEqual([{ count: 1 }]);
     expect((await parcels.query('SELECT id FROM app.parcel WHERE seller_id = $1 AND client_request_id = $2', [seller.principal.id, body.clientRequestId])).rows)
       .toEqual([{ id: parcel.id }]);
   });
