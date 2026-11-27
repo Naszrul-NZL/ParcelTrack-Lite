@@ -67,6 +67,30 @@ it('shows local and server field errors, sends once while pending, and keeps the
   expect(new Headers(submitted[0].headers).get('X-CSRF-Token')).toBe('fixture-csrf');
 });
 
+it('M2-PH3-T01 confirms a replayed registration and explains a reused or expired request ID', async () => {
+  const answers = [
+    Response.json({ error: { code: 'IDEMPOTENCY_CONFLICT' } }, { status: 409 }),
+    Response.json({ error: { code: 'REQUEST_EXPIRED' } }, { status: 409 }),
+    // The retry of a request whose first response was lost returns the original parcel with 200.
+    Response.json(detail, { status: 200 }),
+  ];
+  const bodies: string[] = [];
+  const fetcher = authenticated(async (_path, init) => { bodies.push(String(init!.body)); return answers.shift()!; });
+  render(<SessionProvider fetcher={fetcher}><RegisterParcelPage /></SessionProvider>);
+  const submit = await screen.findByRole('button', { name: 'Register parcel' });
+  fireEvent.change(screen.getByLabelText('Recipient name'), { target: { value: 'Synthetic' } });
+  fireEvent.change(screen.getByLabelText('Recipient phone'), { target: { value: '0123456789' } });
+  fireEvent.change(screen.getByLabelText('Delivery address'), { target: { value: 'Synthetic address' } });
+  fireEvent.change(screen.getByLabelText('Weight (kg)'), { target: { value: '1.25' } });
+  fireEvent.click(submit);
+  expect(await screen.findByText(/This request was already used/)).toBeVisible();
+  fireEvent.click(submit);
+  expect(await screen.findByText(/too old to repeat/)).toBeVisible();
+  fireEvent.click(submit);
+  expect(await screen.findByRole('heading', { name: 'Parcel registered' })).toHaveFocus();
+  expect(new Set(bodies.map(body => JSON.parse(body).clientRequestId)).size).toBe(1);
+});
+
 it('loads and retries the parcel list, pages it, and clears old records on identity change', async () => {
   let requests = 0;
   let finish!: (value: Response) => void;

@@ -2,7 +2,8 @@ import 'server-only';
 import type { PoolClient } from 'pg';
 import { AppError } from '@/server/core/errors';
 import type { AuthContext } from '@/server/modules/auth/principal';
-import { parcelDetailSchema, parcelListSchema, type ParcelDetail, type ParcelSummary } from '@/shared/schemas';
+import { parcelDetailSchema, parcelListSchema, type ParcelDetail, type ParcelListQuery, type ParcelSummary } from '@/shared/schemas';
+import { escapeLike } from './tokens';
 
 type SummaryRow = Omit<ParcelSummary, 'createdAt'> & { createdAt: Date };
 type DetailRow = SummaryRow & Pick<ParcelDetail, 'recipient' | 'assignedRider' | 'hasProof' | 'anonymized'> & {
@@ -10,21 +11,36 @@ type DetailRow = SummaryRow & Pick<ParcelDetail, 'recipient' | 'assignedRider' |
   history: ParcelDetail['history'];
 };
 
-export async function listSellerParcels(client: PoolClient, sellerId: string, page: number, pageSize: number) {
+/**
+ * A11 (M2-PH3-T02). The SQL text is constant: the search text only ever reaches PostgreSQL as LIKE patterns with
+ * `\`, `%` and `_` escaped, so a wildcard in `q` matches itself and never widens the result. The tracking number
+ * is stored in uppercase, so its prefix pattern is uppercased; the name match uses ILIKE. `sort` is an allowlisted
+ * key compared inside the query, never spliced into it.
+ */
+export async function listSellerParcels(client: PoolClient, sellerId: string, query: ParcelListQuery) {
+  const { page, pageSize, q, status, sort } = query;
+  const tokenPrefix = q === undefined ? null : escapeLike(q.toUpperCase()) + '%';
+  const nameContains = q === undefined ? null : '%' + escapeLike(q) + '%';
   const { rows: [result] } = await client.query<{ items: ParcelSummary[]; total: string }>(`
     WITH own AS (
-      SELECT id, tracking_number, current_status, weight_kg, created_at, version
-      FROM app.parcel WHERE seller_id = $1
+      SELECT id, tracking_number, current_status, weight_kg, created_at, version,
+        CASE WHEN $7::text = 'currentStatus' THEN
+          array_position(ARRAY['REGISTERED','ASSIGNED','OUT_FOR_DELIVERY','DELIVERED','FAILED'], current_status)
+        END AS status_rank
+      FROM app.parcel
+      WHERE seller_id = $1
+        AND ($4::text IS NULL OR current_status = $4)
+        AND ($5::text IS NULL OR tracking_number LIKE $5 ESCAPE '\\' OR recipient_name ILIKE $6 ESCAPE '\\')
     ), selected AS (
-      SELECT * FROM own ORDER BY created_at DESC, id DESC LIMIT $2 OFFSET $3
+      SELECT * FROM own ORDER BY status_rank, created_at DESC, id DESC LIMIT $2 OFFSET $3
     )
     SELECT (SELECT count(*) FROM own)::text AS total,
       COALESCE(jsonb_agg(jsonb_build_object(
         'id', id::text, 'trackingNumber', tracking_number, 'currentStatus', current_status,
         'weightKg', weight_kg::text, 'createdAt', created_at, 'version', version
-      ) ORDER BY created_at DESC, id DESC), '[]'::jsonb) AS items
+      ) ORDER BY status_rank, created_at DESC, id DESC), '[]'::jsonb) AS items
     FROM selected
-  `, [sellerId, pageSize, (page - 1) * pageSize]);
+  `, [sellerId, pageSize, (page - 1) * pageSize, status ?? null, tokenPrefix, nameContains, sort]);
 
   return parcelListSchema.parse({
     items: result.items.map(parcel => ({ ...parcel, createdAt: new Date(parcel.createdAt).toISOString() })),
