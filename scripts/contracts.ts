@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { principalSchema,userSummarySchema,userListSchema,userStatusSchema,registerSchema,changePasswordSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema,PARCEL_SORTS } from '../src/shared/schemas';
 import { STATUSES } from '../src/shared/constants';
 import { riderListSchema,riderStatusMultipartSchema } from '../src/features/delivery/rider-contract';
-import { adminParcelListSchema,assignmentSchema } from '../src/features/delivery/admin-contract';
+import { adminParcelListSchema,assignmentSchema,dashboardSchema } from '../src/features/delivery/admin-contract';
 import { assertPlanEndpointParity, assertProductionImportBoundary, implementedEndpoints } from './contract-inventory';
-const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,UserSummary:userSummarySchema,UserList:userListSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelList:parcelListSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema,RiderList:riderListSchema,AdminParcelList:adminParcelListSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
+const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,UserSummary:userSummarySchema,UserList:userListSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelList:parcelListSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema,RiderList:riderListSchema,AdminParcelList:adminParcelListSchema,Dashboard:dashboardSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
 assertPlanEndpointParity();
 assertProductionImportBoundary();
 const paths:Record<string,Record<string,unknown>>={};
@@ -150,11 +150,40 @@ for(const endpoint of implementedEndpoints()) {
   if (endpoint.id === 'A17') {
     paths[endpoint.path].post = {
       operationId: endpoint.id,
-      description: 'Start delivery for an assigned Rider parcel.',
+      description: 'Start or finalize delivery for an assigned Rider parcel. Final outcomes require one sanitized JPEG or PNG proof.',
       parameters: [{ name: 'parcelId', in: 'path', required: true, schema: { type: 'string', pattern: '^[1-9][0-9]{0,17}$' } }],
-      requestBody: { required: true, content: { 'multipart/form-data': { schema: z.toJSONSchema(riderStatusMultipartSchema) } } },
+      requestBody: { required: true, content: { 'multipart/form-data': { schema: {
+        ...z.toJSONSchema(riderStatusMultipartSchema),
+        properties: {
+          ...z.toJSONSchema(riderStatusMultipartSchema).properties,
+          proof: { type: 'string', format: 'binary', description: 'Required for DELIVERED or FAILED; forbidden for OUT_FOR_DELIVERY.' },
+        },
+      } } } },
       responses: {
         '200': { description: 'Committed parcel status and detail.', content: { 'application/json': { schema: { $ref: '#/components/schemas/ParcelDetail' } } } },
+        default: { description: 'Safe error envelope. See the system contract.' },
+      },
+    };
+    continue;
+  }
+  if (endpoint.id === 'A18') {
+    paths[endpoint.path].get = {
+      operationId: endpoint.id,
+      description: 'Read one-snapshot parcel counts for all five statuses as an Admin.',
+      responses: {
+        '200': { description: 'Zero-filled status counts, coherent total and generation time.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Dashboard' } } } },
+        default: { description: 'Safe error envelope. See the system contract.' },
+      },
+    };
+    continue;
+  }
+  if (endpoint.id === 'A19') {
+    paths[endpoint.path].get = {
+      operationId: endpoint.id,
+      description: 'Read the private sanitized proof bytes for an authorized parcel reader. No public or signed URL is returned.',
+      parameters: [{ name: 'parcelId', in: 'path', required: true, schema: { type: 'string', pattern: '^[1-9][0-9]{0,17}$' } }],
+      responses: {
+        '200': { description: 'Verified proof bytes.', content: { 'image/jpeg': { schema: { type: 'string', format: 'binary' } }, 'image/png': { schema: { type: 'string', format: 'binary' } } } },
         default: { description: 'Safe error envelope. See the system contract.' },
       },
     };
