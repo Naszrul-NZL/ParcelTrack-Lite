@@ -411,7 +411,7 @@
     "/api/v1/parcels": {
       "post": {
         "operationId": "A10",
-        "description": "Register a parcel as the signed-in Seller. During PH2, a repeated client request ID returns 409.",
+        "description": "Register a parcel as the signed-in Seller. Repeating a client request ID with the same data returns the original parcel (200); different data returns 409 IDEMPOTENCY_CONFLICT, and a key whose parcel was anonymized returns 409 REQUEST_EXPIRED.",
         "requestBody": {
           "required": true,
           "content": {
@@ -452,6 +452,16 @@
           }
         },
         "responses": {
+          "200": {
+            "description": "The parcel this client request ID already registered, with the same data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParcelDetail"
+                }
+              }
+            }
+          },
           "201": {
             "description": "Registered parcel.",
             "content": {
@@ -645,6 +655,43 @@
               "type": "integer",
               "minimum": 1,
               "default": 20
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Literal search: a tracking-number prefix or a recipient-name substring, case-insensitive. Wildcard characters match themselves.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "REGISTERED",
+                "ASSIGNED",
+                "OUT_FOR_DELIVERY",
+                "DELIVERED",
+                "FAILED"
+              ]
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Newest first; currentStatus orders by delivery stage, then newest first.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "createdAt",
+                "currentStatus"
+              ],
+              "default": "createdAt"
             }
           }
         ],

@@ -74,6 +74,8 @@ function RegisterParcel() {
       if (error instanceof ApiFailure && error.fields && showErrors(error.fields)) return;
       if (error instanceof ApiFailure && error.code === 'IDEMPOTENCY_CONFLICT') {
         setFailure('This request was already used. Check your parcel list before submitting a new registration.');
+      } else if (error instanceof ApiFailure && error.code === 'REQUEST_EXPIRED') {
+        setFailure('This registration is too old to repeat. Check your parcel list, then register it again as a new parcel.');
       } else if (error instanceof ApiFailure && error.code === 'CSRF_INVALID') {
         setFailure('Reload this page to refresh your session before trying again.');
       } else {

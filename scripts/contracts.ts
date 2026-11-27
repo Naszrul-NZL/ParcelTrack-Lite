@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { z } from 'zod';
-import { principalSchema,userSummarySchema,userListSchema,userStatusSchema,registerSchema,changePasswordSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema } from '../src/shared/schemas';
+import { principalSchema,userSummarySchema,userListSchema,userStatusSchema,registerSchema,changePasswordSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema,PARCEL_SORTS } from '../src/shared/schemas';
+import { STATUSES } from '../src/shared/constants';
 import { riderListSchema,riderStatusMultipartSchema } from '../src/features/delivery/rider-contract';
 import { adminParcelListSchema,assignmentSchema } from '../src/features/delivery/admin-contract';
 import { assertPlanEndpointParity, assertProductionImportBoundary, implementedEndpoints } from './contract-inventory';
@@ -13,10 +14,11 @@ for(const endpoint of implementedEndpoints()) {
   if (endpoint.id === 'A10') {
     paths[endpoint.path].post = {
       operationId: endpoint.id,
-      description: 'Register a parcel as the signed-in Seller. During PH2, a repeated client request ID returns 409.',
+      description: 'Register a parcel as the signed-in Seller. Repeating a client request ID with the same data returns the original parcel (200); different data returns 409 IDEMPOTENCY_CONFLICT, and a key whose parcel was anonymized returns 409 REQUEST_EXPIRED.',
       requestBody: { required: true, content: { 'application/json': { schema: z.toJSONSchema(parcelInputSchema, { io: 'input' }) } } },
       responses: {
         '201': { description: 'Registered parcel.', content: { 'application/json': { schema: { $ref: '#/components/schemas/ParcelDetail' } } } },
+        '200': { description: 'The parcel this client request ID already registered, with the same data.', content: { 'application/json': { schema: { $ref: '#/components/schemas/ParcelDetail' } } } },
         default: { description: 'Safe error envelope. See the system contract.' },
       },
     };
@@ -30,6 +32,9 @@ for(const endpoint of implementedEndpoints()) {
       parameters: list ? [
         { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100000, default: 1 } },
         { name: 'pageSize', in: 'query', description: 'Values above 100 are capped at 100.', schema: { type: 'integer', minimum: 1, default: 20 } },
+        { name: 'q', in: 'query', description: 'Literal search: a tracking-number prefix or a recipient-name substring, case-insensitive. Wildcard characters match themselves.', schema: { type: 'string', minLength: 1, maxLength: 64 } },
+        { name: 'status', in: 'query', schema: { type: 'string', enum: [...STATUSES] } },
+        { name: 'sort', in: 'query', description: 'Newest first; currentStatus orders by delivery stage, then newest first.', schema: { type: 'string', enum: [...PARCEL_SORTS], default: 'createdAt' } },
       ] : [{ name: 'parcelId', in: 'path', required: true, schema: { type: 'string', pattern: '^[1-9][0-9]{0,17}$' } }],
       responses: {
         '200': {
