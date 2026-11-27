@@ -49,6 +49,10 @@ Migration `0005_create_parcel` and A10 register a parcel under a real Seller ses
 
 The [Seller slice evidence](evidence/m2-ph2-seller-slice.md) records the browser walkthrough, the M2 consumer runs for H10/H20/H24, and H25's idempotent Rider fixture rerun. PRs #22 to #25 and the Rider migration PR #28 are merged. PR #29 mounts the Rider routes and real-login journey. Its corrective implementation head passed both full-stack CI triggers; teammate review and group gates remain pending.
 
+## M2 PH3 (in progress)
+
+**H34 is published (M2-PH3-T03).** The slot contract for M3's components is `src/shared/types/parcel-slots.ts`: `RiderActionPanel` and `ProofViewer` both take `{ parcel: ParcelDetail, onChanged(): void }`, and the file depends only on the shared schema, never on M3 code (checked by `tests/unit/parcel-slots.test.ts`). The page shows `RiderActionPanel` to the assigned Rider while the parcel is ASSIGNED or OUT_FOR_DELIVERY, and `ProofViewer` when `hasProof` is true; that wiring is M2-PH3-T07, after H35. A12 was already complete from PH2, and is now proven against the PH3 cases: `tests/integration/parcel-detail.test.ts` covers TC05 (registered, assigned, delivered-with-proof and anonymized parcels read by Seller, assigned Rider and Admin with an exact field allowlist; an old Rider gets the uniform 404 after a real `assign_parcel` reassignment) and TC20 (`changedBy` for the Admin only, history ordered by time and then id, anonymous 401). Seller, Rider (A17 response) and Admin all use the one `readParcelDetail` service.
+
 ## M3 PH2 Rider slice (issues #11-#14)
 
 PR #28 registers `0006_delivery_functions` and `0007_delivery_final`; its migration, integration, app and local-stack checks are green. The close-out branch mounts A16 and A17, returns M2's shared A12 detail after Start delivery, adds both endpoints to the real-session authorization matrix, replaces Rider fixture sessions with `loginAs`, and connects the Airway Rider list to the session client. The phone TC09 case starts delivery, reloads the committed state, signs in as Rider B and confirms list and direct-detail isolation.

@@ -1,6 +1,6 @@
 # M2 PH3: Complete module functionality
 
-Owner: Zikri. Phase PH3 of [phase framework](../../../shared/phase-framework.md). Status: Planned.
+Owner: Zikri. Phase PH3 of [phase framework](../../../shared/phase-framework.md). Status: In progress. M2-PH3-T03 is published: the H34 slot contract is in [src/shared/types/parcel-slots.ts](../../../../src/shared/types/parcel-slots.ts), and the completed A12 detail is proven by TC05 and TC20 in `tests/integration/parcel-detail.test.ts`; see [implementation status](../../../implementation-status.md#m2-ph3-in-progress).
 
 ## 1 Objective
 
