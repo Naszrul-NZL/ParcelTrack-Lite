@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import { z } from 'zod';
-import { principalSchema,userSummarySchema,userListSchema,userStatusSchema,registerSchema,changePasswordSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema,PARCEL_SORTS } from '../src/shared/schemas';
+import { principalSchema,userSummarySchema,userListSchema,userStatusSchema,registerSchema,changePasswordSchema,createRiderSchema,temporaryPasswordSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema,PARCEL_SORTS } from '../src/shared/schemas';
 import { STATUSES } from '../src/shared/constants';
 import { riderListSchema,riderStatusMultipartSchema } from '../src/features/delivery/rider-contract';
 import { adminParcelListSchema,assignmentSchema,dashboardSchema } from '../src/features/delivery/admin-contract';
 import { assertPlanEndpointParity, assertProductionImportBoundary, implementedEndpoints } from './contract-inventory';
-const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,UserSummary:userSummarySchema,UserList:userListSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelList:parcelListSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema,RiderList:riderListSchema,AdminParcelList:adminParcelListSchema,Dashboard:dashboardSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
+const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,UserSummary:userSummarySchema,UserList:userListSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelList:parcelListSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema,RiderList:riderListSchema,TemporaryPassword:temporaryPasswordSchema,AdminParcelList:adminParcelListSchema,Dashboard:dashboardSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
 assertPlanEndpointParity();
 assertProductionImportBoundary();
 const paths:Record<string,Record<string,unknown>>={};
@@ -82,6 +82,30 @@ for(const endpoint of implementedEndpoints()) {
       ],
       responses: {
         '200': { description: 'Page of account summaries.', content: { 'application/json': { schema: { $ref: '#/components/schemas/UserList' } } } },
+        default: { description: 'Safe error envelope. See the system contract.' },
+      },
+    };
+    continue;
+  }
+  if (endpoint.id === 'A08') {
+    paths[endpoint.path].post = {
+      operationId: endpoint.id,
+      description: 'Create a Rider account as an Admin. The role is fixed by this endpoint. The initial password must be changed at first sign-in, expires after 72 hours if unused, and is never returned.',
+      requestBody: { required: true, content: { 'application/json': { schema: z.toJSONSchema(createRiderSchema, { io: 'input' }) } } },
+      responses: {
+        '201': { description: 'The new Rider account.', content: { 'application/json': { schema: { $ref: '#/components/schemas/UserSummary' } } } },
+        default: { description: 'Safe error envelope. See the system contract.' },
+      },
+    };
+    continue;
+  }
+  if (endpoint.id === 'A21') {
+    paths[endpoint.path].post = {
+      operationId: endpoint.id,
+      description: 'Reset a Seller or Rider password as an Admin. A random one-time password is returned once and never stored in clear text or logged. The account must change it at next sign-in, it expires after 72 hours, and the account’s sessions end.',
+      parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string', pattern: '^[1-9][0-9]{0,17}$' } }],
+      responses: {
+        '200': { description: 'The one-time password, shown once.', content: { 'application/json': { schema: { $ref: '#/components/schemas/TemporaryPassword' } } } },
         default: { description: 'Safe error envelope. See the system contract.' },
       },
     };

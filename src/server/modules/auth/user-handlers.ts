@@ -1,12 +1,25 @@
 import 'server-only';
+import { randomBytes } from 'node:crypto';
 import { principalUow } from '@/server/core/authorized';
 import { AppError } from '@/server/core/errors';
 import { apiHandler } from '@/server/core/handler';
 import { readJsonBody } from '@/server/core/json-body';
-import { idSchema, userListQuerySchema, userStatusSchema } from '@/shared/schemas';
-import { listUsers, setUserActive } from './users';
+import { getSettings } from '@/server/core/settings';
+import { createRiderSchema, idSchema, temporaryPasswordSchema, userListQuerySchema, userStatusSchema } from '@/shared/schemas';
+import { PasswordService, validatePassword } from './password';
+import { createRider, listUsers, resetPassword, setUserActive } from './users';
 
-export function createUserAdminHandlers(authorize: typeof principalUow = principalUow) {
+let production: PasswordService | undefined;
+const defaultPasswords = () => (production ??= new PasswordService(getSettings().HASH_CONCURRENCY));
+
+/** 18 random bytes as 24 URL-safe characters: well inside the password policy, and never a common password. */
+function newTemporaryPassword() {
+  const value = randomBytes(18).toString('base64url');
+  validatePassword(value);
+  return value;
+}
+
+export function createUserAdminHandlers(authorize: typeof principalUow = principalUow, passwords: Pick<PasswordService, 'hash'> = { hash: value => defaultPasswords().hash(value) }) {
   return {
     list: apiHandler(async request => {
       const result = await authorize(request, { roles: ['ADMIN'] }, async client => {
@@ -26,6 +39,34 @@ export function createUserAdminHandlers(authorize: typeof principalUow = princip
         // A malformed id names no account, exactly like an unknown one.
         if (!userId.success) throw new AppError('NOT_FOUND');
         return setUserActive(client, userId.data, userStatusSchema.parse(await readJsonBody(request)), requestId);
+      });
+      return Response.json(result);
+    }),
+    // A08. The role is decided here, never by the request: the strict schema rejects a `role` field. Hashing happens
+    // after the Admin check, inside the protected transaction; an Admin action is rare enough that the held connection is
+    // acceptable, and the bounded hasher answers 503 BUSY rather than queueing.
+    createRider: apiHandler(async (request, { requestId }) => {
+      const result = await authorize(request, { roles: ['ADMIN'] }, async client => {
+        const input = createRiderSchema.parse(await readJsonBody(request));
+        try { validatePassword(input.initialPassword); }
+        catch (error) {
+          // The shared policy names its field `password`; this request calls it `initialPassword`.
+          if (error instanceof AppError && error.fieldErrors?.password) throw new AppError('VALIDATION_ERROR', { initialPassword: error.fieldErrors.password });
+          throw error;
+        }
+        return createRider(client, input, await passwords.hash(input.initialPassword), requestId);
+      });
+      return Response.json(result, { status: 201 });
+    }),
+    // A21. The generated password appears only in this response body: it is never stored, logged or audited, and the
+    // response is `no-store`. The function leaves the target must-change, expiring in 72 hours, with no live sessions.
+    resetPassword: apiHandler(async (request, { requestId }, { params }: { params: Promise<{ userId: string }> }) => {
+      const result = await authorize(request, { roles: ['ADMIN'] }, async client => {
+        const userId = idSchema.safeParse((await params).userId);
+        if (!userId.success) throw new AppError('NOT_FOUND');
+        const temporaryPassword = newTemporaryPassword();
+        await resetPassword(client, userId.data, await passwords.hash(temporaryPassword), requestId);
+        return temporaryPasswordSchema.parse({ temporaryPassword });
       });
       return Response.json(result);
     }),
