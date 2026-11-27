@@ -6,7 +6,7 @@ const everyone = (status: number, overrides: Partial<Record<Identity, number>> =
 });
 const signedIn = (overrides: Partial<Record<Identity, number>> = {}) => everyone(200, { anonymous: 401, inactive: 401, ...overrides });
 
-/** M1 rows: shared health plus A01, A02, A03, A04 and A05. */
+/** M1 rows: shared health plus A01 to A06. */
 export const authRows: MatrixRow[] = [
   { endpoint: 'HEALTH', label: 'GET /health', expected: everyone(200), call: async actor => health(actor.request('/health')) },
   { endpoint: 'A01', label: 'GET /auth/csrf', expected: everyone(200), call: (actor, handlers) => handlers.csrf(actor.request('/auth/csrf')) },
@@ -17,6 +17,15 @@ export const authRows: MatrixRow[] = [
     expected: everyone(201, { inactive: 403 }),
     call: (actor, handlers) => handlers.register(actor.request('/auth/register', {
       method: 'POST', body: JSON.stringify({ username: 'new.' + actor.identity, displayName: 'Matrix ' + actor.identity, password: 'a-sufficiently-long-secret' }),
+    })),
+  },
+  {
+    // Every signed-in identity changes its own password (a must-change account included). The anonymous session has no
+    // account and the inactive identity's session is already dead, so both are 401.
+    endpoint: 'A06', label: 'POST /auth/password for the identity\'s own account',
+    expected: everyone(204, { anonymous: 401, inactive: 401 }),
+    call: (actor, handlers) => handlers.changePassword(actor.request('/auth/password', {
+      method: 'POST', body: JSON.stringify({ currentPassword: actor.credentials.password, newPassword: 'a-different-long-secret' }),
     })),
   },
   {

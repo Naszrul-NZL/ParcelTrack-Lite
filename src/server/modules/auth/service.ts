@@ -1,7 +1,7 @@
 import 'server-only';
 import type { PoolClient } from 'pg';
 import { LIMITS } from '@/shared/constants';
-import { loginSchema, principalSchema, registerSchema, usernameSchema, type Principal } from '@/shared/schemas';
+import { changePasswordSchema, loginSchema, principalSchema, registerSchema, usernameSchema, type Principal } from '@/shared/schemas';
 import { AppError } from '@/server/core/errors';
 import { assertConnectedRole, getPool, transaction, type TransactionPool } from '@/server/core/db';
 import { getSettings, type Settings } from '@/server/core/settings';
@@ -200,6 +200,51 @@ export function createAuthService(dependencies: AuthServiceDependencies) {
     return Response.json(principalSchema.parse(row), { status: 201 });
   }
 
+  /**
+   * A06: a signed-in account changes its own password. Allowed while the account must change it. Wrong current-password
+   * attempts are limited per account. On success every session of the account, the caller's included, is deleted and
+   * nobody is signed in again: the person signs in with the new password.
+   */
+  async function changePassword(request: Request, { requestId }: Context): Promise<Response> {
+    const declared = Number(request.headers.get('content-length') ?? 0);
+    if (!Number.isFinite(declared) || declared > LIMITS.jsonBytes) throw new AppError('VALIDATION_ERROR', { body: 'The request is too large.' });
+    const { principal, csrfToken } = await work(client => readSessionContext(client, request, settings.SESSION_COOKIE_NAME));
+    verifyCsrf(request, csrfToken, settings.APP_ORIGIN);
+
+    const input = changePasswordSchema.parse(await readBoundedJson(request));
+    try { validatePassword(input.newPassword); }
+    catch (error) {
+      // The shared policy names its field `password`; this request calls it `newPassword`.
+      if (error instanceof AppError && error.fieldErrors?.password) throw new AppError('VALIDATION_ERROR', { newPassword: error.fieldErrors.password });
+      throw error;
+    }
+    if (input.newPassword === input.currentPassword) throw new AppError('VALIDATION_ERROR', { newPassword: 'Choose a password you have not used here.' });
+
+    // A blocked account is refused before any hashing, even with the right password.
+    const blocked = await work(async client => {
+      const attempts = await limiter.count(client, RATE_RULES.passwordAttempt, principal.id);
+      return attempts.count >= RATE_RULES.passwordAttempt.limit ? attempts.retryAfter : null;
+    });
+    if (blocked !== null) throw new AppError('RATE_LIMITED', undefined, blocked);
+
+    const snapshot = await work(client => readSnapshot(client, principal.username));
+    if (!snapshot || snapshot.id !== principal.id) throw new AppError('UNAUTHENTICATED');
+    if (!(await passwords.verify(snapshot.password_hash, input.currentPassword))) {
+      // Counted in its own transaction so the failure is recorded even though the request is refused.
+      await work(client => limiter.increment(client, RATE_RULES.passwordAttempt, principal.id));
+      throw new AppError('CURRENT_PASSWORD_INVALID', { currentPassword: 'That is not your current password.' });
+    }
+
+    const newHash = await passwords.hash(input.newPassword);
+    // The function compares the hash we verified with the stored one under the account lock, so a concurrent change
+    // cannot be overwritten, and it deletes every session of the account in the same transaction.
+    await transaction(pool, { actor: { userId: principal.id, sessionVersion: principal.sessionVersion }, write: true }, async client => {
+      await assertConnectedRole(client, 'app_runtime');
+      await client.query('SELECT app.change_password($1, $2, $3)', [snapshot.password_hash, newHash, requestId]);
+    });
+    return new Response(null, { status: 204, headers: { 'Set-Cookie': expiredCookie(settings) } });
+  }
+
   /** A04: allowed for every authenticated account, including one that must change its password. */
   async function logout(request: Request, { requestId }: Context): Promise<Response> {
     const token = readCookieToken(request, settings.SESSION_COOKIE_NAME);
@@ -224,7 +269,7 @@ export function createAuthService(dependencies: AuthServiceDependencies) {
     return Response.json({ id, username, displayName, role, mustChangePassword });
   }
 
-  return { csrf, login, logout, me, register };
+  return { csrf, login, logout, me, register, changePassword };
 }
 
 let production: ReturnType<typeof createAuthService> | undefined;

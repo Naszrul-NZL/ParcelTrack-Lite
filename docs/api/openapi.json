@@ -173,6 +173,45 @@
         }
       }
     },
+    "/api/v1/auth/password": {
+      "post": {
+        "operationId": "A06",
+        "description": "Change the signed-in account’s own password. Also allowed while the account must change it. Wrong current-password attempts are limited per account. On success every session of the account, including this one, is ended and nobody is signed in again.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "newPassword": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password changed and all sessions ended. The session cookie is cleared."
+          },
+          "default": {
+            "description": "Safe error envelope. See the system contract."
+          }
+        }
+      }
+    },
     "/api/v1/auth/register": {
       "post": {
         "operationId": "A02",
