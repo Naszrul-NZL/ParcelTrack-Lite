@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { createPrincipalUow } from '@/server/core/authorized';
 import { transaction } from '@/server/core/db';
@@ -12,10 +11,8 @@ const listPath = '/api/v1/rider/parcels';
 const version = 2;
 const riderA = 'rider.a';
 let harness: Awaited<ReturnType<typeof createDatabaseHarness>>;
-let draft: string;
 
 beforeAll(async () => {
-  draft = await readFile('db/drafts/0006_delivery_functions.sql', 'utf8');
   harness = await createDatabaseHarness();
 });
 afterAll(async () => { await harness?.dispose(); });
@@ -27,13 +24,6 @@ function handlers(database: IsolatedDatabase) {
   }));
 }
 
-async function installDraft(database: IsolatedDatabase) {
-  const migration = await database.migrationClient();
-  await migration.query('BEGIN');
-  await migration.query(draft);
-  await migration.query('COMMIT');
-  return migration;
-}
 
 function startRequest(parcelId: string, session?: { cookie: string; csrfToken: string }, status = 'OUT_FOR_DELIVERY',
   { csrf = true, proof = false, expectedVersion = version } = {}) {
@@ -86,7 +76,7 @@ it('TC06/TC11/TC14/TC15 scopes and paginates Rider summaries and seeds idempoten
 
 it('TC01–TC04/TC07/TC13 records exactly one committed Start delivery with safe audit and history', async () => {
   await harness.run(async database => {
-    const migration = await installDraft(database);
+    const migration = await database.migrationClient();
     const [parcel] = await seedRiderParcels(database);
     const { updateStatus } = handlers(database);
     const a = await database.session(riderA);
@@ -169,7 +159,7 @@ it('TC01–TC04/TC07/TC13 records exactly one committed Start delivery with safe
 
 it('TC14 refuses an existing Rider cookie after account disablement', async () => {
   await harness.run(async database => {
-    const migration = await installDraft(database);
+    const migration = await database.migrationClient();
     const [parcel] = await seedRiderParcels(database);
     const { list, updateStatus } = handlers(database);
     const a = await database.session(riderA);
@@ -192,7 +182,7 @@ it('TC14 refuses an existing Rider cookie after account disablement', async () =
 
 it('TC05/TC12 checks SQL transitions and rejected direct writes with the restricted runtime role', async () => {
   await harness.run(async database => {
-    const migration = await installDraft(database);
+    const migration = await database.migrationClient();
     const [parcel] = await seedRiderParcels(database);
     const pool = database.pool();
     const riderId = database.accounts[riderA];

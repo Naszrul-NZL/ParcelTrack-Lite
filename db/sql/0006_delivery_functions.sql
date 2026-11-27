@@ -1,4 +1,4 @@
--- Draft revision 0006. Apply in the migration chain only after 0005 merges.
+-- Revision 0006 (owner: Syauqi). Start-delivery branch of update_delivery_status; 0007 adds the final branch.
 GRANT EXECUTE ON FUNCTION app.context_user_id(), app.context_session_version() TO domain_writer;
 
 SET LOCAL ROLE domain_writer;
