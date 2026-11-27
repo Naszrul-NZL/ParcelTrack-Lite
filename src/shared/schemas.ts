@@ -21,6 +21,11 @@ export const weightSchema = z.string().regex(/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,3})
 export const principalSchema = z.strictObject({id: idSchema, username: usernameSchema, displayName: displayNameSchema, role: roleSchema, mustChangePassword: z.boolean()});
 export type Principal = z.infer<typeof principalSchema>;
 export const userSummarySchema = principalSchema.extend({isActive: z.boolean(), version: z.number().int().positive()});
+export const userListSchema = z.strictObject({
+  items: z.array(userSummarySchema), page: z.number().int().positive(),
+  pageSize: z.number().int().min(1).max(100), total: z.number().int().nonnegative(),
+});
+export type UserList = z.infer<typeof userListSchema>;
 export const registerSchema = z.strictObject({username: usernameSchema, displayName: displayNameSchema, password: passwordSchema});
 // Login accepts any bounded username text: a malformed name is an ordinary failed login, not a distinguishable 422.
 export const loginSchema = z.strictObject({username: z.string().min(1).max(256), password: z.string().min(1).refine(v => chars(v) <= LIMITS.passwordMax)});
