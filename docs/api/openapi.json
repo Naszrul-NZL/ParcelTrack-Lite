@@ -5,6 +5,27 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/v1/admin/dashboard": {
+      "get": {
+        "operationId": "A18",
+        "description": "Read one-snapshot parcel counts for all five statuses as an Admin.",
+        "responses": {
+          "200": {
+            "description": "Zero-filled status counts, coherent total and generation time.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dashboard"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe error envelope. See the system contract."
+          }
+        }
+      }
+    },
     "/api/v1/admin/parcels": {
       "get": {
         "operationId": "A14",
@@ -500,6 +521,45 @@
         }
       }
     },
+    "/api/v1/parcels/{parcelId}/proof": {
+      "get": {
+        "operationId": "A19",
+        "description": "Read the private sanitized proof bytes for an authorized parcel reader. No public or signed URL is returned.",
+        "parameters": [
+          {
+            "name": "parcelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,17}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Verified proof bytes.",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe error envelope. See the system contract."
+          }
+        }
+      }
+    },
     "/api/v1/rider/parcels": {
       "get": {
         "operationId": "A16",
@@ -560,7 +620,7 @@
     "/api/v1/rider/parcels/{parcelId}/status": {
       "post": {
         "operationId": "A17",
-        "description": "Start delivery for an assigned Rider parcel.",
+        "description": "Start or finalize delivery for an assigned Rider parcel. Final outcomes require one sanitized JPEG or PNG proof.",
         "parameters": [
           {
             "name": "parcelId",
@@ -594,6 +654,11 @@
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 2147483647
+                  },
+                  "proof": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Required for DELIVERED or FAILED; forbidden for OUT_FOR_DELIVERY."
                   }
                 },
                 "required": [
@@ -1416,6 +1481,66 @@
           "page",
           "pageSize",
           "total"
+        ],
+        "additionalProperties": false
+      },
+      "Dashboard": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "counts": {
+            "type": "object",
+            "properties": {
+              "REGISTERED": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "ASSIGNED": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "OUT_FOR_DELIVERY": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "DELIVERED": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "FAILED": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "REGISTERED",
+              "ASSIGNED",
+              "OUT_FOR_DELIVERY",
+              "DELIVERED",
+              "FAILED"
+            ],
+            "additionalProperties": false
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "counts",
+          "total",
+          "generatedAt"
         ],
         "additionalProperties": false
       }
