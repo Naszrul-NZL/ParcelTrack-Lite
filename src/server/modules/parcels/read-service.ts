@@ -32,7 +32,13 @@ export async function listSellerParcels(client: PoolClient, sellerId: string, pa
   });
 }
 
-export async function readParcelDetail(client: PoolClient, principal: AuthContext, parcelId: string, requestId: string) {
+export async function readParcelDetail(
+  client: PoolClient,
+  principal: AuthContext,
+  parcelId: string,
+  requestId: string,
+  { auditRead = true }: { auditRead?: boolean } = {},
+) {
   const isAdmin = principal.role === 'ADMIN';
   const { rows: [parcel] } = await client.query<DetailRow>(`
     SELECT p.id, p.tracking_number AS "trackingNumber", p.current_status AS "currentStatus",
@@ -65,7 +71,7 @@ export async function readParcelDetail(client: PoolClient, principal: AuthContex
     ...parcel, createdAt: parcel.createdAt.toISOString(), terminalAt: parcel.terminalAt?.toISOString() ?? null,
     history: parcel.history.map(event => ({ ...event, changedAt: new Date(event.changedAt).toISOString() })),
   });
-  if (isAdmin) {
+  if (isAdmin && auditRead) {
     await client.query(`
       INSERT INTO app.audit_event (actor_id, parcel_id, event_type, outcome, request_id)
       VALUES ($1, $2, 'PARCEL_VIEWED', 'SUCCESS', $3)

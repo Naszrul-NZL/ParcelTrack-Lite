@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { PoolClient } from 'pg';
 import ts from 'typescript';
 import { describe, expect, it, vi } from 'vitest';
+import { listAdminParcels } from '@/server/modules/delivery/admin-service';
 import { listRiderParcels } from '@/server/modules/delivery/rider-service';
 
 const MODULE = 'src/server/modules/delivery';
@@ -68,5 +69,18 @@ describe('M3-PH2-TC15 delivery SQL never includes request values', () => {
     expect(query).toHaveBeenCalledOnce();
     expect(query.mock.calls[0][0]).not.toContain(riderId);
     expect(query.mock.calls[0][1]).toEqual([riderId, null, 20, 0]);
+  });
+
+  it('keeps hostile Admin parcel filters in the bound parameter array', async () => {
+    const status = "ASSIGNED' OR true --";
+    const riderId = "7' OR true --";
+    const query = vi.fn().mockResolvedValue({ rows: [{ items: [], total: '0' }] });
+    await listAdminParcels({ query } as unknown as PoolClient, {
+      status: status as 'ASSIGNED', riderId, needsReassignment: true, page: 2, pageSize: 25,
+    });
+    expect(query).toHaveBeenCalledOnce();
+    expect(query.mock.calls[0][0]).not.toContain(status);
+    expect(query.mock.calls[0][0]).not.toContain(riderId);
+    expect(query.mock.calls[0][1]).toEqual([status, riderId, true, 25, 25]);
   });
 });
