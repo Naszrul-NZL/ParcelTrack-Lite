@@ -1,62 +1,61 @@
-import { randomBytes, randomUUID } from 'node:crypto';
-import { Client } from 'pg';
-import { required } from '../../scripts/env';
+import '../../scripts/env';
+import { randomUUID } from 'node:crypto';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 
 test.skip(process.env.PTL_E2E_AUTH !== '1', 'Set PTL_E2E_AUTH=1 with the migrated Rider fixture profile.');
 
-async function signIn(page: Page, username: string) {
-  await page.goto('/login?workspace=rider');
+async function signIn(page: Page, username: string, landing = '/rider/parcels') {
+  await page.goto('/login');
   await page.getByLabel('Username', { exact: true }).fill(username);
   await page.getByLabel('Password', { exact: true }).fill(process.env.FIXTURE_PASSWORD!);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page).toHaveURL(url => url.pathname === '/rider/parcels');
-  await expect(page.getByRole('list', { name: 'Assigned parcel records' })).toBeVisible();
+  await expect(page).toHaveURL(url => url.pathname === landing);
+  if (landing === '/rider/parcels') {
+    await expect(page.getByRole('list', { name: 'Assigned parcel records' })).toBeVisible();
+  }
 }
 
 async function fitsViewport(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 }
 
-async function seedBrowserRiderParcel() {
-  const databaseUrl = required('FIXTURE_DATABASE_URL');
-  const target = new URL(databaseUrl);
-  if (process.env.PTL_PROFILE !== 'test' || target.port !== '54323'
-    || target.pathname !== '/postgres' || target.username !== 'fixture_provisioner') {
-    throw new Error('The Rider browser fixture requires the isolated local test database.');
-  }
-  const trackingNumber = 'PTL-' + randomBytes(16).toString('hex').toUpperCase();
-  const database = new Client({ connectionString: databaseUrl });
-  await database.connect();
-  try {
-    await database.query('BEGIN');
-    await database.query('SET LOCAL ROLE auth_fn_owner');
-    const users = await database.query<{ id: string; username: string }>(`
-      SELECT id, username FROM app.app_user WHERE username = ANY($1)
-    `, [['seller.a', 'rider.a']]);
-    const ids = Object.fromEntries(users.rows.map(user => [user.username, user.id]));
-    if (!ids['seller.a'] || !ids['rider.a']) throw new Error('Synthetic Rider browser accounts are missing.');
-    await database.query('SET LOCAL ROLE domain_writer');
-    const parcel = await database.query<{ id: string }>(`
-      INSERT INTO app.parcel (
-        tracking_number, seller_id, assigned_rider_id, recipient_name, recipient_phone, recipient_address,
-        weight_kg, current_status, version, client_request_id, creation_fingerprint, created_at
-      ) VALUES ($1, $2, $3, 'Synthetic Recipient', '+60000000000', 'Fictional test address',
-        1.250, 'ASSIGNED', 2, $4, repeat('a', 64), clock_timestamp()) RETURNING id
-    `, [trackingNumber, ids['seller.a'], ids['rider.a'], randomUUID()]);
-    await database.query(`
-      INSERT INTO app.parcel_status_history (parcel_id, changed_by_id, status, changed_at)
-      VALUES ($1, $2, 'REGISTERED', clock_timestamp() - interval '1 second'),
-             ($1, $3, 'ASSIGNED', clock_timestamp())
-    `, [parcel.rows[0].id, ids['seller.a'], ids['rider.a']]);
-    await database.query('COMMIT');
-    return trackingNumber;
-  } catch (error) {
-    await database.query('ROLLBACK');
-    throw error;
-  } finally {
-    await database.end();
-  }
+async function csrfToken(page: Page) {
+  const response = await page.request.get('/api/v1/auth/csrf');
+  expect(response.status()).toBe(200);
+  return (await response.json() as { csrfToken: string }).csrfToken;
+}
+
+async function registerAndAssignBrowserParcel(page: Page) {
+  await signIn(page, 'seller.a', '/seller/parcels');
+  const sellerCsrf = await csrfToken(page);
+  const registered = await page.request.post('/api/v1/parcels', {
+    headers: { origin: new URL(page.url()).origin, 'x-csrf-token': sellerCsrf },
+    data: {
+      recipientName: 'Synthetic Recipient', recipientPhone: '+60000000000',
+      recipientAddress: 'Fictional test address', weightKg: '1.250', clientRequestId: randomUUID(),
+    },
+  });
+  expect(registered.status()).toBe(201);
+  const parcel = await registered.json() as { id: string; trackingNumber: string; version: number };
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(page).toHaveURL(/\/login$/);
+
+  await signIn(page, 'admin', '/admin/dashboard');
+  const adminCsrf = await csrfToken(page);
+  const riders = await page.request.get('/api/v1/admin/users?role=RIDER&isActive=true&pageSize=100');
+  expect(riders.status()).toBe(200);
+  const directory = await riders.json() as { items: Array<{ id: string; username: string }> };
+  const rider = directory.items.find(item => item.username === 'rider.a');
+  expect(rider).toBeDefined();
+  const assigned = await page.request.patch(`/api/v1/admin/parcels/${parcel.id}/assignment`, {
+    headers: { origin: new URL(page.url()).origin, 'x-csrf-token': adminCsrf },
+    data: { riderId: rider!.id, expectedVersion: parcel.version },
+  });
+  expect(assigned.status()).toBe(200);
+  expect(await assigned.json()).toMatchObject({ id: parcel.id, currentStatus: 'ASSIGNED', version: parcel.version + 1 });
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  return parcel.trackingNumber;
 }
 
 async function verifyThemes(page: Page, testInfo: TestInfo) {
@@ -87,12 +86,12 @@ test('TC08 Rider list preserves focus, both themes and phone reflow', async ({ p
   }
 });
 
-test('M3-PH2-TC09 starts delivery with a real Rider login and isolates Rider B', async ({ page }, testInfo) => {
+test('M3-PH3-TC17 assigns through A15, starts delivery with a real Rider login and isolates Rider B', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'phone', 'TC09 is the required phone journey.');
   await page.setViewportSize({ width: 375, height: 812 });
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
-  const trackingNumber = await seedBrowserRiderParcel();
+  const trackingNumber = await registerAndAssignBrowserParcel(page);
   await signIn(page, 'rider.a');
 
   const row = page.getByRole('listitem').filter({ has: page.getByRole('link', { name: trackingNumber }) });

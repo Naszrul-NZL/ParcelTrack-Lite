@@ -47,13 +47,19 @@ Known limits. The account row is not locked `FOR UPDATE` at login: `app_runtime`
 
 Migration `0005_create_parcel` and A10 register a parcel under a real Seller session. A11 lists the current Seller's parcels. A12 serves private detail to the owner, assigned Rider, and Admin, with an audit record for Admin reads. The Seller screens use those routes and the shared Airway docket.
 
-The [Seller slice evidence](evidence/m2-ph2-seller-slice.md) records the browser walkthrough, the M2 consumer runs for H10/H20/H24, and H25's idempotent Rider fixture rerun. PRs #22 to #25 and the Rider migration PR #28 are merged. PR #29 mounts the Rider routes and real-login journey. Its corrective implementation head passed both full-stack CI triggers; teammate review and group gates remain pending.
+The [Seller slice evidence](evidence/m2-ph2-seller-slice.md) records the browser walkthrough, the M2 consumer runs for H10/H20/H24, and H25's idempotent Rider fixture rerun. PRs #22 to #25 and the Rider PRs #28 and #29 are merged. Group gates remain pending.
 
 ## M3 PH2 Rider slice (issues #11-#14)
 
 PR #28 registers `0006_delivery_functions` and `0007_delivery_final`; its migration, integration, app and local-stack checks are green. The close-out branch mounts A16 and A17, returns M2's shared A12 detail after Start delivery, adds both endpoints to the real-session authorization matrix, replaces Rider fixture sessions with `loginAs`, and connects the Airway Rider list to the session client. The phone TC09 case starts delivery, reloads the committed state, signs in as Rider B and confirms list and direct-detail isolation.
 
 Local checks on 27 November passed TypeScript, ESLint, six TC08 component cases, the new TC15 delivery SQL scanner, SQL hardening, OpenAPI generation/parity, 32 Airway contrast pairs, the documentation validator and the production build. The 400-case unit/component run had the existing five-second import-graph timeout while 399 cases passed; its isolated one-worker rerun passed all eight cases. The retained test stack then passed bootstrap, two migration runs, catalog verification, Storage initialization, two H25 profile loads, all 97 integration cases and 27 authenticated browser cases with one intentional desktop skip for phone-only TC09. The repeatable Rider browser file also passed twice consecutively on the retained stack. See [M3 close-out evidence](evidence/m3-issues-11-14.md).
+
+## M3 PH3 assignment slice (issue #42)
+
+A14 now lists Admin-visible parcel summaries with strict status, Rider and reassignment filters, fixed newest-first ordering, bounded pagination and an allowlisted `assignedRider` object. A15 assigns or reassigns through the registered `assign_parcel` function and returns the committed private detail without adding a synthetic `PARCEL_VIEWED` audit event. Both routes use the shared protected transaction, real Admin session, CSRF/origin checks and strict input schemas. Their OpenAPI operations and authorization-matrix rows are registered.
+
+The Rider phone journey no longer inserts an Assigned parcel or calls the TMP-02 profile. It registers through A10, discovers an active Rider through A07, assigns through A15, and then starts delivery through A17. A unit policy check rejects direct parcel writes, `domain_writer` switching or TMP-02 helper calls in browser specs. TMP-02 remains labeled only for isolated unit/integration cases. See [M3 PH3 assignment evidence](evidence/m3-ph3-assignment.md). Proof processing, final outcomes, proof access, dashboard, Admin UI and H34 slot components remain open in T05 to T14.
 
 ## Latest local verification
 
