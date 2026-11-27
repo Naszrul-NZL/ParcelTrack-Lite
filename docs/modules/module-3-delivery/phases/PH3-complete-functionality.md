@@ -1,6 +1,6 @@
 # M3 PH3: Complete module functionality
 
-Owner: Syauqi. Phase PH3 of [phase framework](../../../shared/phase-framework.md). Status: In progress. T01 is registered and tested; T02 to T04 implement A14, A15 and the real-assignment browser path; T05 to T08 implement bounded proof handling, finalization, private proof reads and dashboard aggregation. T09 to T14 remain open.
+Owner: Syauqi. Phase PH3 of [phase framework](../../../shared/phase-framework.md). Status: In progress. T01 is registered and tested; T02 to T04 implement A14, A15 and the real-assignment browser path; T05 to T08 implement bounded proof handling, finalization, private proof reads and dashboard aggregation; T09 connects the Admin assignment and dashboard screens. T10 to T14 remain open.
 
 ## 1 Objective
 
