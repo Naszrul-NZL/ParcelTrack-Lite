@@ -1,6 +1,6 @@
 # M3 PH1: Foundation and shared contracts
 
-Owner: Syauqi (Qee110). Phase PH1 of [phase framework](../../../shared/phase-framework.md). Status: In progress locally, 13 November 2026; foundation code/tests exist, remaining cases and review/CI pending. See [actual evidence](../../../implementation-status.md).
+Owner: Syauqi (Qee110). Phase PH1 of [phase framework](../../../shared/phase-framework.md). Status: Foundation implementation and the full-stack image measurement are complete; consumer evidence is recorded, with owner contract sign-off still pending on 27 November 2026. See [actual evidence](../../../implementation-status.md).
 
 The shared follow-up supplies the [isolated backend/test harness](../../../shared/backend-foundation.md): per-case database clones, role assertions and failure cleanup are proved locally. Complete the remaining real HTTP/failpoint, resource and owner-review evidence before marking this phase complete.
 

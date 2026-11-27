@@ -56,3 +56,31 @@ it('TC08 reports a failed list request and retries the read', async () => {
   await user.click(screen.getByRole('button', { name: 'Retry loading' }));
   expect(await screen.findByText('You have no assigned parcels.')).toBeInTheDocument();
 });
+
+it('TC08 distinguishes an empty status filter from an empty assignment list', async () => {
+  const user = userEvent.setup();
+  const load = vi.fn()
+    .mockResolvedValueOnce(assigned)
+    .mockResolvedValueOnce({ ...assigned, items: [], total: 0 });
+  render(<RiderParcelListPage loadParcels={load} startDelivery={vi.fn()} />);
+  await screen.findByRole('link', { name: parcel.trackingNumber });
+  await user.selectOptions(screen.getByLabelText('Status'), 'OUT_FOR_DELIVERY');
+  expect(await screen.findByText('No parcels match this status.')).toBeInTheDocument();
+  expect(load).toHaveBeenLastCalledWith({ status: 'OUT_FOR_DELIVERY', page: 1 }, expect.any(AbortSignal));
+});
+
+it('TC08 exposes bounded pagination and explains a page with no rows', async () => {
+  const user = userEvent.setup();
+  const firstPage = { ...assigned, total: 21 };
+  const secondPage = { ...assigned, items: [], page: 2, total: 21 };
+  const load = vi.fn().mockResolvedValueOnce(firstPage).mockResolvedValueOnce(secondPage);
+  render(<RiderParcelListPage loadParcels={load} startDelivery={vi.fn()} />);
+  await screen.findByRole('link', { name: parcel.trackingNumber });
+  expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Next' }));
+  expect(await screen.findByText('There are no parcels on this page.')).toBeInTheDocument();
+  expect(screen.getByText('Page 2')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Previous' })).toBeEnabled();
+  expect(load).toHaveBeenLastCalledWith({ page: 2 }, expect.any(AbortSignal));
+});

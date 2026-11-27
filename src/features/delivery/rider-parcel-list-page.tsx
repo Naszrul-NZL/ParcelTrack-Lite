@@ -1,14 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ParcelStatusBadge } from '@/components/parcel-status';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { RouteGuard } from '@/features/auth/route-guard';
+import { useSession } from '@/features/auth/session-provider';
 import { ApiFailure } from '@/shared/api-client';
 import { STATUSES, type ParcelStatus } from '@/shared/constants';
 import { PARCEL_PRESENTATION } from '@/shared/parcel-presentation';
-import type { RiderList } from './rider-contract';
+import { riderListSchema, type RiderList } from './rider-contract';
 
 type Filters = { status?: ParcelStatus; page: number };
 type Listing = { filters: Filters; data: RiderList | null };
@@ -16,9 +18,10 @@ type Notice = { text: string; error?: boolean };
 type Props = {
   loadParcels: (filters: Filters, signal: AbortSignal) => Promise<RiderList>;
   startDelivery: (parcelId: string, expectedVersion: number) => Promise<void>;
+  riderName?: string;
 };
 
-export function RiderParcelListPage({ loadParcels, startDelivery }: Props) {
+export function RiderParcelListPage({ loadParcels, startDelivery, riderName }: Props) {
   const [filters, setFilters] = useState<Filters>({ page: 1 });
   const [listing, setListing] = useState<Listing>();
   const [notice, setNotice] = useState<Notice>();
@@ -68,8 +71,13 @@ export function RiderParcelListPage({ loadParcels, startDelivery }: Props) {
   }
 
   return (
-    <section className="page-width grid gap-6 py-8 sm:py-12" aria-labelledby="rider-parcels-heading">
-      <h1 id="rider-parcels-heading" className="text-[clamp(2.5rem,6vw,4rem)]">Assigned parcels</h1>
+    <section className="grid gap-6" aria-labelledby="rider-parcels-heading">
+      <div className="parcel-workspace-header mb-0!">
+        <div>
+          <h1 id="rider-parcels-heading">Assigned parcels</h1>
+          {riderName && <p className="section-label">Signed in as {riderName}.</p>}
+        </div>
+      </div>
       <div className="grid max-w-60 gap-2">
         <Label htmlFor="rider-status">Status</Label>
         <select
@@ -103,7 +111,7 @@ export function RiderParcelListPage({ loadParcels, startDelivery }: Props) {
         {data?.total === 0 && <p className="text-muted-foreground">{filters.status ? 'No parcels match this status.' : 'You have no assigned parcels.'}</p>}
         {data && data.total > 0 && data.items.length === 0 && <p className="text-muted-foreground">There are no parcels on this page.</p>}
         {!!data?.items.length && (
-          <ul className="divide-y divide-border rounded-lg border border-border bg-card px-4 text-card-foreground">
+          <ul aria-label="Assigned parcel records" className="divide-y divide-border rounded-lg border border-border bg-card px-4 text-card-foreground">
             {data.items.map(parcel => (
               <li key={parcel.id} className="grid min-w-0 gap-3 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                 <div className="grid min-w-0 justify-items-start">
@@ -139,4 +147,31 @@ export function RiderParcelListPage({ loadParcels, startDelivery }: Props) {
       </div>
     </section>
   );
+}
+
+function RiderParcelWorkspaceContent() {
+  const { principal, request } = useSession();
+  const loadParcels = useCallback(async (filters: Filters, signal: AbortSignal) => {
+    const query = new URLSearchParams({ page: String(filters.page) });
+    if (filters.status) query.set('status', filters.status);
+    return riderListSchema.parse(await request('/rider/parcels?' + query, { signal }));
+  }, [request]);
+  const startDelivery = useCallback(async (parcelId: string, expectedVersion: number) => {
+    const body = new FormData();
+    body.set('status', 'OUT_FOR_DELIVERY');
+    body.set('expectedVersion', String(expectedVersion));
+    await request('/rider/parcels/' + encodeURIComponent(parcelId) + '/status', { method: 'POST', body });
+  }, [request]);
+
+  return <RiderParcelListPage
+    loadParcels={loadParcels}
+    startDelivery={startDelivery}
+    riderName={principal?.displayName}
+  />;
+}
+
+export function RiderParcelWorkspace() {
+  return <div className="page-width parcel-workspace">
+    <RouteGuard role="RIDER"><RiderParcelWorkspaceContent /></RouteGuard>
+  </div>;
 }

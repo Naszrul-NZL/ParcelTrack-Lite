@@ -1,10 +1,11 @@
-import { afterAll, beforeAll, expect, it } from 'vitest';
+import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 import { createPrincipalUow } from '@/server/core/authorized';
 import { transaction } from '@/server/core/db';
 import { createRiderHandlers } from '@/server/modules/delivery/rider-handlers';
 import { canTransition } from '@/server/modules/delivery/rules';
 import { LIMITS, STATUSES } from '@/shared/constants';
-import { createDatabaseHarness, type IsolatedDatabase } from '../harness/isolated-database';
+import { createDatabaseHarness, type AccountName, type IsolatedDatabase } from '../harness/isolated-database';
+import { loginAs } from '../harness/login-as';
 import { seedRiderParcels } from '../fixtures/delivery/rider-parcels';
 
 const listPath = '/api/v1/rider/parcels';
@@ -46,8 +47,10 @@ it('TC06/TC11/TC14/TC15 scopes and paginates Rider summaries and seeds idempoten
     expect(await seedRiderParcels(database)).toEqual(first);
     expect(first.every(item => item.source === 'seeded')).toBe(true);
     const { list } = handlers(database);
-    const get = async (name: Parameters<typeof database.session>[0], query = '') => {
-      const session = await database.session(name);
+    const get = async (name: AccountName, query = '') => {
+      // An account that starts inactive cannot log in; this is the shared matrix's documented
+      // pre-disable session control. TC14 below uses a real login and disables it afterward.
+      const session = name === 'inactive' ? await database.session(name) : await loginAs(database, name);
       return list(new Request(process.env.APP_ORIGIN! + listPath + query, { headers: { cookie: session.cookie } }));
     };
 
@@ -79,10 +82,10 @@ it('TC01–TC04/TC07/TC13 records exactly one committed Start delivery with safe
     const migration = await database.migrationClient();
     const [parcel] = await seedRiderParcels(database);
     const { updateStatus } = handlers(database);
-    const a = await database.session(riderA);
-    const b = await database.session('rider.b');
-    const admin = await database.session('admin');
-    const seller = await database.session('seller.a');
+    const a = await loginAs(database, riderA);
+    const b = await loginAs(database, 'rider.b');
+    const admin = await loginAs(database, 'admin');
+    const seller = await loginAs(database, 'seller.a');
     const path = { params: Promise.resolve({ parcelId: parcel.parcelId }) };
     const oversized = startRequest(parcel.parcelId, a);
     oversized.headers.set('content-length', String(LIMITS.multipartBytes + 1));
@@ -117,15 +120,31 @@ it('TC01–TC04/TC07/TC13 records exactly one committed Start delivery with safe
       expect(denied.status).toBe(status);
       expect(await denied.json()).toMatchObject({ error: { code } });
     }
+    for (const parcelId of [
+      `${parcel.parcelId} OR 1=1`, `${parcel.parcelId}'; DROP TABLE app.parcel; --`, `' OR ''='`,
+    ]) {
+      const denied = await updateStatus(startRequest(parcel.parcelId, a), {
+        params: Promise.resolve({ parcelId }),
+      });
+      expect(denied.status).toBe(404);
+      expect(await denied.json()).toMatchObject({ error: { code: 'NOT_FOUND' } });
+    }
 
     expect(noCsrf.bodyUsed).toBe(false);
     expect(wrongCsrf.bodyUsed).toBe(false);
     expect(foreignOrigin.bodyUsed).toBe(false);
 
-    const competing = await Promise.all([
-      updateStatus(startRequest(parcel.parcelId, a), path),
-      updateStatus(startRequest(parcel.parcelId, a), path),
-    ]);
+    const messages: string[] = [];
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(message => { messages.push(String(message)); });
+    let competing: Response[];
+    try {
+      competing = await Promise.all([
+        updateStatus(startRequest(parcel.parcelId, a), path),
+        updateStatus(startRequest(parcel.parcelId, a), path),
+      ]);
+    } finally {
+      consoleLog.mockRestore();
+    }
     const [response, replay] = competing.sort((left, right) => left.status - right.status);
     expect(competing.map(item => item.status)).toEqual([200, 409]);
     const result = await response.json();
@@ -143,17 +162,25 @@ it('TC01–TC04/TC07/TC13 records exactly one committed Start delivery with safe
     `, [parcel.parcelId]);
     await migration.query('RESET ROLE');
     expect(history.rows).toHaveLength(3);
-    expect(history.rows[2]).toMatchObject({ status: 'OUT_FOR_DELIVERY', changed_by_id: a.userId });
+    expect(history.rows[2]).toMatchObject({ status: 'OUT_FOR_DELIVERY', changed_by_id: a.principal.id });
     expect(history.rows[2].changed_at.toISOString()).toBe(result.history[2].changedAt);
     expect(history.rows[2].changed_at.getTime()).toBeGreaterThanOrEqual(history.rows[1].changed_at.getTime());
     const audit = await migration.query(`
       SELECT actor_id, event_type, outcome, request_id, details, occurred_at FROM app.audit_event WHERE parcel_id = $1
     `, [parcel.parcelId]);
     expect(audit.rows).toEqual([{
-      actor_id: a.userId, event_type: 'STATUS_CHANGED', outcome: 'SUCCESS',
+      actor_id: a.principal.id, event_type: 'STATUS_CHANGED', outcome: 'SUCCESS',
       request_id: response.headers.get('X-Request-Id'), occurred_at: history.rows[2].changed_at,
       details: { oldStatus: 'ASSIGNED', newStatus: 'OUT_FOR_DELIVERY' },
     }]);
+    const statusLogs = messages.map(message => JSON.parse(message) as Record<string, unknown>)
+      .filter(message => message.event === 'status_changed');
+    expect(statusLogs).toEqual([{
+      event: 'status_changed', actorId: a.principal.id, parcelId: parcel.parcelId,
+      oldStatus: 'ASSIGNED', newStatus: 'OUT_FOR_DELIVERY', occurredAt: result.history[2].changedAt,
+      requestId: response.headers.get('X-Request-Id'),
+    }]);
+    expect(JSON.stringify(statusLogs)).not.toMatch(/recipient|phone|address/i);
   });
 });
 
@@ -162,11 +189,11 @@ it('TC14 refuses an existing Rider cookie after account disablement', async () =
     const migration = await database.migrationClient();
     const [parcel] = await seedRiderParcels(database);
     const { list, updateStatus } = handlers(database);
-    const a = await database.session(riderA);
+    const a = await loginAs(database, riderA);
     const listRequest = () => new Request(process.env.APP_ORIGIN! + listPath, { headers: { cookie: a.cookie } });
     expect((await list(listRequest())).status).toBe(200);
     await migration.query('SET ROLE auth_fn_owner');
-    await migration.query('UPDATE app.app_user SET is_active = false WHERE id = $1', [a.userId]);
+    await migration.query('UPDATE app.app_user SET is_active = false WHERE id = $1', [a.principal.id]);
     await migration.query('RESET ROLE');
 
     expect((await list(listRequest())).status).toBe(401);
