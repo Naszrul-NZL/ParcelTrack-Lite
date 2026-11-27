@@ -1,6 +1,22 @@
 import 'server-only';
 import type { PoolClient } from 'pg';
-import { userListSchema, type UserList } from '@/shared/schemas';
+import { userListSchema, userSummarySchema, type UserList } from '@/shared/schemas';
+
+export type UserStatusInput = { isActive: boolean; expectedVersion: number };
+
+/**
+ * Disables or reactivates a Seller or Rider (A09) through `app.set_user_active`, which checks the acting Admin, rejects
+ * Admin and self targets, compares the version, bumps both versions, deletes the target's sessions and audits the change
+ * in one statement. The strict response schema is the allowlist for what reaches the client.
+ */
+export async function setUserActive(client: PoolClient, userId: string, { isActive, expectedVersion }: UserStatusInput, requestId: string) {
+  const { rows: [row] } = await client.query(`
+    SELECT id::text AS id, username, display_name AS "displayName", role,
+      must_change_password AS "mustChangePassword", is_active AS "isActive", version
+    FROM app.set_user_active($1, $2, $3, $4)
+  `, [userId, isActive, expectedVersion, requestId]);
+  return userSummarySchema.parse(row);
+}
 
 export type UserListFilters = { role?: 'SELLER' | 'RIDER' | 'ADMIN'; isActive?: boolean; page: number; pageSize: number };
 
