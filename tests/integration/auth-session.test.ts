@@ -218,6 +218,24 @@ describe('M1-PH2 login, session and CSRF services', () => {
     });
   });
 
+  it('M1-PH3 refuses an expired initial credential exactly like a wrong password, and accepts it again before expiry', async () => {
+    await harness.run(async database => {
+      const handlers = authHandlers(database);
+      const signIn = async () => { const response = await attempt(handlers, database.loginInput('must.change')); return { status: response.status, body: await response.json() }; };
+      await owner(database, "UPDATE app.app_user SET credential_expires_at = now() + interval '1 hour' WHERE username = 'must.change'");
+      const valid = await signIn();
+      expect(valid.status).toBe(200);
+      expect(valid.body).toMatchObject({ username: 'must.change', mustChangePassword: true });
+      await owner(database, "UPDATE app.app_user SET credential_expires_at = now() - interval '1 second' WHERE username = 'must.change'");
+      const expired = await signIn();
+      const wrongPassword = await attempt(handlers, { username: 'must.change', password: database.loginInput('must.change').password + '-wrong' });
+      expect(expired.status).toBe(401);
+      expect({ status: expired.status, error: expired.body.error }).toEqual({ status: wrongPassword.status, error: (await wrongPassword.json()).error });
+      const reasons = (await sql(database, "SELECT details->>'reason' AS reason FROM app.audit_event WHERE event_type = 'LOGIN_FAILED' ORDER BY id")).rows.map(row => row.reason);
+      expect(reasons).toEqual(['credential_expired', 'bad_password']);
+    });
+  });
+
   it('TC11 applies idle, absolute and anonymous expiry boundaries and never recreates a row', async () => {
     await harness.run(async database => {
       const handlers = authHandlers(database);

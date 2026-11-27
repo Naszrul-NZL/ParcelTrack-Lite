@@ -35,7 +35,8 @@ export const loginResponseSchema = principalSchema.extend({csrfToken: z.string()
 // mustChangePassword; the account role is decided by the endpoint, never by the request.
 export const createRiderSchema = z.strictObject({username: usernameSchema, displayName: displayNameSchema, initialPassword: passwordSchema});
 export const changePasswordSchema = z.strictObject({currentPassword: z.string().min(1).refine(v => chars(v) <= LIMITS.passwordMax), newPassword: passwordSchema});
-export const userStatusSchema = z.strictObject({isActive: z.boolean(), expectedVersion: z.number().int().positive()});
+// expectedVersion is compared with a PostgreSQL integer, so a larger number is invalid input rather than a database error.
+export const userStatusSchema = z.strictObject({isActive: z.boolean(), expectedVersion: z.number().int().positive().max(2_147_483_647)});
 const pageSchema = z.coerce.number().int().min(1).max(100_000).default(1);
 // A list never errors on an oversized page: it is served at the cap.
 const pageSizeSchema = z.coerce.number().int().min(1).transform(v => Math.min(v, 100)).default(20);

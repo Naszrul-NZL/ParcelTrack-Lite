@@ -76,6 +76,7 @@ Status of every row is as of this document. Local implementation is recorded in 
 | D-37 | Proposed | Admin sees who changed each status (`changedBy`) in private detail; other roles and the public never do | SRC-08 needs a demonstrable read path | Proposed |
 | D-38 | Proposed | Restore exercises use synthetic data, or a protected same-account environment limited to named operators and destroyed afterwards; audit events are kept 24 months and application and database logs 90 days; interpretation recorded in the final document | P3/P4 | Proposed |
 | D-39 | Proposed | TypeScript ESLint/Semgrep, npm audit, gitleaks, Trivy/hadolint for pinned infrastructure; ZAP and sqlmap against local Next.js plus real Supabase; authorized TLS checks on later cloud URL | Retain module-specific attack evidence and triage; no Python security toolchain. Do not scan shared hosting infrastructure outside the permitted app target | SRC-17; action versions pinned by commit SHA |
+| D-40 | Confirmed | `lock_assignee` (revision 0007) is accepted as implemented. A Rider whose password has not been changed yet stays assignable (the contract's "active Rider"), and an expired initial or reset credential is handled by Admin reassignment like a disabled Rider | M1 owner review of 27 November 2026 in [the evidence note](../evidence/m1-lock-assignee-review.md); the assign-versus-disable race tests ship with revision 0008 | Confirmed |
 
 ## External dependencies
 
