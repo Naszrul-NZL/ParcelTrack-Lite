@@ -64,8 +64,8 @@ describe('M1-PH3-TC12 list queries', () => {
   });
 });
 
-describe('account_functions draft hardening', () => {
+describe('0008_account_functions hardening', () => {
   it('passes the privileged SQL lint rules', () => {
-    expect(lintSql(fs.readFileSync('db/drafts/account_functions.sql', 'utf8'))).toEqual([]);
+    expect(lintSql(fs.readFileSync('db/sql/0008_account_functions.sql', 'utf8'))).toEqual([]);
   });
 });

@@ -1,7 +1,6 @@
--- M1 PH3 revision `account_functions` (owner: Naszrul). Follows 0007 in the registered migration order, so this file
--- stays a draft until 0005 to 0007 have merged; then it moves to db/sql and gains a db/migrations wrapper with the
--- next number. Until then it is applied by tests/integration/account-functions.test.ts on a migrated clone.
--- Fix-forward only: no applied revision is edited.
+-- Revision 0008 `account_functions` (owner: Naszrul, M1). Account creation, password change, disablement and
+-- Admin password reset, plus the credential-expiry column and the indexes behind the Admin user and audit lists.
+-- Follows 0007 in the registered order. Fix-forward only: no applied revision is edited.
 
 -- Initial and reset passwords expire (72 hours). NULL means the credential does not expire.
 ALTER TABLE app.app_user ADD COLUMN credential_expires_at timestamptz;

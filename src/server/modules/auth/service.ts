@@ -27,7 +27,7 @@ export type AuthServiceDependencies = {
   clock?: Clock;
 };
 
-type Snapshot = { id: string; password_hash: string; session_version: number; is_active: boolean; must_change_password: boolean };
+type Snapshot = { id: string; password_hash: string; session_version: number; is_active: boolean; must_change_password: boolean; credential_expired: boolean };
 type Attempt = { username: string; usernameDigest: string; length: number; source: string; requestId: string };
 type Issued = { principal: Principal; token: string; csrfToken: string; maxAgeSeconds: number };
 
@@ -63,7 +63,7 @@ export function createAuthService(dependencies: AuthServiceDependencies) {
   });
 
   async function readSnapshot(client: PoolClient, username: string): Promise<Snapshot | null> {
-    const result = await client.query<Snapshot>('SELECT id,password_hash,session_version,is_active,must_change_password FROM app.get_login_snapshot($1)', [username]);
+    const result = await client.query<Snapshot>('SELECT id,password_hash,session_version,is_active,must_change_password,credential_expired FROM app.get_login_snapshot($1)', [username]);
     return result.rows[0] ?? null;
   }
 
@@ -140,15 +140,16 @@ export function createAuthService(dependencies: AuthServiceDependencies) {
     // Short read, then hash outside any transaction so slow Argon2 work never holds a database connection.
     const snapshot = username ? await work(client => readSnapshot(client, username)) : null;
     const matched = await passwords.verify(snapshot?.password_hash ?? null, input.password);
-    if (!snapshot || !matched || !snapshot.is_active) {
-      return recordFailure(attempt, !snapshot ? 'unknown_user' : !snapshot.is_active ? 'inactive' : 'bad_password', snapshot?.id ?? null);
+    // An expired initial or reset password fails exactly like a wrong one: same response, no extra signal.
+    if (!snapshot || !matched || !snapshot.is_active || snapshot.credential_expired) {
+      return recordFailure(attempt, !snapshot ? 'unknown_user' : !snapshot.is_active ? 'inactive' : matched && snapshot.credential_expired ? 'credential_expired' : 'bad_password', snapshot?.id ?? null);
     }
 
     const issued = await work(async (client): Promise<Issued | null> => {
       // Re-read inside the issuing transaction: the account must be unchanged since the password was verified.
       const current = await readSnapshot(client, username!);
       if (!current || current.id !== snapshot.id || current.password_hash !== snapshot.password_hash
-        || current.session_version !== snapshot.session_version || !current.is_active) return null;
+        || current.session_version !== snapshot.session_version || !current.is_active || current.credential_expired) return null;
       const profile = (await client.query<{ id: string; username: string; display_name: string; role: Principal['role']; must_change_password: boolean }>(
         'SELECT id,username,display_name,role,must_change_password FROM app.app_user WHERE id=$1', [current.id])).rows[0];
       if (presentedDigest) await revokeSession(client, presentedDigest);
