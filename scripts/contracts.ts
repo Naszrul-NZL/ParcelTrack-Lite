@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { z } from 'zod';
-import { principalSchema,userSummarySchema,userListSchema,userStatusSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema } from '../src/shared/schemas';
+import { principalSchema,userSummarySchema,userListSchema,userStatusSchema,registerSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema } from '../src/shared/schemas';
 import { riderListSchema,riderStatusMultipartSchema } from '../src/features/delivery/rider-contract';
 import { assertPlanEndpointParity, assertProductionImportBoundary, implementedEndpoints } from './contract-inventory';
 const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,UserSummary:userSummarySchema,UserList:userListSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelList:parcelListSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema,RiderList:riderListSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
@@ -35,6 +35,18 @@ for(const endpoint of implementedEndpoints()) {
           description: list ? 'Page of Seller parcels.' : 'Private parcel detail.',
           content: { 'application/json': { schema: { $ref: '#/components/schemas/' + (list ? 'ParcelList' : 'ParcelDetail') } } },
         },
+        default: { description: 'Safe error envelope. See the system contract.' },
+      },
+    };
+    continue;
+  }
+  if (endpoint.id === 'A02') {
+    paths[endpoint.path].post = {
+      operationId: endpoint.id,
+      description: 'Register a Seller account. The role is always Seller; the request cannot choose it. The new account is not signed in. Requires the CSRF token from A01 and is limited per source address.',
+      requestBody: { required: true, content: { 'application/json': { schema: z.toJSONSchema(registerSchema, { io: 'input' }) } } },
+      responses: {
+        '201': { description: 'The new Seller account.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Principal' } } } },
         default: { description: 'Safe error envelope. See the system contract.' },
       },
     };

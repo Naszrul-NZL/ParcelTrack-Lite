@@ -1,12 +1,12 @@
 import 'server-only';
 import type { PoolClient } from 'pg';
 import { LIMITS } from '@/shared/constants';
-import { loginSchema, usernameSchema, type Principal } from '@/shared/schemas';
+import { loginSchema, principalSchema, registerSchema, usernameSchema, type Principal } from '@/shared/schemas';
 import { AppError } from '@/server/core/errors';
 import { assertConnectedRole, getPool, transaction, type TransactionPool } from '@/server/core/db';
 import { getSettings, type Settings } from '@/server/core/settings';
 import { sourceAddress } from '@/server/core/request';
-import { PasswordService } from './password';
+import { PasswordService, validatePassword } from './password';
 import { recordAudit } from './audit';
 import { verifyCsrf } from './csrf';
 import { RATE_RULES, RateLimiter, normalizeSource, type Clock } from './rate-limit';
@@ -21,7 +21,9 @@ export type AuthServiceSettings = Pick<Settings, 'APP_ENV' | 'APP_ORIGIN' | 'SES
 export type AuthServiceDependencies = {
   pool: TransactionPool;
   settings: AuthServiceSettings;
-  passwords: Pick<PasswordService, 'verify'>;
+  passwords: Pick<PasswordService, 'verify' | 'hash'>;
+  /** Registrations accepted per source per hour; the contract default is 30. */
+  registrationLimit?: number;
   /** Trusted client address; defaults to the adapter-supplied socket address. */
   source?: (request: Request) => string;
   clock?: Clock;
@@ -58,6 +60,12 @@ export function createAuthService(dependencies: AuthServiceDependencies) {
   const sourceOf = (request: Request) => normalizeSource((dependencies.source ?? sourceAddress)(request));
   // Session, CSRF and limiter housekeeping never take the backup lock, so these transactions are not write transactions.
   const work = <T>(task: (client: PoolClient) => Promise<T>) => transaction(pool, {}, async client => {
+    await assertConnectedRole(client, 'app_runtime');
+    return task(client);
+  });
+
+  // Registration is a business write: it takes the maintenance gate and the shared backup lock like other writes.
+  const workWrite = <T>(task: (client: PoolClient) => Promise<T>) => transaction(pool, { write: true }, async client => {
     await assertConnectedRole(client, 'app_runtime');
     return task(client);
   });
@@ -166,6 +174,32 @@ export function createAuthService(dependencies: AuthServiceDependencies) {
     return Response.json({ ...issued.principal, csrfToken: issued.csrfToken }, { headers: { 'Set-Cookie': sessionCookie(settings, issued.token, issued.maxAgeSeconds) } });
   }
 
+  /**
+   * A02: public Seller registration. The role is forced to SELLER inside `app.register_account`; nothing in the request
+   * can choose it. It never signs the new account in. Order: cheap size check, CSRF, strict validation and password
+   * policy, per-source limit, hash, then one write transaction.
+   */
+  async function register(request: Request, { requestId }: Context): Promise<Response> {
+    const declared = Number(request.headers.get('content-length') ?? 0);
+    if (!Number.isFinite(declared) || declared > LIMITS.jsonBytes) throw new AppError('VALIDATION_ERROR', { body: 'The request is too large.' });
+    const presented = readCookieToken(request, settings.SESSION_COOKIE_NAME);
+    const session = presented ? await work(client => findLiveSession(client, tokenDigest(presented))) : null;
+    if (!session) throw new AppError('CSRF_INVALID');
+    verifyCsrf(request, session.csrfToken, settings.APP_ORIGIN);
+
+    const input = registerSchema.parse(await readBoundedJson(request));
+    validatePassword(input.password);
+    const charged = await work(client => limiter.increment(client, RATE_RULES.registration, sourceOf(request)));
+    if (charged.count > (dependencies.registrationLimit ?? RATE_RULES.registration.limit)) throw new AppError('RATE_LIMITED', undefined, charged.retryAfter);
+
+    // Hash before the write transaction, so slow Argon2 work never holds a connection or a lock.
+    const hash = await passwords.hash(input.password);
+    const row = await workWrite(async client => (await client.query(
+      `SELECT id::text AS id, username, display_name AS "displayName", role, must_change_password AS "mustChangePassword"
+       FROM app.register_account($1, $2, $3, 'SELLER', $4)`, [input.username, input.displayName, hash, requestId])).rows[0]);
+    return Response.json(principalSchema.parse(row), { status: 201 });
+  }
+
   /** A04: allowed for every authenticated account, including one that must change its password. */
   async function logout(request: Request, { requestId }: Context): Promise<Response> {
     const token = readCookieToken(request, settings.SESSION_COOKIE_NAME);
@@ -190,12 +224,12 @@ export function createAuthService(dependencies: AuthServiceDependencies) {
     return Response.json({ id, username, displayName, role, mustChangePassword });
   }
 
-  return { csrf, login, logout, me };
+  return { csrf, login, logout, me, register };
 }
 
 let production: ReturnType<typeof createAuthService> | undefined;
 /** Application wiring: the restricted `app_runtime` pool and validated server settings. */
 export function authService() {
-  production ??= createAuthService({ pool: getPool('app_runtime'), settings: getSettings(), passwords: new PasswordService(getSettings().HASH_CONCURRENCY) });
+  production ??= createAuthService({ pool: getPool('app_runtime'), settings: getSettings(), passwords: new PasswordService(getSettings().HASH_CONCURRENCY), registrationLimit: getSettings().REGISTRATION_LIMIT_PER_HOUR });
   return production;
 }

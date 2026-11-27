@@ -9,7 +9,7 @@ import type { AccountName, IsolatedDatabase } from './isolated-database';
 /** H20 test helper: signs in through the real A01/A03 handlers and the real session table (retires TMP-01 and TMP-04). */
 export const DEFAULT_ACCOUNT: Record<Role, AccountName> = { ADMIN: 'admin', SELLER: 'seller.a', RIDER: 'rider.a' };
 
-export type HandlerOptions = { source?: string; clock?: Clock };
+export type HandlerOptions = { source?: string; clock?: Clock; registrationLimit?: number };
 export type LoginSession = {
   principal: Principal;
   /** Cookie jar value for the Cookie header. */
@@ -28,12 +28,14 @@ export function authHandlers(database: IsolatedDatabase, options: HandlerOptions
     passwords: new PasswordService(),
     source: () => options.source ?? '127.0.0.1',
     clock: options.clock,
+    registrationLimit: options.registrationLimit,
   });
   return {
     csrf: apiHandler(request => service.csrf(request)),
     login: apiHandler((request, context) => service.login(request, context)),
     logout: apiHandler((request, context) => service.logout(request, context)),
     me: apiHandler(request => service.me(request)),
+    register: apiHandler((request, context) => service.register(request, context)),
   };
 }
 export type AuthHandlers = ReturnType<typeof authHandlers>;
