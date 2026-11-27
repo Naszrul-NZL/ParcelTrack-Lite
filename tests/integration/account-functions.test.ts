@@ -1,12 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import fs from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import type { PoolClient } from 'pg';
 import { createDatabaseHarness, type IsolatedDatabase } from '../harness/isolated-database';
+import { seedRiderParcels } from '../fixtures/delivery/rider-parcels';
 
 type AccountName = keyof IsolatedDatabase['accounts'];
 
-const draft = fs.readFileSync('db/drafts/account_functions.sql', 'utf8');
 const hash = '$argon2id$v=19$m=19456,t=2,p=1$' + 'c2FsdHNhbHQ$' + 'x'.repeat(43);
 const otherHash = '$argon2id$v=19$m=19456,t=2,p=1$' + 'c2FsdHNhbHQ$' + 'y'.repeat(43);
 
@@ -14,14 +13,6 @@ let harness: Awaited<ReturnType<typeof createDatabaseHarness>>;
 beforeAll(async () => { harness = await createDatabaseHarness(); });
 afterAll(async () => { await harness?.dispose(); });
 
-/** The draft is applied exactly as a revision would be: one transaction as the migration owner. */
-async function applyDraft(database: IsolatedDatabase) {
-  const client = await database.migrationClient();
-  await client.query('BEGIN');
-  try { await client.query(draft); await client.query('COMMIT'); }
-  catch (error) { await client.query('ROLLBACK'); throw error; }
-  return client;
-}
 async function owner(database: IsolatedDatabase, text: string, values: unknown[] = []) {
   return (await database.migrationClient()).query(text, values);
 }
@@ -37,6 +28,19 @@ async function runtime<T>(database: IsolatedDatabase, actor: Actor, work: (clien
     return result;
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
 }
+/** A transaction held open as an actor, so a test can show another request waiting on its row locks. */
+async function hold(database: IsolatedDatabase, actor: NonNullable<Actor>) {
+  const client = await database.pool().connect();
+  await client.query('BEGIN');
+  await client.query("SELECT set_config('app.user_id',$1,true),set_config('app.session_version',$2,true)", [database.accounts[actor.name], String(actor.version ?? 1)]);
+  let open = true;
+  const end = async (command: 'COMMIT' | 'ROLLBACK') => { if (open) { open = false; try { await client.query(command); } finally { client.release(); } } };
+  return { client, commit: () => end('COMMIT'), rollback: () => end('ROLLBACK') };
+}
+/** 'waiting' if the promise has not settled after `ms`, otherwise 'settled'. */
+const settledWithin = (promise: Promise<unknown>, ms: number) =>
+  Promise.race([promise.then(() => 'settled', () => 'settled'), new Promise<string>(resolve => setTimeout(() => resolve('waiting'), ms))]);
+
 // seller, rider and admin have forced row security with a policy for auth_fn_owner only, so read them as that role.
 async function members(database: IsolatedDatabase, table: 'seller' | 'rider' | 'admin', userId: string) {
   const client = await database.migrationClient();
@@ -54,10 +58,9 @@ const state = async (database: IsolatedDatabase, name: string) =>
 const audit = async (database: IsolatedDatabase, type: string) =>
   (await owner(database, 'SELECT actor_id,target_user_id,outcome,details::text AS details FROM app.audit_event WHERE event_type=$1 ORDER BY id', [type])).rows;
 
-describe('account_functions draft', () => {
-  it('applies as one migration-owner transaction and keeps the hash unreadable by the runtime role', async () => {
+describe('0008_account_functions', () => {
+  it('is part of the migrated schema and keeps the hash and credential expiry unreadable by the runtime role', async () => {
     await harness.run(async database => {
-      await applyDraft(database);
       await expect(runtime(database, null, client => client.query('SELECT password_hash FROM app.app_user'))).rejects.toMatchObject({ code: '42501' });
       await expect(runtime(database, null, client => client.query('SELECT credential_expires_at FROM app.app_user'))).rejects.toMatchObject({ code: '42501' });
       const snapshot = await runtime(database, null, client => client.query("SELECT * FROM app.get_login_snapshot('seller.a')"));
@@ -70,7 +73,6 @@ describe('account_functions draft', () => {
   describe('register_account (A02, A08)', () => {
     it('creates a Seller with no actor, forces must_change false, adds the subclass row and audits USER_CREATED', async () => {
       await harness.run(async database => {
-        await applyDraft(database);
         const created = (await runtime(database, null, client => register(client, 'new.seller', 'SELLER'))).rows[0];
         expect(created).toMatchObject({ username: 'new.seller', role: 'SELLER', is_active: true, must_change_password: false, version: 1 });
         expect(Object.keys(created)).not.toContain('password_hash');
@@ -83,7 +85,6 @@ describe('account_functions draft', () => {
 
     it('lets only a verified Admin create a Rider, who must change an initial password that expires in 72 hours', async () => {
       await harness.run(async database => {
-        await applyDraft(database);
         const created = (await runtime(database, { name: 'admin' }, client => register(client, 'new.rider', 'RIDER'))).rows[0];
         expect(created).toMatchObject({ role: 'RIDER', must_change_password: true });
         const row = (await owner(database, "SELECT credential_expires_at-now() BETWEEN interval '71 hours 59 minutes' AND interval '72 hours' AS window FROM app.app_user WHERE username='new.rider'")).rows[0];
@@ -100,7 +101,6 @@ describe('account_functions draft', () => {
 
     it('never creates an Admin or a Seller for a signed-in actor, whatever the caller passes', async () => {
       await harness.run(async database => {
-        await applyDraft(database);
         for (const role of ['ADMIN', 'admin', 'ROOT', '']) expect(await code(runtime(database, { name: 'admin' }, client => register(client, 'sneaky', role)))).toBe('PT007');
         expect(await code(runtime(database, { name: 'admin' }, client => register(client, 'sneaky', 'SELLER')))).toBe('PT001');
         expect(await code(runtime(database, { name: 'seller.a' }, client => register(client, 'sneaky', 'SELLER')))).toBe('PT001');
@@ -110,7 +110,6 @@ describe('account_functions draft', () => {
 
     it('answers a duplicate with USERNAME_TAKEN and lets exactly one of two simultaneous registrations win', async () => {
       await harness.run(async database => {
-        await applyDraft(database);
         expect(await code(runtime(database, null, client => register(client, 'seller.a', 'SELLER')))).toBe('PT011');
         const results = await Promise.all([
           code(runtime(database, null, client => register(client, 'race.winner', 'SELLER'))),
@@ -126,7 +125,6 @@ describe('account_functions draft', () => {
   describe('change_password (A06)', () => {
     it('replaces the hash, clears must-change and expiry, bumps both versions and signs the user out everywhere', async () => {
       await harness.run(async database => {
-        await applyDraft(database);
         await owner(database, "UPDATE app.app_user SET credential_expires_at=now()+interval '1 hour' WHERE username='must.change'");
         const before = await state(database, 'must.change');
         await session(database, 'must.change');
@@ -144,7 +142,6 @@ describe('account_functions draft', () => {
 
     it('changes nothing when the verified hash is out of date, and refuses anonymous callers', async () => {
       await harness.run(async database => {
-        await applyDraft(database);
         const before = await state(database, 'seller.a');
         expect(await code(runtime(database, { name: 'seller.a' }, client => client.query('SELECT app.change_password($1,$2,$3)', [otherHash, hash, randomUUID()])))).toBe('PT003');
         expect(await code(runtime(database, null, client => client.query('SELECT app.change_password($1,$2,$3)', [before.password_hash, hash, randomUUID()])))).toBe('PT012');
@@ -157,7 +154,6 @@ describe('account_functions draft', () => {
   describe('set_user_active (A09)', () => {
     it('disables a Rider immediately: sessions deleted, versions bumped, audited, and reactivation revives nothing', async () => {
       await harness.run(async database => {
-        await applyDraft(database);
         const before = await state(database, 'rider.a');
         await session(database, 'rider.a');
         const disabled = (await runtime(database, { name: 'admin' }, client => client.query('SELECT * FROM app.set_user_active($1,false,$2,$3)', [before.id, before.version, randomUUID()]))).rows[0];
@@ -172,7 +168,6 @@ describe('account_functions draft', () => {
 
     it('rejects a stale or missing version, Admin and self targets, a missing target and non-Admin actors, changing nothing', async () => {
       await harness.run(async database => {
-        await applyDraft(database);
         const rider = await state(database, 'rider.a');
         const call = (actor: Actor, target: string, version: number | null) => code(runtime(database, actor, client => client.query('SELECT * FROM app.set_user_active($1,false,$2,$3)', [target, version, randomUUID()])));
         expect(await call({ name: 'admin' }, rider.id, rider.version + 1)).toBe('PT003');
@@ -191,7 +186,6 @@ describe('account_functions draft', () => {
 
     it('lets one of two simultaneous requests with the same expected version win and writes one audit event', async () => {
       await harness.run(async database => {
-        await applyDraft(database);
         const rider = await state(database, 'rider.b');
         const disable = () => code(runtime(database, { name: 'admin' }, client => client.query('SELECT * FROM app.set_user_active($1,false,$2,$3)', [rider.id, rider.version, randomUUID()])));
         expect((await Promise.all([disable(), disable()])).sort()).toEqual(['PT003', 'ok']);
@@ -203,7 +197,6 @@ describe('account_functions draft', () => {
   describe('admin_reset_password (A21)', () => {
     it('sets a one-time credential that must be changed, expires and signs the target out', async () => {
       await harness.run(async database => {
-        await applyDraft(database);
         const before = await state(database, 'seller.b');
         await session(database, 'seller.b');
         await runtime(database, { name: 'admin' }, client => client.query('SELECT app.admin_reset_password($1,$2,$3)', [before.id, otherHash, randomUUID()]));
@@ -216,7 +209,6 @@ describe('account_functions draft', () => {
 
     it('refuses Admin and self targets and non-Admin actors', async () => {
       await harness.run(async database => {
-        await applyDraft(database);
         const call = (actor: Actor, target: string) => code(runtime(database, actor, client => client.query('SELECT app.admin_reset_password($1,$2,$3)', [target, otherHash, randomUUID()])));
         expect(await call({ name: 'admin' }, database.accounts.admin)).toBe('PT007');
         expect(await call({ name: 'seller.a' }, database.accounts['seller.b'])).toBe('PT001');
@@ -227,9 +219,74 @@ describe('account_functions draft', () => {
     });
   });
 
+  describe('lock_assignee against set_user_active (assign versus disable)', () => {
+    const assign = 'SELECT app.assign_parcel($1, $2, $3)';
+    const disable = 'SELECT * FROM app.set_user_active($1, false, $2, $3)';
+    const registeredParcel = async (database: IsolatedDatabase) => (await seedRiderParcels(database)).find(item => item.key === 'registered')!.parcelId;
+    // parcel has forced row security with policies for domain_writer, so read it as that role.
+    const parcelRow = async (database: IsolatedDatabase, parcelId: string) => {
+      const client = await database.migrationClient();
+      await client.query('SET ROLE domain_writer');
+      try { return (await client.query('SELECT current_status, assigned_rider_id FROM app.parcel WHERE id = $1', [parcelId])).rows[0]; }
+      finally { await client.query('RESET ROLE'); }
+    };
+
+    it('makes a disablement wait for an assignment that already holds the Rider, then applies it after commit', async () => {
+      await harness.run(async database => {
+        const parcelId = await registeredParcel(database);
+        const rider = database.accounts['rider.b'];
+        const before = await state(database, 'rider.b');
+        const assigning = await hold(database, { name: 'admin' });
+        const disabling = await hold(database, { name: 'admin' });
+        try {
+          await assigning.client.query(assign, [parcelId, rider, 1]);
+          const pending = disabling.client.query(disable, [rider, before.version, randomUUID()]);
+          expect(await settledWithin(pending, 400)).toBe('waiting');
+          await assigning.commit();
+          await pending;
+          await disabling.commit();
+        } finally { await assigning.rollback(); await disabling.rollback(); }
+        expect(await state(database, 'rider.b')).toMatchObject({ is_active: false, version: before.version + 1 });
+        const parcel = await parcelRow(database, parcelId);
+        expect(parcel).toMatchObject({ current_status: 'ASSIGNED', assigned_rider_id: rider });
+        // Once the disablement has committed, the same Rider can no longer be assigned.
+        const another = (await seedRiderParcels(database)).find(item => item.key === 'registered')!.parcelId;
+        expect(await code(runtime(database, { name: 'admin' }, client => client.query(assign, [another, rider, 1])))).toBe('PT005');
+      });
+    });
+
+    it('makes an assignment wait for a pending disablement, then rejects it as an invalid assignee', async () => {
+      await harness.run(async database => {
+        const parcelId = await registeredParcel(database);
+        const rider = database.accounts['rider.a'];
+        const before = await state(database, 'rider.a');
+        const disabling = await hold(database, { name: 'admin' });
+        const assigning = await hold(database, { name: 'admin' });
+        const outcome = await (async () => {
+          try {
+            await disabling.client.query(disable, [rider, before.version, randomUUID()]);
+            const pending = assigning.client.query(assign, [parcelId, rider, 1]).then(() => 'assigned', (error: { code?: string }) => error.code ?? 'error');
+            expect(await settledWithin(pending, 400)).toBe('waiting');
+            await disabling.commit();
+            return await pending;
+          } finally { await disabling.rollback(); await assigning.rollback(); }
+        })();
+        expect(outcome).toBe('PT005');
+        expect((await state(database, 'rider.a')).is_active).toBe(false);
+        const parcel = await parcelRow(database, parcelId);
+        expect(parcel).toMatchObject({ current_status: 'REGISTERED', assigned_rider_id: null });
+      });
+    });
+
+    it('cannot be called by the web runtime role, so account types cannot be probed through it', async () => {
+      await harness.run(async database => {
+        expect(await code(runtime(database, { name: 'admin' }, client => client.query('SELECT app.lock_assignee($1)', [database.accounts['rider.a']])))).toBe('42501');
+      });
+    });
+  });
+
   it('keeps the runtime role unable to write account rows or call a function it was not granted', async () => {
     await harness.run(async database => {
-      await applyDraft(database);
       await expect(runtime(database, null, client => client.query("UPDATE app.app_user SET role='ADMIN'"))).rejects.toMatchObject({ code: '42501' });
       await expect(runtime(database, null, client => client.query('DELETE FROM app.audit_event'))).rejects.toMatchObject({ code: '42501' });
       const privileges = await owner(database, `SELECT p.proname,has_function_privilege('public',p.oid,'EXECUTE') AS public_exec,has_function_privilege('app_runtime',p.oid,'EXECUTE') AS runtime_exec,
