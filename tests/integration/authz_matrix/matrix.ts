@@ -25,12 +25,6 @@ export type MatrixRow = {
   expected: Record<Identity, number>;
 };
 
-/**
- * PH2 rows owed by other modules: M2 registers A10 to A12 and M3 registers A16 and A17 in their own
- * `*.rows.ts` files when those endpoints are implemented. The coverage rule below enforces it.
- */
-export const PENDING_OWNER_ROWS = { A10: 'M2', A11: 'M2', A12: 'M2', A16: 'M3', A17: 'M3' } as const;
-
 export function assertRowsCoverEndpoints(implemented: { id: string }[], rows: { endpoint: string }[]) {
   const covered = new Set(rows.map(row => row.endpoint));
   const missing = [...new Set(implemented.map(endpoint => endpoint.id))].filter(id => !covered.has(id));

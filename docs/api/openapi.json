@@ -218,6 +218,82 @@
         }
       }
     },
+    "/api/v1/rider/parcels": {
+      "get": {
+        "operationId": "A16",
+        "description": "Implemented route; endpoint-specific request/response coverage remains required.",
+        "responses": {
+          "default": {
+            "description": "See the shared system contract and endpoint tests."
+          }
+        }
+      }
+    },
+    "/api/v1/rider/parcels/{parcelId}/status": {
+      "post": {
+        "operationId": "A17",
+        "description": "Start delivery for an assigned Rider parcel.",
+        "parameters": [
+          {
+            "name": "parcelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,17}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "REGISTERED",
+                      "ASSIGNED",
+                      "OUT_FOR_DELIVERY",
+                      "DELIVERED",
+                      "FAILED"
+                    ]
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483647
+                  }
+                },
+                "required": [
+                  "status",
+                  "expectedVersion"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Committed parcel status and detail.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParcelDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe error envelope. See the system contract."
+          }
+        }
+      }
+    },
     "/api/v1/seller/parcels": {
       "get": {
         "operationId": "A11",

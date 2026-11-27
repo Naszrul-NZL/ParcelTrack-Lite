@@ -7,8 +7,9 @@ import { authRows } from './auth.rows';
 
 import { adminRows } from './admin.rows';
 import { parcelRows } from './parcel.rows';
+import { riderRows } from './rider.rows';
 
-const rows = [...authRows, ...parcelRows, ...adminRows];
+const rows = [...authRows, ...parcelRows, ...adminRows, ...riderRows];
 
 let harness: Awaited<ReturnType<typeof createDatabaseHarness>>;
 beforeAll(async () => { harness = await createDatabaseHarness(); });
