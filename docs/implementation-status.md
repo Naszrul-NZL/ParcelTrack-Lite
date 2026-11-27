@@ -47,7 +47,7 @@ Known limits. The account row is not locked `FOR UPDATE` at login: `app_runtime`
 
 Migration `0005_create_parcel` and A10 register a parcel under a real Seller session. A11 lists the current Seller's parcels. A12 serves private detail to the owner, assigned Rider, and Admin, with an audit record for Admin reads. The Seller screens use those routes and the shared Airway docket.
 
-The [Seller slice evidence](evidence/m2-ph2-seller-slice.md) records the browser walkthrough, the M2 consumer runs for H10/H20/H24, and H25's idempotent Rider fixture rerun. PRs #22 to #25 and the Rider migration PR #28 are merged. PR #29 mounts the Rider routes and real-login journey. Its original-head full-stack CI passed; corrective final-head CI, teammate review and group gates remain pending.
+The [Seller slice evidence](evidence/m2-ph2-seller-slice.md) records the browser walkthrough, the M2 consumer runs for H10/H20/H24, and H25's idempotent Rider fixture rerun. PRs #22 to #25 and the Rider migration PR #28 are merged. PR #29 mounts the Rider routes and real-login journey. Its corrective implementation head passed both full-stack CI triggers; teammate review and group gates remain pending.
 
 ## M3 PH2 Rider slice (issues #11-#14)
 
