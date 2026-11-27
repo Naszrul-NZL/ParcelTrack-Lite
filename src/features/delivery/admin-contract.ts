@@ -47,3 +47,5 @@ export const dashboardSchema = z.strictObject({
 });
 
 export type AdminParcelList = z.infer<typeof adminParcelListSchema>;
+export type AdminParcelSummary = z.infer<typeof adminParcelSummarySchema>;
+export type AdminDashboard = z.infer<typeof dashboardSchema>;

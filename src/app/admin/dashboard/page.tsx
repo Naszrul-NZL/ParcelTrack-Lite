@@ -1,5 +1,8 @@
-import { RoleWorkspacePlaceholder } from '@/features/auth/role-workspace-placeholder';
-export const dynamic='force-dynamic';
-export const metadata={title:'Admin workspace | ParcelTrack Lite'};
-// Placeholder landing page: the owning module replaces this file with its real screen.
-export default function Page() { return <RoleWorkspacePlaceholder role="ADMIN" />; }
+import { AdminDashboardWorkspace } from '@/features/delivery/admin-dashboard-page';
+
+export const dynamic = 'force-dynamic';
+export const metadata = { title: 'Admin dashboard | ParcelTrack Lite' };
+
+export default function Page() {
+  return <AdminDashboardWorkspace />;
+}
