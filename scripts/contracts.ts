@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import { z } from 'zod';
 import { principalSchema,userSummarySchema,userListSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema } from '../src/shared/schemas';
-import { riderStatusMultipartSchema } from '../src/features/delivery/rider-contract';
+import { riderListSchema,riderStatusMultipartSchema } from '../src/features/delivery/rider-contract';
 import { assertPlanEndpointParity, assertProductionImportBoundary, implementedEndpoints } from './contract-inventory';
-const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,UserSummary:userSummarySchema,UserList:userListSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelList:parcelListSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
+const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,UserSummary:userSummarySchema,UserList:userListSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelList:parcelListSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema,RiderList:riderListSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
 assertPlanEndpointParity();
 assertProductionImportBoundary();
 const paths:Record<string,Record<string,unknown>>={};
@@ -52,6 +52,22 @@ for(const endpoint of implementedEndpoints()) {
       ],
       responses: {
         '200': { description: 'Page of account summaries.', content: { 'application/json': { schema: { $ref: '#/components/schemas/UserList' } } } },
+        default: { description: 'Safe error envelope. See the system contract.' },
+      },
+    };
+    continue;
+  }
+  if (endpoint.id === 'A16') {
+    paths[endpoint.path].get = {
+      operationId: endpoint.id,
+      description: 'List parcels assigned to the signed-in Rider.',
+      parameters: [
+        { name: 'status', in: 'query', schema: { type: 'string', enum: ['REGISTERED','ASSIGNED','OUT_FOR_DELIVERY','DELIVERED','FAILED'] } },
+        { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 2_147_483_647, default: 1 } },
+        { name: 'pageSize', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 } },
+      ],
+      responses: {
+        '200': { description: 'Page of parcels assigned to the Rider.', content: { 'application/json': { schema: { $ref: '#/components/schemas/RiderList' } } } },
         default: { description: 'Safe error envelope. See the system contract.' },
       },
     };

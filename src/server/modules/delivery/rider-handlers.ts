@@ -2,6 +2,7 @@ import 'server-only';
 import { apiHandler } from '@/server/core/handler';
 import { principalUow } from '@/server/core/authorized';
 import { AppError } from '@/server/core/errors';
+import { logEvent } from '@/server/core/logging';
 import { LIMITS } from '@/shared/constants';
 import { idSchema } from '@/shared/schemas';
 import { riderListQuerySchema, riderStatusFields } from '@/features/delivery/rider-contract';
@@ -60,12 +61,20 @@ export function createRiderHandlers(authorize: typeof principalUow = principalUo
       return Response.json(await listRiderParcels(client, principal, riderListQuerySchema.parse(Object.fromEntries(entries))));
     })),
     updateStatus: apiHandler(async (request, { requestId }, context: { params: Promise<{ parcelId: string }> }) => {
-      const detail = await authorize(request, { roles: ['RIDER'] }, async (client, principal) => {
+      const result = await authorize(request, { roles: ['RIDER'] }, async (client, principal) => {
         const { parcelId } = await context.params;
         if (!idSchema.safeParse(parcelId).success) throw new AppError('NOT_FOUND');
-        return updateRiderStatus(client, principal, parcelId, await readStatusFields(request), requestId);
+        const detail = await updateRiderStatus(client, principal, parcelId, await readStatusFields(request), requestId);
+        const current = detail.history.at(-1);
+        const previous = detail.history.at(-2);
+        return { detail, log: {
+          actorId: principal.id, parcelId: detail.id, oldStatus: previous?.status,
+          newStatus: current?.status, occurredAt: current?.changedAt, requestId,
+        } };
       });
-      return Response.json(detail);
+      // authorize resolves only after its transaction commits, so a success log cannot precede the commit.
+      logEvent('status_changed', result.log);
+      return Response.json(result.detail);
     }),
   };
 }

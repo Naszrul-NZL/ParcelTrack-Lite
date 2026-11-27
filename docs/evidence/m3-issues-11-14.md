@@ -1,17 +1,17 @@
 # M3 foundation and Rider slice close-out evidence
 
-Updated 27 November 2026 for [issue #11](https://github.com/Naszrul-NZL/ParcelTrack-Lite/issues/11), [issue #12](https://github.com/Naszrul-NZL/ParcelTrack-Lite/issues/12), [issue #13](https://github.com/Naszrul-NZL/ParcelTrack-Lite/issues/13) and [issue #14](https://github.com/Naszrul-NZL/ParcelTrack-Lite/issues/14). The registered migration work is in [PR #28](https://github.com/Naszrul-NZL/ParcelTrack-Lite/pull/28); the route, UI and acceptance work is on `feat/m3-issues-11-14-closeout` pending its own PR and remote CI.
+Updated 27 November 2026 for [issue #11](https://github.com/Naszrul-NZL/ParcelTrack-Lite/issues/11), [issue #12](https://github.com/Naszrul-NZL/ParcelTrack-Lite/issues/12), [issue #13](https://github.com/Naszrul-NZL/ParcelTrack-Lite/issues/13) and [issue #14](https://github.com/Naszrul-NZL/ParcelTrack-Lite/issues/14). [PR #28](https://github.com/Naszrul-NZL/ParcelTrack-Lite/pull/28) merged the registered migrations. [PR #29](https://github.com/Naszrul-NZL/ParcelTrack-Lite/pull/29) carries the route, UI and acceptance close-out; both CI triggers passed on its original head, and the corrective final head must rerun CI after push.
 
 | Issue and task | Completed implementation and evidence | Still required before issue closure |
 | --- | --- | --- |
 | #11 - M3-PH1-T01/T02/T05/T09 - H10/H13 | HAR-01 covers audit isolation and overlapping restricted connections. PR #21 records the full local-stack Sharp measurement. M2 consumed H10 for registration, RLS, private reads and the authorization matrix. PR #28 consumes the migration contract and has green migration/integration/local-stack CI. | Naszrul and Zikri must record the required owner contract review. Wider recovery/failpoint work stays with its later phase and does not block this issue's bounded PH1 evidence. |
-| #12 - M3-PH2-T02/T03 - H23 | PR #28 registers 0006 after 0005 and adds 0007. Its migration CI is green. The close-out branch mounts A17, preserves the five-second body-read deadline, uses real H20 sessions and returns the shared A12 detail after commit. All 97 local integration cases pass. | PR #28 still needs its requested owner reviews before merge; the close-out PR needs remote CI. |
-| #13 - M3-PH2-T01/T04 - H25/TMP-02 | The H25 profile reran twice without duplicates. The close-out branch mounts A16, adds A16/A17 matrix rows and changes Rider service tests from fixture sessions to `loginAs`. All 97 integration cases pass, including filtering, RLS, validation, pagination and SQL safety. | TMP-02 remains visibly seeded until PH3 assignment replaces it; the close-out PR needs remote CI. |
-| #14 - M3-PH2-T05 - TC08/TC09 | Four TC08 component cases pass. The real workspace uses the shared session client and complete states. The full authenticated browser run passed 27 cases with one intentional desktop skip, including both themes, keyboard focus, 200% text, 320px portrait, phone landscape and the phone-only TC09 isolation journey. | The close-out PR needs remote CI. |
+| #12 - M3-PH2-T02/T03 - H23 | PR #28 registered 0006 after 0005 and added 0007. PR #29 mounts A17, preserves the five-second body-read deadline, uses real H20 sessions, writes one redacted post-commit status log and returns the shared A12 detail after commit. All 97 local integration cases pass. | PR #29 needs final-head CI, review and merge. |
+| #13 - M3-PH2-T01/T04 - H25/TMP-02 | The H25 profile reran twice without duplicates. PR #29 mounts A16, publishes its query/response OpenAPI contract, adds A16/A17 matrix rows and changes Rider service tests from fixture sessions to `loginAs`. All 97 integration cases pass, including filtering, RLS, validation, pagination and TC15 static/injection safety. | TMP-02 remains visibly seeded until PH3 assignment replaces it; PR #29 needs final-head CI, review and merge. |
+| #14 - M3-PH2-T05 - TC08/TC09 | Six TC08 component cases pass. The real workspace uses the shared session client and complete states. The full authenticated browser run passed 27 cases with one intentional desktop skip, including both themes, keyboard focus, 200% text, 320px portrait, phone landscape and the phone-only TC09 isolation journey. TC09 provisions a fresh synthetic assignment and passed twice consecutively on the retained stack. | PR #29 needs final-head CI, review and merge. |
 
 ## Registered migrations and owner review
 
-PR #28 moves Syauqi's reviewed start-delivery draft into registered revision `0006_delivery_functions` without changing its body, then adds `0007_delivery_final`. The close-out review found no issue in 0006's actor lock, assignee check, expected-version check, monotonic history time, atomic status/history/audit write, ownership or grants. The 0007 review found the documented actor-target-parcel lock order, restricted `lock_assignee` execution, proof metadata validation and terminal transition behavior consistent with the contract and its new integration cases.
+PR #28 moved Syauqi's reviewed start-delivery draft into registered revision `0006_delivery_functions` without changing its body, then added `0007_delivery_final`. The close-out review found no issue in 0006's actor lock, assignee check, expected-version check, monotonic history time, atomic status/history/audit write, ownership or grants. The 0007 review found the documented actor-target-parcel lock order, restricted `lock_assignee` execution, proof metadata validation and terminal transition behavior consistent with the contract and its new integration cases.
 
 This is Syauqi's owner review of the M3 revisions. It does not replace Naszrul's requested review of the account lock helper or the two other owners' contract sign-off required by #11.
 
@@ -43,18 +43,19 @@ The screen adds no new asset, icon package, gradient, glow, glass or decorative 
 | Check | Observed result |
 | --- | --- |
 | TypeScript and ESLint | Passed on 27 November 2026. |
-| TC08 component file | 4 tests passed. |
-| Full unit/component attempt | 394 of 395 passed; the existing import-graph case exceeded its five-second limit. The isolated one-worker rerun passed all 8 cases in that file. |
+| TC08 component file | 6 tests passed, including filtered-empty, paged-empty and pagination controls. |
+| Full unit/component attempt | 399 of 400 passed; the existing import-graph case exceeded its five-second limit. The isolated one-worker rerun passed all 8 cases in that file. |
 | SQL hardening | Passed with registered 0006/0007. |
-| Contract generation and check | Passed; the OpenAPI snapshot now includes mounted A16/A17 and the A17 multipart/detail contract. |
+| Contract generation and check | Passed; the OpenAPI snapshot includes A16 filters/pagination/RiderList and the A17 multipart/detail contract. |
 | Airway design check | Theme parity, generated CSS and all 32 contrast pairs passed. |
 | Plan documentation checker | 18 phase files, 192 tasks, 265 cases, 44 handoffs, 6 substitutes, 39 decisions, 7 external items and 15 integration scenarios; zero errors or warnings. |
 | Production build | Passed on Next.js 16.4.6; A16, A17 and `/rider/parcels` appear in the route output. |
-| PR #28 remote CI | App, unit, lint/type, integration, migration, local-stack smoke, contract, dependency and secret jobs passed on head `336a5f9`. |
+| PR #28 remote CI | App, unit, lint/type, integration, migration, local-stack smoke, contract, dependency and secret jobs passed before merge. |
+| PR #29 original-head CI | Both the push and pull-request runs passed all nine jobs on `c6ec4d5`; the corrective final head will rerun them. |
 | Registered migration chain | Bootstrap, migrate twice, catalog verification and private Storage initialization passed on the retained isolated test volume. |
 | H25 fixture profile | Base fixtures loaded, then `rider-assigned` loaded twice without an error or duplicate. |
 | Integration suite | 17 files and 97 tests passed, including the A16/A17 authorization matrix and delivery-final migration cases. |
-| Authenticated browser suite | 27 passed, with one intentional desktop skip for phone-only TC09. Existing auth and Seller journeys also passed. |
+| Authenticated browser suite | 27 passed, with one intentional desktop skip for phone-only TC09. The Rider-only file then passed twice consecutively on the retained database, three applicable cases each time with one intentional skip. |
 
 ## Delivery gate
 
@@ -62,7 +63,7 @@ The screen adds no new asset, icon package, gradient, glow, glass or decorative 
 - R-17/R-18/R-23/R-36/R-38 PASS: the screen shows only API data or the explicitly seeded test profile; no assets, metrics, people or claims were invented.
 - R-24/R-26 PASS: every record link targets the authorized A12 screen and the only action calls mounted A17.
 - R-25 PASS: all 32 repository Airway contrast pairs passed; the change adds no new color.
-- R-27 PASS: loading, empty, filtered-empty, paged-empty and error/retry states are implemented and component-covered.
+- R-27 PASS: loading, empty, filtered-empty, paged-empty and error/retry states are implemented and covered by six component cases.
 - R-32 PASS: native select, links and buttons retain the shared 3px focus treatment; the browser case checks keyboard focus.
 - R-34 PASS: the browser case switches and captures both themes; the component uses semantic tokens only.
 - R-35 PASS: production build passed; all 27 applicable authenticated browser cases passed with no page errors, including every Rider control and TC09.

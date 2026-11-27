@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, it } from 'vitest';
+import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 import { createPrincipalUow } from '@/server/core/authorized';
 import { transaction } from '@/server/core/db';
 import { createRiderHandlers } from '@/server/modules/delivery/rider-handlers';
@@ -120,15 +120,31 @@ it('TC01–TC04/TC07/TC13 records exactly one committed Start delivery with safe
       expect(denied.status).toBe(status);
       expect(await denied.json()).toMatchObject({ error: { code } });
     }
+    for (const parcelId of [
+      `${parcel.parcelId} OR 1=1`, `${parcel.parcelId}'; DROP TABLE app.parcel; --`, `' OR ''='`,
+    ]) {
+      const denied = await updateStatus(startRequest(parcel.parcelId, a), {
+        params: Promise.resolve({ parcelId }),
+      });
+      expect(denied.status).toBe(404);
+      expect(await denied.json()).toMatchObject({ error: { code: 'NOT_FOUND' } });
+    }
 
     expect(noCsrf.bodyUsed).toBe(false);
     expect(wrongCsrf.bodyUsed).toBe(false);
     expect(foreignOrigin.bodyUsed).toBe(false);
 
-    const competing = await Promise.all([
-      updateStatus(startRequest(parcel.parcelId, a), path),
-      updateStatus(startRequest(parcel.parcelId, a), path),
-    ]);
+    const messages: string[] = [];
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(message => { messages.push(String(message)); });
+    let competing: Response[];
+    try {
+      competing = await Promise.all([
+        updateStatus(startRequest(parcel.parcelId, a), path),
+        updateStatus(startRequest(parcel.parcelId, a), path),
+      ]);
+    } finally {
+      consoleLog.mockRestore();
+    }
     const [response, replay] = competing.sort((left, right) => left.status - right.status);
     expect(competing.map(item => item.status)).toEqual([200, 409]);
     const result = await response.json();
@@ -157,6 +173,14 @@ it('TC01–TC04/TC07/TC13 records exactly one committed Start delivery with safe
       request_id: response.headers.get('X-Request-Id'), occurred_at: history.rows[2].changed_at,
       details: { oldStatus: 'ASSIGNED', newStatus: 'OUT_FOR_DELIVERY' },
     }]);
+    const statusLogs = messages.map(message => JSON.parse(message) as Record<string, unknown>)
+      .filter(message => message.event === 'status_changed');
+    expect(statusLogs).toEqual([{
+      event: 'status_changed', actorId: a.principal.id, parcelId: parcel.parcelId,
+      oldStatus: 'ASSIGNED', newStatus: 'OUT_FOR_DELIVERY', occurredAt: result.history[2].changedAt,
+      requestId: response.headers.get('X-Request-Id'),
+    }]);
+    expect(JSON.stringify(statusLogs)).not.toMatch(/recipient|phone|address/i);
   });
 });
 

@@ -1,6 +1,6 @@
 # M3 PH2: Initial working slice
 
-Owner: Syauqi. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: The registered migrations, mounted A16/A17 routes, real Rider workspace and acceptance cases are on the close-out branch; full-stack CI and review remain pending on 27 November 2026. See [working evidence and pending handoffs](../../../evidence/m3-issues-11-14.md).
+Owner: Syauqi. Phase PH2 of [phase framework](../../../shared/phase-framework.md). Status: PR #28 merged the registered migrations. PR #29 contains the mounted A16/A17 routes, real Rider workspace and acceptance cases; original-head full-stack CI passed, with corrective final-head CI and teammate review pending on 27 November 2026. See [working evidence and pending handoffs](../../../evidence/m3-issues-11-14.md).
 
 ## 1 Objective
 
