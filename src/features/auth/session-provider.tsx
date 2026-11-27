@@ -6,10 +6,10 @@ import { csrfResponseSchema,loginResponseSchema,principalSchema,type Principal }
 export type SignInResult =
   | { ok: true; principal: Principal }
   | { ok: false; reason: 'invalid' | 'rate_limited' | 'expired' | 'busy' | 'invalid_input' | 'unavailable'; retryAfter?: number };
-type Session = SessionState & { request<T>(path: string, init?: RequestInit): Promise<T>; identityKey: string; signIn(credentials: { username: string; password: string }): Promise<SignInResult>; signOut(): Promise<boolean> };
+type Session = SessionState & { request<T>(path: string, init?: RequestInit): Promise<T>; identityKey: string; signIn(credentials: { username: string; password: string }): Promise<SignInResult>; signOut(): Promise<boolean>; expire(): void };
 
 const anonymous: SessionState = { status: 'anonymous', principal: null, csrfToken: null };
-const Context = createContext<Session>({ ...{ status: 'loading', principal: null, csrfToken: null } as SessionState, identityKey: 'loading', request: async () => { throw new Error('Session is unavailable.'); }, signIn: async () => ({ ok: false, reason: 'unavailable' }), signOut: async () => false });
+const Context = createContext<Session>({ ...{ status: 'loading', principal: null, csrfToken: null } as SessionState, identityKey: 'loading', request: async () => { throw new Error('Session is unavailable.'); }, signIn: async () => ({ ok: false, reason: 'unavailable' }), signOut: async () => false, expire: () => undefined });
 export const useSession = () => useContext(Context);
 
 export function SessionProvider({ children, fetcher = fetch }: { children: ReactNode; fetcher?: typeof fetch }) {
@@ -111,6 +111,13 @@ export function SessionProvider({ children, fetcher = fetch }: { children: React
     return true;
   }, [request]);
 
-  const value = useMemo<Session>(() => ({ ...state, identityKey: state.principal?.id ?? state.status, request, signIn, signOut }), [state, request, signIn, signOut]);
+  // The server has already ended this session (a password change ends them all): forget the identity without a call.
+  const expire: Session['expire'] = useCallback(() => {
+    epoch.current++;
+    csrf.current = null;
+    setState(anonymous);
+  }, []);
+
+  const value = useMemo<Session>(() => ({ ...state, identityKey: state.principal?.id ?? state.status, request, signIn, signOut, expire }), [state, request, signIn, signOut, expire]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

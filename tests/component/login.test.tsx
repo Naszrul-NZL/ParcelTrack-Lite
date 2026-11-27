@@ -194,6 +194,7 @@ describe('M1-PH2-T10 route guard, sign-out and identity change', () => {
   it('holds a must-change account on a notice instead of the workspace', async () => {
     guarded(signedIn({ mustChangePassword: true }));
     expect(await screen.findByText('Change your password before you continue.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Change password' })).toHaveAttribute('href', '/account/password');
     expect(screen.queryByText(/Private for/)).not.toBeInTheDocument();
   });
 

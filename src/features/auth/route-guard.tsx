@@ -12,10 +12,10 @@ import { useSession } from './session-provider';
  * Client-side gate for a role workspace. It decides what to render only; every API and server service still
  * checks the session, role and CSRF token itself.
  */
-export function RouteGuard({ role, children }: { role?: Role; children: ReactNode }) {
+export function RouteGuard({ role, allowPasswordChange = false, signInPath = '/login', children }: { role?: Role; allowPasswordChange?: boolean; signInPath?: string; children: ReactNode }) {
   const session = useSession();
   const router = useRouter();
-  useEffect(() => { if (session.status === 'anonymous') router.replace('/login'); }, [session.status, router]);
+  useEffect(() => { if (session.status === 'anonymous') router.replace(signInPath); }, [session.status, signInPath, router]);
 
   if (session.status === 'loading') return <p className="guard-status" role="status">Checking your session…</p>;
   if (session.status === 'anonymous') return <p className="guard-status" role="status">Taking you to sign in…</p>;
@@ -25,10 +25,10 @@ export function RouteGuard({ role, children }: { role?: Role; children: ReactNod
       <AlertDescription><p>Check your connection, then reload this page.</p><Button className="mt-3" variant="outline" size="sm" onClick={() => window.location.reload()}>Reload page</Button></AlertDescription>
     </Alert>;
   }
-  if (session.principal.mustChangePassword) {
+  if (session.principal.mustChangePassword && !allowPasswordChange) {
     return <Alert className="guard-alert">
       <AlertTitle className="font-semibold">Change your password before you continue.</AlertTitle>
-      <AlertDescription><p>An Admin set this password for you. The password change screen is not available in this build yet, so sign out and ask an Admin for help.</p><Button className="mt-3" variant="outline" size="sm" onClick={() => void session.signOut()}>Sign out</Button></AlertDescription>
+      <AlertDescription><p>An Admin set this password for you. Choose your own to open your workspace.</p><Link className={buttonVariants({ size: 'sm', className: 'mt-3 mr-2' })} href="/account/password">Change password</Link><Button className="mt-3" variant="outline" size="sm" onClick={() => void session.signOut()}>Sign out</Button></AlertDescription>
     </Alert>;
   }
   if (role && session.principal.role !== role) {
