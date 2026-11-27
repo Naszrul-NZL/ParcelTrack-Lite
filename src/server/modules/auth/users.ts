@@ -18,6 +18,28 @@ export async function setUserActive(client: PoolClient, userId: string, { isActi
   return userSummarySchema.parse(row);
 }
 
+/**
+ * Admin creates a Rider (A08) through `app.register_account`, which accepts the RIDER role only for a verified Admin,
+ * forces must-change and a 72-hour expiry on the initial password, and audits `USER_CREATED`. The hash is made by the
+ * caller; the plain password never reaches this module.
+ */
+export async function createRider(client: PoolClient, { username, displayName }: { username: string; displayName: string }, passwordHash: string, requestId: string) {
+  const { rows: [row] } = await client.query(`
+    SELECT id::text AS id, username, display_name AS "displayName", role,
+      must_change_password AS "mustChangePassword", is_active AS "isActive", version
+    FROM app.register_account($1, $2, $3, 'RIDER', $4)
+  `, [username, displayName, passwordHash, requestId]);
+  return userSummarySchema.parse(row);
+}
+
+/**
+ * Admin sets a new one-time password for a Seller or Rider (A21) through `app.admin_reset_password`, which rejects
+ * Admin and self targets, sets must-change and a 72-hour expiry, ends the target's sessions and audits `PASSWORD_RESET`.
+ */
+export async function resetPassword(client: PoolClient, userId: string, passwordHash: string, requestId: string) {
+  await client.query('SELECT app.admin_reset_password($1, $2, $3)', [userId, passwordHash, requestId]);
+}
+
 export type UserListFilters = { role?: 'SELLER' | 'RIDER' | 'ADMIN'; isActive?: boolean; page: number; pageSize: number };
 
 /**

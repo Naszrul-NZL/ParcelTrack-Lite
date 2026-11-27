@@ -8,7 +8,7 @@ const admin = (database: IsolatedDatabase) => createUserAdminHandlers(createPrin
   APP_ORIGIN: origin(), SESSION_COOKIE_NAME: 'ptl_session_dev',
 }));
 
-/** M1 Admin rows (PH3): A07 and A09 now; A08 and A21 register theirs with their endpoints. */
+/** M1 Admin rows (PH3): A07 to A09 and A21; A20 registers its row with its endpoint. */
 export const adminRows: MatrixRow[] = [
   {
     endpoint: 'A07', label: 'GET /admin/users',
@@ -26,6 +26,21 @@ export const adminRows: MatrixRow[] = [
         actor.request(`/admin/users/${userId}/status`, { method: 'PATCH', body: JSON.stringify({ isActive: false, expectedVersion: 1 }) }),
         { params: Promise.resolve({ userId }) },
       );
+    },
+  },
+  {
+    endpoint: 'A08', label: 'POST /admin/riders',
+    expected: { anonymous: 401, 'seller.a': 403, 'seller.b': 403, 'rider.a': 403, 'rider.b': 403, admin: 201, inactive: 401, 'must.change': 403 },
+    call: (actor, _handlers, database) => admin(database).createRider(
+      actor.request('/admin/riders', { method: 'POST', body: JSON.stringify({ username: 'matrix.rider', displayName: 'Matrix Rider', initialPassword: 'a-sufficiently-long-secret' }) })),
+  },
+  {
+    // Seller B is the target for the same reason as A09: its own identity is denied before the function runs.
+    endpoint: 'A21', label: 'POST /admin/users/{userId}/password-reset for Seller B',
+    expected: { anonymous: 401, 'seller.a': 403, 'seller.b': 403, 'rider.a': 403, 'rider.b': 403, admin: 200, inactive: 401, 'must.change': 403 },
+    call: async (actor, _handlers, database) => {
+      const userId = database.accounts['seller.b'];
+      return admin(database).resetPassword(actor.request(`/admin/users/${userId}/password-reset`, { method: 'POST' }), { params: Promise.resolve({ userId }) });
     },
   },
 ];

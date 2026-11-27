@@ -140,6 +140,56 @@
         }
       }
     },
+    "/api/v1/admin/riders": {
+      "post": {
+        "operationId": "A08",
+        "description": "Create a Rider account as an Admin. The role is fixed by this endpoint. The initial password must be changed at first sign-in, expires after 72 hours if unused, and is never returned.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9._-]{3,50}$"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "initialPassword": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "displayName",
+                  "initialPassword"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The new Rider account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSummary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe error envelope. See the system contract."
+          }
+        }
+      }
+    },
     "/api/v1/admin/users": {
       "get": {
         "operationId": "A07",
@@ -196,6 +246,38 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserList"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe error envelope. See the system contract."
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{userId}/password-reset": {
+      "post": {
+        "operationId": "A21",
+        "description": "Reset a Seller or Rider password as an Admin. A random one-time password is returned once and never stored in clear text or logged. The account must change it at next sign-in, it expires after 72 hours, and the account’s sessions end.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,17}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The one-time password, shown once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemporaryPassword"
                 }
               }
             }
@@ -1310,6 +1392,21 @@
           "page",
           "pageSize",
           "total"
+        ],
+        "additionalProperties": false
+      },
+      "TemporaryPassword": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "temporaryPassword": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "temporaryPassword"
         ],
         "additionalProperties": false
       },
