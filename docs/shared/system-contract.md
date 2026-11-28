@@ -222,7 +222,7 @@ FORCE RLS applies to the table owner; function owners are ordinary roles subject
 
 - `domain_writer`: `FOR ALL ... USING (true) WITH CHECK (true)` on `parcel`, `parcel_status_history` and `delivery_proof`. The functions themselves enforce actor, role, assignment, version and transition through `lock_active_actor`; owner policies never call the principal helper.
 - `lookup_fn_owner`: `SELECT` only, column grants `parcel(id, tracking_number)` and `parcel_status_history(id, parcel_id, status, changed_at)` (`id` is needed for ordering).
-- `maintenance_fn_owner`: `SELECT`, and column-limited `UPDATE` on the recipient fields, fingerprint, `anonymized_at` and `version` of `parcel` and on `delivery_proof` metadata clearing.
+- `maintenance_fn_owner`: `SELECT`, and column-limited `UPDATE` on the recipient fields, fingerprint, `anonymized_at` and `version` of `parcel` and on `delivery_proof` metadata clearing; `SELECT(parcel_id, changed_at)` on `parcel_status_history` with a read policy (the D-31 last-change rule) and `INSERT` on `audit_event` (`RETENTION_ANONYMIZED`), both added by `0010_retention_functions`.
 - Runtime-role policies read identity with `NULLIF(current_setting('app.user_id', true), '')::bigint` (an unset or reset transaction-local setting reads as the empty string, which must deny and never raise), call the policy helper as a scalar sub-select so the planner evaluates it once, and implement the helper as a plain `STABLE` SQL function (no `SECURITY DEFINER`) over the column-limited `SELECT` that `app_runtime` already has on `app_user`.
 
 ### Protection of the account tables

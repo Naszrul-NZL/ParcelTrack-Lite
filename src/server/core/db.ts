@@ -7,10 +7,15 @@ export interface ActorContext { userId: string; sessionVersion: number }
 export interface TransactionOptions { actor?: ActorContext; write?: boolean }
 export interface PgConnection { query: PoolClient['query']; release: PoolClient['release'] }
 export interface TransactionPool { connect(): Promise<PoolClient> }
+export class CommitUncertainError extends AppError {
+  readonly commitUncertain = true;
+  constructor() { super('BUSY'); }
+}
 export async function transaction<T>(pool: TransactionPool, options: TransactionOptions, work: (client: PoolClient) => Promise<T>): Promise<T> {
   let client: PoolClient;
   try { client = await pool.connect(); } catch { throw new AppError('BUSY'); }
   let destroy = false;
+  let commitStarted = false;
   try {
     await client.query('BEGIN');
     await client.query("SELECT set_config('app.user_id', $1, true), set_config('app.session_version', $2, true)", [options.actor?.userId ?? '', options.actor ? String(options.actor.sessionVersion) : '']);
@@ -24,10 +29,12 @@ export async function transaction<T>(pool: TransactionPool, options: Transaction
       if(current.rows[0]?.maintenance_mode && current.rows[0].set_until && new Date(current.rows[0].set_until).getTime()>Date.now())throw new AppError('MAINTENANCE');
     }
     const result = await work(client);
+    commitStarted = true;
     await client.query('COMMIT');
     return result;
   } catch (error) {
     try { await client.query('ROLLBACK'); } catch { destroy = true; }
+    if (commitStarted) throw new CommitUncertainError();
     throw error instanceof AppError ? error : classifyError(error);
   } finally { client.release(destroy); }
 }

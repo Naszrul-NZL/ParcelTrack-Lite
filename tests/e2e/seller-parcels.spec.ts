@@ -90,3 +90,46 @@ test('M2-PH2-TC14 registers a parcel, preserves it on refresh, and hides it from
   }
   expect(errors).toEqual([]);
 });
+
+test('M2-PH3-TC11 searches by recipient fragment and tracking prefix, filters by status, and isolates Seller B', async ({ page }, testInfo) => {
+  if (testInfo.project.name === 'phone') await page.setViewportSize({ width: 320, height: 800 });
+  // A unique, wildcard-bearing name proves the search is literal: `%` and `_` match only themselves.
+  const marker = 'Srch' + Date.now().toString(36) + testInfo.project.name;
+  const recipient = `Literal ${marker} 100%_done`;
+  await signIn(page, 'seller.a');
+  const csrf = (await (await page.request.get('/api/v1/auth/csrf')).json() as { csrfToken: string }).csrfToken;
+  const created = await page.request.post('/api/v1/parcels', {
+    headers: { origin: new URL(page.url()).origin, 'x-csrf-token': csrf },
+    data: { recipientName: recipient, recipientPhone: '0123456789', recipientAddress: 'Synthetic search address', weightKg: '2.000', clientRequestId: crypto.randomUUID() },
+  });
+  expect(created.status()).toBe(201);
+  const parcel = await created.json() as { id: string; trackingNumber: string };
+  await page.reload();
+
+  const search = page.getByLabel('Search', { exact: true });
+  const record = page.getByRole('link', { name: new RegExp(parcel.trackingNumber) });
+  await search.fill(marker.toLowerCase() + ' 100%_');
+  await expect(record).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Parcel records' }).getByRole('listitem')).toHaveCount(1);
+  await search.fill(marker + ' 100x_');
+  await expect(page.getByRole('heading', { name: 'No parcels match' })).toBeVisible();
+  expect(page.url()).not.toContain(marker);
+
+  await search.fill(parcel.trackingNumber.slice(0, 14).toLowerCase());
+  await expect(record).toBeVisible();
+  await page.getByLabel('Status', { exact: true }).selectOption('DELIVERED');
+  await expect(page.getByRole('heading', { name: 'No parcels match' })).toBeVisible();
+  await page.getByLabel('Status', { exact: true }).selectOption('REGISTERED');
+  await expect(record).toBeVisible();
+  await fitsViewport(page);
+  await record.click();
+  await expect(page.getByText(recipient, { exact: true })).toBeVisible();
+  // A Seller never gets the Rider or proof slots.
+  await expect(page.getByRole('heading', { name: 'Delivery actions' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Delivery proof' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await signIn(page, 'seller.b');
+  await page.getByLabel('Search', { exact: true }).fill(marker);
+  await expect(page.getByRole('heading', { name: 'No parcels match' })).toBeVisible();
+});

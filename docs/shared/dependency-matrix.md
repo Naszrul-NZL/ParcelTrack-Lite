@@ -27,8 +27,10 @@ Example of a concrete dependency: Zikri's protected parcel-registration endpoint
 | 6 | `0006_delivery_functions` (`update_delivery_status`, start branch) | Syauqi M3-PH2-T02 | 0005 | Implemented; uses grants and policies in 0003/0004 |
 | 7 | `0007_delivery_final` (`assign_parcel`, `lock_delivery_target`, `lock_assignee`, final branch) | Syauqi M3-PH3-T01 | 0006 | Implemented finalization using the proof schema in 0004; reconcile helpers stay in `proof_maintenance_functions` |
 | 8 | `0008_account_functions` (`register_account`, `change_password`, `set_user_active`, `admin_reset_password`, `credential_expires_at`, `get_login_snapshot` with `credential_expired`, directory and audit indexes) | Naszrul M1-PH3 | 0007 | Implemented; the assign-versus-disable race with `lock_assignee` is proven in `tests/integration/account-functions.test.ts` |
-| 11 | `0011_audit_viewer` (`list_audit_events`, `SELECT` on `audit_event` for `auth_fn_owner` only) | Naszrul M1-PH3 | 0008 | Implemented. Numbered 0011 because Zikri's `0009_tracking_lookup` and `0010_retention_functions` are in flight; the revisions are independent, and `checkOrder` needs all three on `main` in numeric order |
-| later | `tracking_lookup`, `retention_functions` (Zikri); `proof_maintenance_functions` (Syauqi); `session_cleanup_functions`, `ops_functions` (Naszrul) | owner of the function | 0007 | Additive; single head enforced by Zikri |
+| 9 | `0009_tracking_lookup` (`lookup_tracking`) | Zikri M2-PH3-T04 | 0008 | Implemented: owned by `lookup_fn_owner`, executable only by `tracking_runtime`; proven by `tests/integration/tracking-lookup.test.ts` |
+| 10 | `0010_retention_functions` (`list_retention_candidates`, `anonymize_parcel`) | Zikri M2-PH3-T08 | 0009 | Implemented: owned by `maintenance_fn_owner`, executable only by `maintenance_runtime`; adds the owner's audit insert and history-time read; proven by `tests/integration/retention.test.ts` |
+| 11 | `0011_audit_viewer` (`list_audit_events`, `SELECT` on `audit_event` for `auth_fn_owner` only) | Naszrul M1-PH3 | 0010 | Implemented; the only read path to `audit_event` for the runtime role, proven by `tests/integration/admin-audit.test.ts` |
+| later | `proof_maintenance_functions` (Syauqi); `session_cleanup_functions`, `ops_functions` (Naszrul) | owner of the function | 0007 | Additive; single head enforced by Zikri |
 
 ## Handoff register
 

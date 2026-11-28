@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { createPrincipalUow } from '@/server/core/authorized';
 import { createRegistrationHandler } from '@/server/modules/parcels/register-handler';
 import { createParcelReadHandlers } from '@/server/modules/parcels/read-handlers';
+import { createTrackingHandler } from '@/server/modules/parcels/tracking-handler';
 import { seedRiderParcels } from '../../fixtures/delivery/rider-parcels';
 import type { IsolatedDatabase } from '../../harness/isolated-database';
 import { origin } from '../../harness/login-as';
@@ -35,6 +36,19 @@ export const parcelRows: MatrixRow[] = [
       return createParcelReadHandlers(authorize(database)).detail(actor.request('/parcels/' + parcelId), {
         params: Promise.resolve({ parcelId }),
       });
+    },
+  },
+  {
+    // Public and read-only: every identity, signed in or not, gets the same public history. The actor's cookie and CSRF
+    // header are ignored; only the same-origin check and the per-source limiter apply.
+    endpoint: 'A13', label: 'POST /public/tracking for a seeded parcel',
+    expected: { anonymous: 200, 'seller.a': 200, 'seller.b': 200, 'rider.a': 200, 'rider.b': 200, admin: 200, inactive: 200, 'must.change': 200 },
+    call: async (actor, _handlers, database) => {
+      const [{ trackingNumber }] = await seedRiderParcels(database);
+      return createTrackingHandler({
+        pool: database.pool(), trackingPool: database.pool('tracking_runtime'),
+        settings: { APP_ORIGIN: origin(), RATE_LIMIT_KEY: process.env.RATE_LIMIT_KEY! }, source: () => '127.0.0.1',
+      })(actor.request('/public/tracking', { method: 'POST', body: JSON.stringify({ trackingNumber }), headers: { 'content-type': 'application/json' } }));
     },
   },
 ];

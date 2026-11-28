@@ -78,10 +78,17 @@ export const parcelDetailSchema = parcelSummarySchema.extend({
   hasProof: z.boolean(), anonymized: z.boolean(), terminalAt: z.iso.datetime().nullable(),
 });
 export type ParcelInput = z.infer<typeof parcelInputSchema>;
+// A11 sort keys (allowlist). Both end with createdAt desc and id desc so the order is always stable.
+export const PARCEL_SORTS = ['createdAt', 'currentStatus'] as const;
 export const parcelListQuerySchema = z.strictObject({
   page: z.string().regex(/^[1-9][0-9]*$/).transform(Number).pipe(z.number().int().max(100_000)).default(1),
   pageSize: z.string().regex(/^[1-9][0-9]*$/).transform(value => Math.min(Number(value), 100)).default(20),
+  // Literal search text (D-08): a tracking-number prefix or a recipient-name substring, case-insensitive.
+  q: z.string().trim().refine(v => chars(v) >= 1 && chars(v) <= 64, 'Use 1 to 64 characters.').optional(),
+  status: statusSchema.optional(),
+  sort: z.enum(PARCEL_SORTS).default('createdAt'),
 });
+export type ParcelListQuery = z.infer<typeof parcelListQuerySchema>;
 export const parcelListSchema = z.strictObject({
   items: z.array(parcelSummarySchema), page: z.number().int().positive(),
   pageSize: z.number().int().min(1).max(100), total: z.number().int().nonnegative(),
