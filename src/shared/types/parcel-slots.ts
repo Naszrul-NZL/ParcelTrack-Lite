@@ -14,7 +14,8 @@ import type { ParcelDetail } from '@/shared/schemas';
  * When the page shows each slot (wired in M2-PH3-T07):
  * - `RiderActionPanel`: only for the assigned Rider while the status still allows a Rider action
  *   (ASSIGNED or OUT_FOR_DELIVERY).
- * - `ProofViewer`: only when `parcel.hasProof` is true.
+ * - `ProofViewer`: only when `parcel.hasProof` is true and the parcel is not anonymized (A19 denies
+ *   anonymized parcels, so a viewer there could only fail).
  */
 export type ParcelSlotProps = {
   /** The A12 detail exactly as served to the signed-in viewer. */
