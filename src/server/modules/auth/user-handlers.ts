@@ -5,12 +5,8 @@ import { AppError } from '@/server/core/errors';
 import { apiHandler } from '@/server/core/handler';
 import { readJsonBody } from '@/server/core/json-body';
 import { getSettings } from '@/server/core/settings';
-<<<<<<< HEAD
 import { auditQuerySchema, createRiderSchema, idSchema, temporaryPasswordSchema, userListQuerySchema, userStatusSchema } from '@/shared/schemas';
-=======
-import { createRiderSchema, idSchema, temporaryPasswordSchema, userListQuerySchema, userStatusSchema } from '@/shared/schemas';
 import { accountJournal, type AccountJournal } from './account-journal';
->>>>>>> origin/feat/m1-ph3-account-journal
 import { PasswordService, validatePassword } from './password';
 import { createRider, listAuditEvents, listUsers, resetPassword, setUserActive } from './users';
 
