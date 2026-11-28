@@ -212,6 +212,7 @@ Revision order is fixed and equals dependency order; a revision is "applied" onc
 | later, named | owner of the function | `tracking_lookup`, `retention_functions` (Zikri); `proof_maintenance_functions` (Syauqi); `session_cleanup_functions`, `ops_functions` (Naszrul) |
 =======
 | `0012_ops_functions` | Naszrul | Implemented: `provision_admin`, `set_maintenance_mode` and `get_maintenance_state`, owned by `ops_fn_owner` and executable only by `ops_runtime`. Follows `0011_audit_viewer`, which must be on `main` first |
+| `0013_ops_account_commands` | Naszrul | Implemented: `lock_account`, `lock_account_by_id`, `recover_account`, `purge_sessions`, `force_password_change`, `quarantine_after_restore` and `account_exists`, owned by `ops_fn_owner` and executable only by `ops_runtime` |
 | later, named | owner of the function | `tracking_lookup`, `retention_functions` (Zikri); `proof_maintenance_functions` (Syauqi); `session_cleanup_functions` and the remaining `ops_functions` commands (Naszrul) |
 >>>>>>> origin/feat/m1-ph3-ops-provision-admin
 
