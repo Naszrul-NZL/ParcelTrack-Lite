@@ -5,7 +5,12 @@ import { AppError } from '@/server/core/errors';
 import { apiHandler } from '@/server/core/handler';
 import { readJsonBody } from '@/server/core/json-body';
 import { getSettings } from '@/server/core/settings';
+<<<<<<< HEAD
 import { auditQuerySchema, createRiderSchema, idSchema, temporaryPasswordSchema, userListQuerySchema, userStatusSchema } from '@/shared/schemas';
+=======
+import { createRiderSchema, idSchema, temporaryPasswordSchema, userListQuerySchema, userStatusSchema } from '@/shared/schemas';
+import { accountJournal, type AccountJournal } from './account-journal';
+>>>>>>> origin/feat/m1-ph3-account-journal
 import { PasswordService, validatePassword } from './password';
 import { createRider, listAuditEvents, listUsers, resetPassword, setUserActive } from './users';
 
@@ -19,7 +24,7 @@ function newTemporaryPassword() {
   return value;
 }
 
-export function createUserAdminHandlers(authorize: typeof principalUow = principalUow, passwords: Pick<PasswordService, 'hash'> = { hash: value => defaultPasswords().hash(value) }) {
+export function createUserAdminHandlers(authorize: typeof principalUow = principalUow, passwords: Pick<PasswordService, 'hash'> = { hash: value => defaultPasswords().hash(value) }, journal: () => AccountJournal = accountJournal) {
   return {
     list: apiHandler(async request => {
       const result = await authorize(request, { roles: ['ADMIN'] }, async client => {
@@ -48,6 +53,8 @@ export function createUserAdminHandlers(authorize: typeof principalUow = princip
         if (!userId.success) throw new AppError('NOT_FOUND');
         return setUserActive(client, userId.data, userStatusSchema.parse(await readJsonBody(request)), requestId);
       });
+      // After the transaction has committed, so the journal never records a change that rolled back.
+      await journal().record(result.id, 'USER_STATUS_CHANGED', { isActive: result.isActive });
       return Response.json(result);
     }),
     // A08. The role is decided here, never by the request: the strict schema rejects a `role` field. Hashing happens
@@ -64,6 +71,7 @@ export function createUserAdminHandlers(authorize: typeof principalUow = princip
         }
         return createRider(client, input, await passwords.hash(input.initialPassword), requestId);
       });
+      await journal().record(result.id, 'USER_CREATED');
       return Response.json(result, { status: 201 });
     }),
     // A21. The generated password appears only in this response body: it is never stored, logged or audited, and the
@@ -74,9 +82,10 @@ export function createUserAdminHandlers(authorize: typeof principalUow = princip
         if (!userId.success) throw new AppError('NOT_FOUND');
         const temporaryPassword = newTemporaryPassword();
         await resetPassword(client, userId.data, await passwords.hash(temporaryPassword), requestId);
-        return temporaryPasswordSchema.parse({ temporaryPassword });
+        return { userId: userId.data, ...temporaryPasswordSchema.parse({ temporaryPassword }) };
       });
-      return Response.json(result);
+      await journal().record(result.userId, 'PASSWORD_RESET');
+      return Response.json({ temporaryPassword: result.temporaryPassword });
     }),
   };
 }
