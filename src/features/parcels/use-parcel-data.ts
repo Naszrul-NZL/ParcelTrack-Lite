@@ -23,7 +23,12 @@ export function useParcelData<T>(path: string, schema: { parse(value: unknown): 
   }, [key, path, request, schema]);
 
   return {
-    result: result?.key === key ? result : null,
-    retry: () => setAttempt(current => current + 1),
+    // Keep a successful detail mounted while it refreshes. Slot components can preserve safe local input
+    // (notably a selected proof after a 409) until the newer server version replaces these props.
+    result: result?.key === key || result?.data ? result : null,
+    retry: () => {
+      setResult(current => current?.data ? current : null);
+      setAttempt(current => current + 1);
+    },
   };
 }
