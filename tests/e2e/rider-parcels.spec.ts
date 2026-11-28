@@ -1,6 +1,7 @@
 import '../../scripts/env';
 import { randomUUID } from 'node:crypto';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { fileFixtures } from '../fixtures/files/generate';
 
 test.skip(process.env.PTL_E2E_AUTH !== '1', 'Set PTL_E2E_AUTH=1 with the migrated Rider fixture profile.');
 
@@ -114,5 +115,66 @@ test('M3-PH3-TC17 assigns through A15, starts delivery with a real Rider login a
   await page.goto(detailPath!);
   await expect(page.getByRole('heading', { name: 'Parcel not found' })).toBeVisible();
   await expect(page.getByText(trackingNumber, { exact: true })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('M3-PH3-TC14 Rider records Delivered with proof on a phone and rejects hostile selections locally', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'phone', 'The Rider outcome journey is verified at phone size.');
+  await page.setViewportSize({ width: 375, height: 812 });
+  const errors: string[] = [];
+  const statusRequests: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('request', request => {
+    if (request.method() === 'POST' && request.url().endsWith('/status')) statusRequests.push(request.url());
+  });
+
+  const trackingNumber = await registerAndAssignBrowserParcel(page);
+  await signIn(page, 'rider.a');
+  await page.getByRole('link', { name: trackingNumber }).click();
+  await expect(page.getByRole('heading', { name: 'Start this delivery' })).toBeVisible();
+
+  const started = page.waitForResponse(response => response.url().endsWith('/status') && response.request().method() === 'POST');
+  await page.getByRole('button', { name: 'Start delivery' }).click();
+  expect((await started).status()).toBe(200);
+  await expect(page.getByRole('heading', { name: 'Record the outcome' })).toBeVisible();
+
+  const fixtures = await fileFixtures();
+  const hostile = fixtures.find(fixture => fixture.id === 'double-extension')!;
+  const oversized = fixtures.find(fixture => fixture.id === 'oversize')!;
+  const valid = fixtures.find(fixture => fixture.id === 'valid-jpg')!;
+  const input = page.getByLabel('Proof photo');
+  await input.focus();
+  await expect(input).toBeFocused();
+
+  await input.setInputFiles({ name: hostile.filename, mimeType: 'image/jpeg', buffer: hostile.bytes });
+  await expect(page.getByText(/double-extension files are not accepted/)).toBeVisible();
+  expect(statusRequests).toHaveLength(1);
+  await input.setInputFiles({ name: oversized.filename, mimeType: 'image/jpeg', buffer: oversized.bytes });
+  await expect(page.getByText(/larger than 3 MiB/)).toBeVisible();
+  expect(statusRequests).toHaveLength(1);
+
+  await input.setInputFiles({ name: valid.filename, mimeType: 'image/jpeg', buffer: valid.bytes });
+  await page.getByLabel('Delivered').check();
+  await fitsViewport(page);
+  for (const theme of ['light', 'dark']) {
+    const current = await page.locator('html').getAttribute('data-theme');
+    if (current !== theme) await page.getByRole('button', { name: 'Switch to ' + theme + ' theme' }).click();
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.getByRole('article', { name: 'parcel docket ' + trackingNumber })).toContainText('Out for delivery');
+    await fitsViewport(page);
+    await page.screenshot({ path: testInfo.outputPath(`rider-outcome-${theme}.png`), fullPage: true });
+  }
+  await page.setViewportSize({ width: 320, height: 800 });
+  await fitsViewport(page);
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+  await fitsViewport(page);
+  await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+
+  const delivered = page.waitForResponse(response => response.url().endsWith('/status') && response.request().method() === 'POST');
+  await page.getByRole('button', { name: 'Save outcome' }).click();
+  expect((await delivered).status()).toBe(200);
+  await expect(page.getByRole('heading', { name: 'Record the outcome' })).toHaveCount(0);
+  await expect(page.getByRole('article', { name: 'parcel docket ' + trackingNumber })).toContainText('Delivered');
+  expect(statusRequests).toHaveLength(2);
   expect(errors).toEqual([]);
 });
