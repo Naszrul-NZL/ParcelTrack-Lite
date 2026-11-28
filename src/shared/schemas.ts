@@ -48,6 +48,18 @@ export const userListQuerySchema = z.strictObject({
   page: pageSchema, pageSize: pageSizeSchema,
 });
 export const auditQuerySchema = z.strictObject({eventType: z.enum(AUDIT_TYPES).optional(), parcelId: idSchema.optional(), page: pageSchema, pageSize: pageSizeSchema});
+// A20 response. Strict objects are the allowlist: a field the database function did not intend to return fails here.
+export const auditEventSchema = z.strictObject({
+  id: idSchema, eventType: z.enum(AUDIT_TYPES), outcome: z.enum(['SUCCESS', 'FAILURE']),
+  actorId: idSchema.nullable(), targetUserId: idSchema.nullable(), parcelId: idSchema.nullable(),
+  occurredAt: z.iso.datetime(), requestId: z.uuid(),
+  details: z.record(z.string().max(40), z.union([z.string().max(128), z.number(), z.boolean()])),
+});
+export const auditListSchema = z.strictObject({
+  items: z.array(auditEventSchema), page: z.number().int().positive(),
+  pageSize: z.number().int().min(1).max(100), total: z.number().int().nonnegative(),
+});
+export type AuditList = z.infer<typeof auditListSchema>;
 export const parcelInputSchema = z.strictObject({
   recipientName: z.string().trim().refine(v => chars(v) >= 1 && chars(v) <= 120),
   recipientPhone: phoneSchema,
