@@ -67,6 +67,8 @@ The [Seller slice evidence](evidence/m2-ph2-seller-slice.md) records the browser
 
 **`/track` (M2-PH3-T06).** The page posts the normalized number with no cookie, CSRF token or referrer, shows Malaysia time, and gives distinct messages for 404, 422, 429 (with the wait), server failure and network failure while keeping the typed number. Only the latest lookup can update the screen. Nothing is stored and real numbers never enter the URL. The synthetic sample journeys remain, clearly labelled, and never send a lookup. Component tests cover TC10; `tests/e2e/public-tracking.spec.ts` covers TC09 on the real stack for Registered and Assigned parcels (the API test covers all five statuses and an anonymized parcel).
 
+**Security rows (M2-PH3-T10).** The [security worksheet](security-tests.md) now records actual PH3 results for M2-01, M2-02, M2-04, M2-05, M2-06, M2-07, RLS-07 and RLS-08, the A13 part of S-01, and the function part of M2-10 (the scheduled job and proof removal are PH4/M3). New evidence: TC14 hostile and oversized recipient text (`tests/integration/parcel-hostile-input.test.ts`) and a token-generator check (`tests/unit/parcel-tokens.test.ts`).
+
 ## M3 PH2 Rider slice (issues #11-#14)
 
 PR #28 registers `0006_delivery_functions` and `0007_delivery_final`; its migration, integration, app and local-stack checks are green. The close-out branch mounts A16 and A17, returns M2's shared A12 detail after Start delivery, adds both endpoints to the real-session authorization matrix, replaces Rider fixture sessions with `loginAs`, and connects the Airway Rider list to the session client. The phone TC09 case starts delivery, reloads the committed state, signs in as Rider B and confirms list and direct-detail isolation.
