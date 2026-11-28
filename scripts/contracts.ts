@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { z } from 'zod';
-import { principalSchema,userSummarySchema,userListSchema,userStatusSchema,registerSchema,changePasswordSchema,createRiderSchema,temporaryPasswordSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema,PARCEL_SORTS } from '../src/shared/schemas';
+import { principalSchema,userSummarySchema,userListSchema,userStatusSchema,registerSchema,changePasswordSchema,createRiderSchema,temporaryPasswordSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema,trackingInputSchema,PARCEL_SORTS } from '../src/shared/schemas';
 import { STATUSES } from '../src/shared/constants';
 import { riderListSchema,riderStatusMultipartSchema } from '../src/features/delivery/rider-contract';
 import { adminParcelListSchema,assignmentSchema,dashboardSchema } from '../src/features/delivery/admin-contract';
@@ -41,6 +41,21 @@ for(const endpoint of implementedEndpoints()) {
           description: list ? 'Page of Seller parcels.' : 'Private parcel detail.',
           content: { 'application/json': { schema: { $ref: '#/components/schemas/' + (list ? 'ParcelList' : 'ParcelDetail') } } },
         },
+        default: { description: 'Safe error envelope. See the system contract.' },
+      },
+    };
+    continue;
+  }
+  if (endpoint.id === 'A13') {
+    paths[endpoint.path].post = {
+      operationId: endpoint.id,
+      description: 'Public parcel tracking. No session or CSRF token is needed, but the request must be same-origin and is limited to 30 lookups per source per minute, invalid tokens included. The token is trimmed and uppercased before validation. The response holds only the status history; it never contains recipient, actor or proof data.',
+      requestBody: { required: true, content: { 'application/json': { schema: z.toJSONSchema(trackingInputSchema, { io: 'input' }) } } },
+      responses: {
+        '200': { description: 'Public status history, oldest first.', content: { 'application/json': { schema: { $ref: '#/components/schemas/PublicTracking' } } } },
+        '404': { description: 'No parcel has this tracking number.' },
+        '422': { description: 'The tracking number is not in the PTL- format.' },
+        '429': { description: 'Too many lookups from this source; see Retry-After.' },
         default: { description: 'Safe error envelope. See the system contract.' },
       },
     };

@@ -1,8 +1,19 @@
 import { test, expect } from '@playwright/test';
 
-test('sample tracking covers empty, validation, loading, missing and delivery histories', async ({ page }) => {
-  const writes: string[] = [];
-  page.on('request', request => { if (request.method() === 'POST') writes.push(request.url()); });
+test('tracking covers empty, local validation, lookup outcomes and sample journeys', async ({ page }) => {
+  // No database is needed: A13 is answered by the test. Sample journeys never send a lookup.
+  const lookups: { body: string | null; cookie?: string; csrf?: string }[] = [];
+  const answers = [
+    { status: 404, json: { error: { code: 'NOT_FOUND', message: 'The request could not be completed.' }, requestId: 'r1' } },
+    { status: 200, json: { history: [{ status: 'REGISTERED', changedAt: '2026-10-21T08:00:00.000Z' }, { status: 'OUT_FOR_DELIVERY', changedAt: '2026-10-21T16:00:00.000Z' }] } },
+  ];
+  await page.route('**/api/v1/public/tracking', async route => {
+    const headers = route.request().headers();
+    lookups.push({ body: route.request().postData(), cookie: headers.cookie, csrf: headers['x-csrf-token'] });
+    const answer = answers.shift()!;
+    await route.fulfill({ status: answer.status, contentType: 'application/json', json: answer.json });
+  });
+  const number = 'PTL-' + 'ABCDEF0123456789'.repeat(2);
   await page.goto('/track');
   await expect(page.getByRole('heading', { name: 'Your parcel’s story starts here.' })).toBeVisible();
   await page.getByRole('button', { name: 'Track parcel', exact: true }).click();
@@ -10,19 +21,27 @@ test('sample tracking covers empty, validation, loading, missing and delivery hi
   await expect(page.getByLabel('Tracking number', { exact: true })).toBeFocused();
   await page.getByLabel('Tracking number', { exact: true }).fill('UNKNOWN');
   await page.getByRole('button', { name: 'Track parcel', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Showing sample…', exact: true })).toBeDisabled();
-  await expect(page.getByRole('heading', { name: 'We couldn’t find that sample.' })).toBeVisible();
-  await page.getByRole('button', { name: 'Show an example' }).click();
-  await expect(page.getByRole('heading', { name: 'PTL-DEMO-001', exact: true })).toBeVisible();
+  await expect(page.getByText(/PTL- followed by 32 letters A to F or digits/)).toBeVisible();
+  expect(lookups).toEqual([]);
+
+  await page.getByLabel('Tracking number', { exact: true }).fill(number.toLowerCase());
+  await page.getByRole('button', { name: 'Track parcel', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'We couldn’t find that parcel.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Track parcel', exact: true }).click();
+  await expect(page.getByRole('heading', { name: number, exact: true })).toBeVisible();
+  await expect(page.locator('.tracking-status h2')).toHaveText('Out for delivery');
   await expect(page.getByRole('region', { name: 'Tracking result' })).toBeFocused();
-  for (const [number, status] of [['PTL-DEMO-002', 'Delivered'], ['PTL-DEMO-003', 'Registered'], ['PTL-DEMO-001', 'Out for delivery'], ['PTL-DEMO-004', 'Failed'], ['PTL-DEMO-005', 'Assigned']]) {
-    await page.getByRole('button', { name: `${number} ${status}`, exact: true }).click();
-    await expect(page.getByRole('heading', { name: number, exact: true })).toBeVisible();
+  expect(lookups).toEqual([{ body: JSON.stringify({ trackingNumber: number }), cookie: undefined, csrf: undefined }, { body: JSON.stringify({ trackingNumber: number }), cookie: undefined, csrf: undefined }]);
+  expect(page.url()).not.toContain(number);
+
+  for (const [sample, status] of [['PTL-DEMO-002', 'Delivered'], ['PTL-DEMO-003', 'Registered'], ['PTL-DEMO-001', 'Out for delivery'], ['PTL-DEMO-004', 'Failed'], ['PTL-DEMO-005', 'Assigned']]) {
+    await page.getByRole('button', { name: `${sample} ${status}`, exact: true }).click();
+    await expect(page.getByRole('heading', { name: sample, exact: true })).toBeVisible();
     await expect(page.locator('.tracking-status h2')).toHaveText(status);
     await expect(page.locator('.docket-journey [aria-current="step"] h3')).toHaveText(status);
     if (status === 'Failed') await expect(page.getByRole('region', { name: 'Tracking result' }).getByText('Delivered', { exact: true })).toHaveCount(0);
   }
-  expect(writes).toEqual([]);
+  expect(lookups).toHaveLength(2);
 });
 
 test('sign-in validates locally, reports server outcomes and clears the password after each submit', async ({ page }) => {
@@ -102,8 +121,7 @@ test('home links, keyboard navigation and page layouts work across screen widths
   }
   await page.goto('/');
   await page.locator('.hero-actions').getByRole('link', { name: 'Track a parcel', exact: true }).click();
-  await page.getByLabel('Tracking number', { exact: true }).fill('PTL-DEMO-002');
-  await page.getByRole('button', { name: 'Track parcel', exact: true }).click();
+  await page.getByRole('button', { name: 'PTL-DEMO-002 Delivered', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'PTL-DEMO-002', exact: true })).toBeVisible();
   await page.getByRole('navigation').getByRole('link', { name: 'Home', exact: true }).click();
   await page.locator('.public-tracking-note').getByRole('link', { name: 'Track a parcel' }).click();
@@ -151,13 +169,10 @@ test('Airway themes persist across navigation and reload with locally served fon
     loaded: Array.from(document.fonts).filter(font => font.status === 'loaded').map(font => font.family.replaceAll('"', '')),
   }));
   expect(fonts.loaded).toEqual(expect.arrayContaining(fonts.expected));
-  await page.getByLabel('Tracking number', { exact: true }).fill('UNKNOWN');
-  await page.getByRole('button', { name: 'Track parcel', exact: true }).click();
-  const recovery = page.getByRole('button', { name: 'Show an example' });
-  await expect(recovery).toBeVisible();
-  await expect(recovery).toHaveCSS('color', 'rgb(39, 36, 65)');
-  await recovery.focus();
+  const sample = page.getByRole('button', { name: 'PTL-DEMO-001 Out for delivery', exact: true });
+  await sample.focus();
   await page.keyboard.press('Enter');
+  await expect(page.getByRole('region', { name: 'Tracking result' })).toBeFocused();
   await expect(page.locator('.docket-journey [aria-current="step"] h3')).toHaveText('Out for delivery');
   await page.getByRole('button', { name: 'Switch to light theme' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
@@ -183,9 +198,11 @@ test('Airway layouts support both themes, long identifiers, enlarged text and re
   await page.goto('/track?number=PTL-DEMO-001');
   await page.locator('.docket-identity h2').evaluate(element => { element.textContent = 'PTL-' + 'A'.repeat(32); });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.route('**/api/v1/public/tracking', route => route.fulfill({ status: 404, json: { error: { code: 'NOT_FOUND', message: 'The request could not be completed.' }, requestId: 'r' } }));
   await page.getByLabel('Tracking number', { exact: true }).fill('PTL-' + 'A'.repeat(32));
   await page.getByRole('button', { name: 'Track parcel', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'We couldn’t find that sample.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'We couldn’t find that parcel.' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(page.url()).not.toContain('AAAA');
   await page.setViewportSize({ width: 1280, height: 1000 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
