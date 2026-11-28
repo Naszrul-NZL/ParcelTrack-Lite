@@ -114,7 +114,8 @@ export function TrackPage({ initialSample = '', fetcher = (...args) => fetch(...
           <p className="lead">{presentation?.description ?? 'Follow the recorded journey, from registration to the final delivery update.'}</p>
           {latest && <p className="last-update">Last recorded update <time dateTime={latest.changedAt}>{formatParcelTime(latest.changedAt)}</time>{parcel?.sample ? ' (sample)' : ''}</p>}
         </div>
-        <form className="tracking-form" onSubmit={submit} noValidate>
+        {/* method="post": a submit before the page is interactive must not put the number in the URL. */}
+        <form className="tracking-form" method="post" onSubmit={submit} noValidate>
           <Label htmlFor="tracking-number">Tracking number</Label>
           <div className="input-action">
             <Input ref={input} id="tracking-number" name="trackingNumber" value={number} onChange={event => setNumber(event.target.value)} maxLength={64}
