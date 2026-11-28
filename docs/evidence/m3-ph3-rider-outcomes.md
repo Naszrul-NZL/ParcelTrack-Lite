@@ -33,3 +33,12 @@ The phone journey recorded exactly two A17 requests: the intentional Start and t
 - Motion is limited to the shared color transitions and respects the existing reduced-motion behavior.
 
 Screenshots and Playwright traces remain under ignored `.local/test-results`; they contain only synthetic fixture data.
+
+## Review fixes (28 November 2026)
+
+- The shared data hook keeps an earlier result only while the same path refreshes, so the Seller list shows loading again after a search, filter, sort or page change.
+- The Rider panel stays blocked after a successful action until the refetched parcel arrives, and its message then stops saying a refresh is still to come.
+- Three component tests were added and failed before the fix. Afterwards `npm run check` (448 unit/component tests), the production build and `security:local` passed, as did the Rider and Seller phone browser specs (5) and the Seller and public tracking desktop specs (4).
+- Full rerun on this branch: `npm run check` 448/448, integration 177/177 (30 files), production build, `security:local`, `security:scan` (0 findings) and `security:controls` passed. The full browser suite with `--workers=1` passed 52 and skipped 2.
+- Flaky behaviour seen: with the default 6 browser workers, 3 tests failed on each of two runs (not the same 3 each time), and one registration focus component test failed once, then passed in 8 repeats and a full rerun. Causes not identified.
+- The post-refresh message wording is covered by component tests only, not checked visually.

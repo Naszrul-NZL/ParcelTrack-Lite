@@ -105,3 +105,36 @@ it('M3-PH3-TC13 refreshes after an uncertain result and never replays automatica
   expect(update).toHaveBeenCalledOnce();
   expect(changed).toHaveBeenCalledOnce();
 });
+
+it('M3-PH3-TC13 stays blocked after a success until the refreshed parcel arrives', async () => {
+  const user = userEvent.setup();
+  const update = vi.fn().mockResolvedValue(undefined);
+  const view = render(<RiderActionPanelView parcel={parcel('ASSIGNED')} onChanged={vi.fn()} updateStatus={update} />);
+  await user.click(screen.getByRole('button', { name: 'Start delivery' }));
+  const waiting = screen.getByRole('button', { name: 'Refreshing parcel…' });
+  expect(waiting).toBeDisabled();
+  await user.click(waiting);
+  expect(update).toHaveBeenCalledOnce();
+  expect(screen.getByText('Refreshing the parcel with its latest status.')).toBeVisible();
+
+  view.rerender(<RiderActionPanelView parcel={parcel('OUT_FOR_DELIVERY')} onChanged={vi.fn()} updateStatus={update} />);
+  expect(screen.getByRole('button', { name: 'Save outcome' })).toBeEnabled();
+  expect(screen.getByText('Delivery started.')).toBeVisible();
+  expect(screen.getByText('Record the outcome when the delivery is finished.')).toBeVisible();
+  expect(screen.queryByText('Refreshing the parcel with its latest status.')).toBeNull();
+});
+
+it('M3-PH3-TC13 stops saying it will refresh once the refreshed parcel arrives after a 409', async () => {
+  const user = userEvent.setup();
+  const update = vi.fn().mockRejectedValue(new ApiFailure(409, 'VERSION_CONFLICT'));
+  const view = render(<RiderActionPanelView parcel={parcel('OUT_FOR_DELIVERY', 3)} onChanged={vi.fn()} updateStatus={update} />);
+  await user.click(screen.getByLabelText('Delivered'));
+  await user.upload(screen.getByLabelText('Proof photo'), jpg());
+  await user.click(screen.getByRole('button', { name: 'Save outcome' }));
+  expect(await screen.findByText(/The parcel will refresh before/)).toBeVisible();
+
+  view.rerender(<RiderActionPanelView parcel={parcel('OUT_FOR_DELIVERY', 4)} onChanged={vi.fn()} updateStatus={update} />);
+  expect(screen.getByText('The parcel changed.')).toBeVisible();
+  expect(screen.getByText('Check the latest status, then submit again if it is still needed.')).toBeVisible();
+  expect(screen.queryByText(/The parcel will refresh before/)).toBeNull();
+});

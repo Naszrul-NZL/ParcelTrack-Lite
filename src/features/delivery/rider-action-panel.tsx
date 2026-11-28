@@ -11,11 +11,17 @@ import type { RiderActionPanelProps } from '@/shared/types/parcel-slots';
 
 type RiderOutcome = Extract<ParcelStatus, 'DELIVERED' | 'FAILED'>;
 type UpdateStatus = (parcelId: string, status: Extract<ParcelStatus, 'OUT_FOR_DELIVERY' | RiderOutcome>, expectedVersion: number, proof?: File) => Promise<void>;
-type Notice = { kind: 'success' | 'error'; title: string; detail: string };
+/** `refreshedDetail` replaces `detail` once the refetched parcel arrives. */
+type Notice = { kind: 'success' | 'error'; title: string; detail: string; refreshedDetail?: string };
 
 const PHOTO_NAME = /^[^./\\]+\.(?:jpe?g|png)$/i;
 const ALLOWED_MEDIA = new Set(['image/jpeg', 'image/png']);
 const MAX_MIB = LIMITS.proofBytes / 1024 / 1024;
+const CHECK_STATUS = 'Check the latest status, then submit again if it is still needed.';
+const UNCERTAIN: Notice = {
+  kind: 'error', title: 'The result is uncertain.',
+  detail: 'The parcel will refresh before you can try again. Check its latest status first.', refreshedDetail: CHECK_STATUS,
+};
 
 function validatePhoto(file: File | null) {
   if (!file) return 'Choose one JPG or PNG photo.';
@@ -29,13 +35,10 @@ function validatePhoto(file: File | null) {
 
 function failureNotice(error: unknown): { notice: Notice; refresh: boolean } {
   if (!(error instanceof ApiFailure)) {
-    return {
-      notice: { kind: 'error', title: 'The result is uncertain.', detail: 'The parcel will refresh before you can try again. Check its latest status first.' },
-      refresh: true,
-    };
+    return { notice: UNCERTAIN, refresh: true };
   }
   if (error.status === 409) return {
-    notice: { kind: 'error', title: 'The parcel changed.', detail: 'The parcel will refresh before you can submit again. Your selected photo will be kept when the action is still available.' },
+    notice: { kind: 'error', title: 'The parcel changed.', detail: 'The parcel will refresh before you can submit again. Your selected photo will be kept when the action is still available.', refreshedDetail: CHECK_STATUS },
     refresh: true,
   };
   if (error.code === 'PROOF_TOO_LARGE' || error.status === 413) return {
@@ -51,11 +54,9 @@ function failureNotice(error: unknown): { notice: Notice; refresh: boolean } {
     notice: { kind: 'error', title: 'Too many attempts.', detail: error.retryAfter ? `Try again in ${error.retryAfter} seconds.` : 'Wait a minute, then try again.' }, refresh: false,
   };
   if (error.status === 404 || error.status === 403 || error.status === 401) return {
-    notice: { kind: 'error', title: 'This action is no longer available.', detail: 'The parcel will refresh to check its assignment and latest status.' }, refresh: true,
+    notice: { kind: 'error', title: 'This action is no longer available.', detail: 'The parcel will refresh to check its assignment and latest status.', refreshedDetail: CHECK_STATUS }, refresh: true,
   };
-  if (error.status >= 500) return {
-    notice: { kind: 'error', title: 'The result is uncertain.', detail: 'The parcel will refresh before you can try again. Check its latest status first.' }, refresh: true,
-  };
+  if (error.status >= 500) return { notice: UNCERTAIN, refresh: true };
   return {
     notice: { kind: 'error', title: 'Couldn’t update this parcel.', detail: 'Review the selected outcome and photo, then try again.' }, refresh: false,
   };
@@ -74,6 +75,7 @@ export function RiderActionPanelView({ parcel, onChanged, updateStatus }: ViewPr
   const noticeRef = useRef<HTMLDivElement>(null);
 
   const refreshing = awaitingRefresh === parcel;
+  const refreshed = !!awaitingRefresh && !refreshing;
   const blocked = pending || refreshing;
 
   async function submit(status: 'OUT_FOR_DELIVERY' | RiderOutcome, proof?: File) {
@@ -86,7 +88,10 @@ export function RiderActionPanelView({ parcel, onChanged, updateStatus }: ViewPr
       setNotice({
         kind: 'success', title: status === 'OUT_FOR_DELIVERY' ? 'Delivery started.' : `Parcel marked ${status === 'DELIVERED' ? 'Delivered' : 'Failed'}.`,
         detail: 'Refreshing the parcel with its latest status.',
+        refreshedDetail: status === 'OUT_FOR_DELIVERY' ? 'Record the outcome when the delivery is finished.' : 'The latest status is shown on this parcel.',
       });
+      // The displayed version is now old; stay blocked until the refetched parcel replaces it.
+      setAwaitingRefresh(parcel);
       onChanged();
     } catch (error) {
       const failure = failureNotice(error);
@@ -139,7 +144,7 @@ export function RiderActionPanelView({ parcel, onChanged, updateStatus }: ViewPr
       className={notice.kind === 'success' ? 'border-success text-success' : undefined}
     >
       <AlertTitle>{notice.title}</AlertTitle>
-      <p>{notice.detail}</p>
+      <p>{refreshed && notice.refreshedDetail ? notice.refreshedDetail : notice.detail}</p>
     </Alert>}
 
     {parcel.currentStatus === 'ASSIGNED' && <Button type="button" className="min-h-11 w-full sm:w-fit" disabled={blocked} onClick={() => void submit('OUT_FOR_DELIVERY')}>

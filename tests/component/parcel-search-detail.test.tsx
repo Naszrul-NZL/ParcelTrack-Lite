@@ -114,6 +114,18 @@ it('M2-PH3-TC11 ignores a slow stale search response that arrives after a newer 
   expect(screen.queryByRole('link', { name: new RegExp(token('D')) })).toBeNull();
 });
 
+it('M2-PH3-TC11 shows loading, not the previous records, while a changed query is pending', async () => {
+  const pending = Promise.withResolvers<Response>();
+  const fetcher = session('SELLER', path => query(path).status ? pending.promise : listOf([summary('12', 'A')]));
+  render(<SessionProvider fetcher={fetcher}><SellerParcelListPage /></SessionProvider>);
+  await screen.findByRole('link', { name: new RegExp(token('A')) });
+  fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'DELIVERED' } });
+  expect(screen.getByText('Loading parcels…')).toBeVisible();
+  expect(screen.queryByRole('link', { name: new RegExp(token('A')) })).toBeNull();
+  await act(async () => { pending.resolve(listOf([summary('20', 'C', 'DELIVERED')])); });
+  expect(await screen.findByRole('link', { name: new RegExp(token('C')) })).toBeVisible();
+});
+
 it('M2-PH3-TC11 validates search length locally and explains 422 and 429 answers', async () => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
   const fetcher = session('SELLER', path => {
