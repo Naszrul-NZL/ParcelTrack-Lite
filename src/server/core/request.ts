@@ -10,8 +10,20 @@ export function verifyOrigin(request: Request, expectedOrigin = getSettings().AP
   try { if (new URL(request.headers.get('referer') ?? '').origin === expectedOrigin) return; } catch { /* Missing/malformed provenance is rejected below. */ }
   throw new AppError('CSRF_INVALID');
 }
-export function sourceAddress(request: Request): string {
-  const expected=process.env.PTL_ADAPTER_SECRET;
+/**
+ * The client address used to key rate limits (login, registration, anonymous sessions, public tracking).
+ * - On Vercel there is no custom server. Vercel's edge sets `x-vercel-forwarded-for` and `x-real-ip` itself and
+ *   overwrites any client-supplied value, so the first entry is the real client address.
+ * - Locally, `scripts/server.mjs` stamps the socket address with a per-process token, and requests without that token
+ *   are refused, so a client cannot choose its own bucket.
+ */
+export function sourceAddress(request: Request, env: Record<string, string | undefined> = process.env): string {
+  if (env.VERCEL === '1') {
+    const forwarded = (request.headers.get('x-vercel-forwarded-for') ?? request.headers.get('x-real-ip') ?? '').split(',')[0].trim();
+    if (!forwarded) throw new AppError('BUSY');
+    return forwarded;
+  }
+  const expected=env.PTL_ADAPTER_SECRET;
   if (!expected || !equalSecret(request.headers.get('x-ptl-adapter-token') ?? '',expected)) throw new AppError('BUSY');
   const source=request.headers.get('x-ptl-client-ip');
   if (!source) throw new AppError('BUSY');
