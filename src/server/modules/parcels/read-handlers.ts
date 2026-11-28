@@ -12,8 +12,7 @@ export function createParcelReadHandlers(authorize: typeof principalUow = princi
         const query = new URL(request.url).searchParams;
         const entries = Array.from(query.entries());
         if (entries.length !== new Set(query.keys()).size) throw new AppError('VALIDATION_ERROR');
-        const { page, pageSize } = parcelListQuerySchema.parse(Object.fromEntries(entries));
-        return listSellerParcels(client, principal.id, page, pageSize);
+        return listSellerParcels(client, principal.id, parcelListQuerySchema.parse(Object.fromEntries(entries)));
       });
       return Response.json(result);
     }),

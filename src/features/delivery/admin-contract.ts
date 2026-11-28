@@ -34,4 +34,18 @@ export const assignmentSchema = z.strictObject({
   expectedVersion: z.number().int().positive().max(pgIntegerMax),
 });
 
+export const dashboardSchema = z.strictObject({
+  counts: z.strictObject({
+    REGISTERED: z.number().int().nonnegative(),
+    ASSIGNED: z.number().int().nonnegative(),
+    OUT_FOR_DELIVERY: z.number().int().nonnegative(),
+    DELIVERED: z.number().int().nonnegative(),
+    FAILED: z.number().int().nonnegative(),
+  }),
+  total: z.number().int().nonnegative(),
+  generatedAt: z.iso.datetime(),
+});
+
 export type AdminParcelList = z.infer<typeof adminParcelListSchema>;
+export type AdminParcelSummary = z.infer<typeof adminParcelSummarySchema>;
+export type AdminDashboard = z.infer<typeof dashboardSchema>;

@@ -34,6 +34,8 @@ export const loginResponseSchema = principalSchema.extend({csrfToken: z.string()
 // M1 PH3 request bodies and query strings. Strict objects reject unknown fields such as role, isActive or
 // mustChangePassword; the account role is decided by the endpoint, never by the request.
 export const createRiderSchema = z.strictObject({username: usernameSchema, displayName: displayNameSchema, initialPassword: passwordSchema});
+// A21 shows the generated one-time password once; this is the only place it is ever part of a response.
+export const temporaryPasswordSchema = z.strictObject({temporaryPassword: z.string().min(10).max(LIMITS.passwordMax)});
 export const changePasswordSchema = z.strictObject({currentPassword: z.string().min(1).refine(v => chars(v) <= LIMITS.passwordMax), newPassword: passwordSchema});
 // expectedVersion is compared with a PostgreSQL integer, so a larger number is invalid input rather than a database error.
 export const userStatusSchema = z.strictObject({isActive: z.boolean(), expectedVersion: z.number().int().positive().max(2_147_483_647)});
@@ -64,10 +66,17 @@ export const parcelDetailSchema = parcelSummarySchema.extend({
   hasProof: z.boolean(), anonymized: z.boolean(), terminalAt: z.iso.datetime().nullable(),
 });
 export type ParcelInput = z.infer<typeof parcelInputSchema>;
+// A11 sort keys (allowlist). Both end with createdAt desc and id desc so the order is always stable.
+export const PARCEL_SORTS = ['createdAt', 'currentStatus'] as const;
 export const parcelListQuerySchema = z.strictObject({
   page: z.string().regex(/^[1-9][0-9]*$/).transform(Number).pipe(z.number().int().max(100_000)).default(1),
   pageSize: z.string().regex(/^[1-9][0-9]*$/).transform(value => Math.min(Number(value), 100)).default(20),
+  // Literal search text (D-08): a tracking-number prefix or a recipient-name substring, case-insensitive.
+  q: z.string().trim().refine(v => chars(v) >= 1 && chars(v) <= 64, 'Use 1 to 64 characters.').optional(),
+  status: statusSchema.optional(),
+  sort: z.enum(PARCEL_SORTS).default('createdAt'),
 });
+export type ParcelListQuery = z.infer<typeof parcelListQuerySchema>;
 export const parcelListSchema = z.strictObject({
   items: z.array(parcelSummarySchema), page: z.number().int().positive(),
   pageSize: z.number().int().min(1).max(100), total: z.number().int().nonnegative(),

@@ -13,7 +13,7 @@ async function signIn(page: Page, username: string, secret = password()) {
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 }
 
-for (const [username, landing, heading] of [['seller.a', '/seller/parcels', 'Your parcels'], ['rider.a', '/rider/parcels', 'Assigned parcels'], ['admin', '/admin/dashboard', 'Admin workspace']]) {
+for (const [username, landing, heading] of [['seller.a', '/seller/parcels', 'Your parcels'], ['rider.a', '/rider/parcels', 'Assigned parcels'], ['admin', '/admin/dashboard', 'Parcel dashboard']]) {
   test(`${username} signs in, survives a refresh, signs out and cannot go back to private content`, async ({ page, context, request }) => {
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));

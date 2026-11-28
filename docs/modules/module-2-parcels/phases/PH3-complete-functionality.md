@@ -1,6 +1,6 @@
 # M2 PH3: Complete module functionality
 
-Owner: Zikri. Phase PH3 of [phase framework](../../../shared/phase-framework.md). Status: Planned.
+Owner: Zikri. Phase PH3 of [phase framework](../../../shared/phase-framework.md). Status: In progress. M2-PH3-T01 (replay-safe creation, TC01 and TC02) and M2-PH3-T02 (A11 search, status filter and sort, TC03, TC04 and TC15) are implemented and tested. M2-PH3-T04 adds revision `0009_tracking_lookup` and the `tracking_runtime` lookup service (TC06). M2-PH3-T05 adds A13 `POST /public/tracking` (TC07, TC08, TC19) and M2-PH3-T06 connects `/track` to it (TC09, TC10). M2-PH3-T10 records the feature-level security rows (M2-01, M2-02, M2-04 to M2-07, partial M2-10, RLS-07, RLS-08 and S-01 for A13) with actual results; TC14 is `tests/integration/parcel-hostile-input.test.ts`. M2-PH3-T08 adds revision `0010_retention_functions` (TC12, TC13; handoff H36); the scheduled job is M2-PH4-T03. M2-PH3-T03 is published: the H34 slot contract is in [src/shared/types/parcel-slots.ts](../../../../src/shared/types/parcel-slots.ts), and the completed A12 detail is proven by TC05 and TC20 in `tests/integration/parcel-detail.test.ts`; M2-PH3-T07 adds Seller search, status filter and order on `/seller/parcels` and wires the H34 slots into `/parcels/:id` with placeholder components until H35 (TC11); see [implementation status](../../../implementation-status.md#m2-ph3-in-progress).
 
 ## 1 Objective
 
