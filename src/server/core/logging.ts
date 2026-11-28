@@ -6,6 +6,6 @@ export function redact(value: unknown): unknown {
   if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k,v]) => [k, sensitive.test(k) ? '[REDACTED]' : redact(v)]));
   return value;
 }
-export function logEvent(event: 'request_failed'|'service_ready'|'job_completed'|'status_changed', context: Record<string,unknown> = {}) {
+export function logEvent(event: 'request_failed'|'service_ready'|'job_completed'|'status_changed'|'account_journal_gap', context: Record<string,unknown> = {}) {
   console.log(JSON.stringify({event,...redact(context) as object}));
 }
