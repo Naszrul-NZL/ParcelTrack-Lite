@@ -10,4 +10,4 @@ export function createApiClient(options:{fetcher?:typeof fetch;csrf:()=>string|n
     return response.status===204?undefined as T:response.json();
   };
 }
-export type SessionState={status:'loading'|'anonymous'|'authenticated'|'error';principal:Principal|null;csrfToken:string|null};
+export type SessionState={status:'loading'|'anonymous'|'authenticated'|'error';principal:Principal|null;csrfToken:string|null;/** Set when a signed-in session was ended by the server (a 401), not by the person signing out. */ended?:'expired'};

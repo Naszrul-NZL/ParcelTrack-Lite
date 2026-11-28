@@ -11,6 +11,7 @@ import { recordAudit } from './audit';
 import { verifyCsrf } from './csrf';
 import { RATE_RULES, RateLimiter, normalizeSource, type Clock } from './rate-limit';
 import { readSessionContext } from './session-context';
+import { accountJournal, type AccountJournal } from './account-journal';
 import {
   createAnonymousSession, createUserSession, expiredCookie, findLiveSession, readCookieToken,
   revokeSession, sessionCookie, tokenDigest,
@@ -27,6 +28,8 @@ export type AuthServiceDependencies = {
   /** Trusted client address; defaults to the adapter-supplied socket address. */
   source?: (request: Request) => string;
   clock?: Clock;
+  /** Off-database account journal; defaults to the configured one. Written after each account change commits. */
+  journal?: AccountJournal;
 };
 
 type Snapshot = { id: string; password_hash: string; session_version: number; is_active: boolean; must_change_password: boolean; credential_expired: boolean };
@@ -56,6 +59,7 @@ async function readBoundedJson(request: Request): Promise<unknown> {
 
 export function createAuthService(dependencies: AuthServiceDependencies) {
   const { pool, settings, passwords } = dependencies;
+  const journal = () => dependencies.journal ?? accountJournal();
   const limiter = new RateLimiter(settings.RATE_LIMIT_KEY, dependencies.clock);
   const sourceOf = (request: Request) => normalizeSource((dependencies.source ?? sourceAddress)(request));
   // Session, CSRF and limiter housekeeping never take the backup lock, so these transactions are not write transactions.
@@ -197,7 +201,9 @@ export function createAuthService(dependencies: AuthServiceDependencies) {
     const row = await workWrite(async client => (await client.query(
       `SELECT id::text AS id, username, display_name AS "displayName", role, must_change_password AS "mustChangePassword"
        FROM app.register_account($1, $2, $3, 'SELLER', $4)`, [input.username, input.displayName, hash, requestId])).rows[0]);
-    return Response.json(principalSchema.parse(row), { status: 201 });
+    const principal = principalSchema.parse(row);
+    await journal().record(principal.id, 'USER_CREATED');
+    return Response.json(principal, { status: 201 });
   }
 
   /**
@@ -242,6 +248,7 @@ export function createAuthService(dependencies: AuthServiceDependencies) {
       await assertConnectedRole(client, 'app_runtime');
       await client.query('SELECT app.change_password($1, $2, $3)', [snapshot.password_hash, newHash, requestId]);
     });
+    await journal().record(principal.id, 'PASSWORD_CHANGED');
     return new Response(null, { status: 204, headers: { 'Set-Cookie': expiredCookie(settings) } });
   }
 

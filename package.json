@@ -25,6 +25,8 @@
     "local:up": "node scripts/supabase.mjs up",
     "local:down": "node scripts/supabase.mjs down",
     "local:status": "node scripts/supabase.mjs status",
+    "ops": "tsx --conditions=react-server scripts/ops.ts",
+    "maintenance": "tsx --conditions=react-server scripts/maintenance.ts",
     "db:bootstrap": "tsx --conditions=react-server scripts/db-bootstrap.ts",
     "db:migrate": "tsx --conditions=react-server scripts/db-migrate.ts",
     "db:verify": "tsx --conditions=react-server scripts/db-verify.ts",

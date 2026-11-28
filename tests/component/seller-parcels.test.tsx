@@ -59,7 +59,8 @@ it('shows local and server field errors, sends once while pending, and keeps the
   expect(await screen.findByText(/Enter a weight from/)).toBeVisible();
   fireEvent.click(submit);
   const receipt = await screen.findByRole('heading', { name: 'Parcel registered' });
-  expect(receipt).toHaveFocus();
+  // Focus moves in an effect, which can run just after the heading appears.
+  await waitFor(() => expect(receipt).toHaveFocus());
   expect(screen.getByRole('heading', { name: number })).toBeVisible();
   expect(screen.getByRole('link', { name: 'View parcel details' })).toHaveAttribute('href', '/parcels/12');
   expect(submitted).toHaveLength(2);

@@ -12,7 +12,11 @@ export function AppNavigation() {
   const session = useSession();
   const [failed, setFailed] = useState(false);
   const principal = session.status === 'authenticated' ? session.principal : null;
-  const links = [['/', 'Home'], ['/track', 'Track a parcel'], ...(principal ? [[ROLE_LANDING[principal.role], 'Your workspace']] : [['/login', 'Sign in']])];
+  // An account that must change its password sees no workspace links: every private route leads to the password screen.
+  const links = [['/', 'Home'], ['/track', 'Track a parcel'], ...(principal
+    ? principal.mustChangePassword ? [['/account/password', 'Change password']]
+      : [[ROLE_LANDING[principal.role], 'Your workspace'], ...(principal.role === 'ADMIN' ? [['/admin/users', 'Accounts']] : []), ['/account/password', 'Password']]
+    : [['/login', 'Sign in'], ['/register', 'Create account']])];
 
   async function signOut() {
     setFailed(false);

@@ -29,7 +29,10 @@ Example of a concrete dependency: Zikri's protected parcel-registration endpoint
 | 8 | `0008_account_functions` (`register_account`, `change_password`, `set_user_active`, `admin_reset_password`, `credential_expires_at`, `get_login_snapshot` with `credential_expired`, directory and audit indexes) | Naszrul M1-PH3 | 0007 | Implemented; the assign-versus-disable race with `lock_assignee` is proven in `tests/integration/account-functions.test.ts` |
 | 9 | `0009_tracking_lookup` (`lookup_tracking`) | Zikri M2-PH3-T04 | 0008 | Implemented: owned by `lookup_fn_owner`, executable only by `tracking_runtime`; proven by `tests/integration/tracking-lookup.test.ts` |
 | 10 | `0010_retention_functions` (`list_retention_candidates`, `anonymize_parcel`) | Zikri M2-PH3-T08 | 0009 | Implemented: owned by `maintenance_fn_owner`, executable only by `maintenance_runtime`; adds the owner's audit insert and history-time read; proven by `tests/integration/retention.test.ts` |
-| later | `proof_maintenance_functions` (Syauqi); `session_cleanup_functions`, `ops_functions` (Naszrul) | owner of the function | 0007 | Additive; single head enforced by Zikri |
+| 11 | `0011_audit_viewer` (`list_audit_events`, `SELECT` on `audit_event` for `auth_fn_owner` only) | Naszrul M1-PH3 | 0010 | Implemented; the only read path to `audit_event` for the runtime role, proven by `tests/integration/admin-audit.test.ts` |
+| 12 | `0012_ops_functions` (`provision_admin`, `set_maintenance_mode`, `get_maintenance_state`) | Naszrul M1-PH3 | 0011 | Implemented; `ops_runtime` only, proven by `tests/integration/ops-functions.test.ts`. Merge after `0011_audit_viewer` so the order check passes on shared databases |
+| 13 | `0013_ops_account_commands` (lock, recover, purge sessions, force password change, quarantine after restore, account existence) | Naszrul M1-PH3 | 0012 | Implemented; `ops_runtime` only, proven by `tests/integration/ops-account-commands.test.ts` |
+| later | `proof_maintenance_functions` (Syauqi); `session_cleanup_functions` and the remaining `ops_functions` commands (Naszrul) | owner of the function | 0007 | Additive; single head enforced by Zikri |
 
 ## Handoff register
 

@@ -1,3 +1,4 @@
+import type { AccountJournal } from '@/server/modules/auth/account-journal';
 import { apiHandler } from '@/server/core/handler';
 import { PasswordService } from '@/server/modules/auth/password';
 import { createAuthService } from '@/server/modules/auth/service';
@@ -9,7 +10,7 @@ import type { AccountName, IsolatedDatabase } from './isolated-database';
 /** H20 test helper: signs in through the real A01/A03 handlers and the real session table (retires TMP-01 and TMP-04). */
 export const DEFAULT_ACCOUNT: Record<Role, AccountName> = { ADMIN: 'admin', SELLER: 'seller.a', RIDER: 'rider.a' };
 
-export type HandlerOptions = { source?: string; clock?: Clock; registrationLimit?: number };
+export type HandlerOptions = { source?: string; clock?: Clock; registrationLimit?: number; journal?: AccountJournal };
 export type LoginSession = {
   principal: Principal;
   /** Cookie jar value for the Cookie header. */
@@ -29,6 +30,7 @@ export function authHandlers(database: IsolatedDatabase, options: HandlerOptions
     source: () => options.source ?? '127.0.0.1',
     clock: options.clock,
     registrationLimit: options.registrationLimit,
+    journal: options.journal,
   });
   return {
     csrf: apiHandler(request => service.csrf(request)),
