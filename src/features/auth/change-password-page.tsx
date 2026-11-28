@@ -88,7 +88,7 @@ function Screen({ onChanged }: { onChanged(): void }) {
       <p className={styles.intro}>{mustChange
         ? 'An Admin set your current password. Choose your own to continue to your workspace.'
         : `Signed in as ${principal.displayName}. Enter your current password, then choose a new one.`}</p>
-      <form className={styles.form} onSubmit={submit} noValidate aria-busy={pending} aria-label="Change your password">
+      <form method="post" className={styles.form} onSubmit={submit} noValidate aria-busy={pending} aria-label="Change your password">
         <div className={styles.field}><PasswordField key={`current-${attempt}`} ref={element => { inputs.current.currentPassword = element; }} id="currentPassword" label="Current password" autoComplete="current-password"
           value={values.currentPassword} onChange={set('currentPassword')} disabled={pending} error={errors.currentPassword} /></div>
         <div className={styles.field}><PasswordField key={`new-${attempt}`} ref={element => { inputs.current.newPassword = element; }} id="newPassword" label="New password" autoComplete="new-password"
