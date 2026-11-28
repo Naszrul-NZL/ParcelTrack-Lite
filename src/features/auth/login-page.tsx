@@ -35,7 +35,13 @@ function failureCopy(failure: Failure): { title: string; detail: string } {
   }
 }
 
-export function LoginPage({ initialWorkspace }: { initialWorkspace: Workspace }) {
+const notices = {
+  registered: { title: 'Your account is ready.', detail: 'Sign in with the username and password you just chose.' },
+  'password-changed': { title: 'Your password was changed.', detail: 'You’ve been signed out everywhere. Sign in with your new password.' },
+};
+export type LoginNotice = keyof typeof notices;
+
+export function LoginPage({ initialWorkspace, notice }: { initialWorkspace: Workspace; notice?: LoginNotice }) {
   const session = useSession();
   const router = useRouter();
   const [workspace, setWorkspace] = useState<Workspace>(initialWorkspace);
@@ -52,7 +58,7 @@ export function LoginPage({ initialWorkspace }: { initialWorkspace: Workspace })
   const signedIn = session.status === 'authenticated' && session.principal;
 
   // A signed-in person has no use for the form: send them to their workspace.
-  useEffect(() => { if (session.status === 'authenticated' && session.principal) router.replace(ROLE_LANDING[session.principal.role]); }, [session.status, session.principal, router]);
+  useEffect(() => { if (session.status === 'authenticated' && session.principal) router.replace(session.principal.mustChangePassword ? '/account/password' : ROLE_LANDING[session.principal.role]); }, [session.status, session.principal, router]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -75,13 +81,15 @@ export function LoginPage({ initialWorkspace }: { initialWorkspace: Workspace })
   return <Card className="sign-in-layout grid gap-0 py-0 ring-0">
     <section className="sign-in-form-panel" aria-labelledby="signin-title"><h1 id="signin-title">Sign in</h1><p className="sign-in-intro">Your parcels and deliveries,<br />ready when you are.</p>
       {signedIn ? <p className="guard-status" role="status">You’re already signed in. Opening your workspace…</p> :
+      <>{notice && !failure && <Alert className="form-feedback mt-6 mb-0 p-4 text-[13px]" role="status"><AlertTitle className="font-semibold">{notices[notice].title}</AlertTitle><AlertDescription className="text-[13px]"><p>{notices[notice].detail}</p></AlertDescription></Alert>}
       <form onSubmit={submit} noValidate aria-busy={pending}>
         <div className="form-field"><Label htmlFor="username">Username</Label><Input ref={usernameInput} id="username" name="username" autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={50} value={username} onChange={event => { setUsername(event.target.value); setFailure(null); }} placeholder="Enter your username" aria-invalid={!!errors.username} aria-describedby={errors.username ? 'username-error' : undefined} /><FieldFeedback id="username-error" error={errors.username} /></div>
         <div className="form-field"><Label htmlFor="password">Password</Label><div className="password-input"><Input ref={passwordInput} id="password" name="password" type={visible ? 'text' : 'password'} autoComplete="current-password" maxLength={128} value={password} onChange={event => { setPassword(event.target.value); setFailure(null); }} placeholder="Enter your password" aria-invalid={!!errors.password || !!failure} aria-describedby={errors.password ? 'password-error' : failure ? 'signin-failure' : undefined} /><Button variant="ghost" size="sm" className="h-11 px-2 text-[13px]" type="button" aria-label={visible ? 'Hide password' : 'Show password'} aria-pressed={visible} onClick={() => setVisible(!visible)}>{visible ? 'Hide' : 'Show'}</Button></div>{errors.password && <p className="field-error" id="password-error" role="alert">{errors.password}</p>}</div>
         <Button className="button sign-in-button" type="submit" disabled={pending}>{pending ? 'Signing in…' : 'Sign in'}</Button>
         {failure && <Alert variant="destructive" className="form-feedback p-4 text-[13px]" id="signin-failure" ref={failureNotice}><AlertTitle className="font-semibold">{failureCopy(failure).title}</AlertTitle><AlertDescription className="text-[13px]"><p>{failureCopy(failure).detail}</p></AlertDescription></Alert>}
         {pending && <p className="sr-only" role="status">Signing in</p>}
-      </form>}
+      </form></>}
+      <p className="login-track-link">New seller? <Link href="/register">Create an account</Link></p>
       <p className="login-track-link">Checking a delivery? <Link href="/track">Track without signing in</Link></p>
     </section>
     <section className="workspace-preview" aria-labelledby="workspace-title">

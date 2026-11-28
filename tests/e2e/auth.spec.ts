@@ -57,9 +57,14 @@ test('a Seller opening the Admin workspace is told it is not theirs', async ({ p
   await expect(page.getByRole('link', { name: 'Go to your workspace', exact: true })).toHaveAttribute('href', '/seller/parcels');
 });
 
-test('an account that must change its password is held on a notice', async ({ page }) => {
+test('an account that must change its password is sent to the change screen and held there', async ({ page }) => {
   await signIn(page, 'must.change');
+  await expect(page).toHaveURL(/\/account\/password$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Set a new password');
+  // Other private screens still refuse it, with a way to the change screen.
+  await page.goto('/seller/parcels');
   await expect(page.getByText('Change your password before you continue.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Change password', exact: true })).toHaveAttribute('href', '/account/password');
 });
 
 test('sign-in works with the keyboard alone on a phone-sized screen', async ({ page }) => {
