@@ -46,6 +46,12 @@ it('M2-PH3-TC10 posts the normalized number without a session, and shows Malaysi
   expect(window.location.href).not.toContain(NUMBER);
 });
 
+it('keeps the number out of the URL if the form is submitted before the page is interactive', () => {
+  render(<TrackPage />);
+  // A native submit uses the form's own method; the default, GET, would append ?trackingNumber= to the address.
+  expect(field().closest('form')).toHaveAttribute('method', 'post');
+});
+
 it('M2-PH3-TC10 shows distinct, safe messages for 404, 422, 429, server and network failures, keeping the number', async () => {
   const responses: (() => Promise<Response>)[] = [
     () => errorBody(404, 'NOT_FOUND'),
