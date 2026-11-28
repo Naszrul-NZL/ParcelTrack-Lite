@@ -652,6 +652,57 @@
         }
       }
     },
+    "/api/v1/public/tracking": {
+      "post": {
+        "operationId": "A13",
+        "description": "Public parcel tracking. No session or CSRF token is needed, but the request must be same-origin and is limited to 30 lookups per source per minute, invalid tokens included. The token is trimmed and uppercased before validation. The response holds only the status history; it never contains recipient, actor or proof data.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "trackingNumber": {
+                    "type": "string",
+                    "pattern": "^PTL-[0-9A-F]{32}$"
+                  }
+                },
+                "required": [
+                  "trackingNumber"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Public status history, oldest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicTracking"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No parcel has this tracking number."
+          },
+          "422": {
+            "description": "The tracking number is not in the PTL- format."
+          },
+          "429": {
+            "description": "Too many lookups from this source; see Retry-After."
+          },
+          "default": {
+            "description": "Safe error envelope. See the system contract."
+          }
+        }
+      }
+    },
     "/api/v1/rider/parcels": {
       "get": {
         "operationId": "A16",
