@@ -12,7 +12,7 @@ export function AppNavigation() {
   const session = useSession();
   const [failed, setFailed] = useState(false);
   const principal = session.status === 'authenticated' ? session.principal : null;
-  const links = [['/', 'Home'], ['/track', 'Track a parcel'], ...(principal ? [[ROLE_LANDING[principal.role], 'Your workspace'], ['/account/password', 'Password']] : [['/login', 'Sign in'], ['/register', 'Create account']])];
+  const links = [['/', 'Home'], ['/track', 'Track a parcel'], ...(principal ? [[ROLE_LANDING[principal.role], 'Your workspace'], ...(principal.role === 'ADMIN' ? [['/admin/users', 'Accounts']] : []), ['/account/password', 'Password']] : [['/login', 'Sign in'], ['/register', 'Create account']])];
 
   async function signOut() {
     setFailed(false);

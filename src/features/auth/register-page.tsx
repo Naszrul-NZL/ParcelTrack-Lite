@@ -108,7 +108,7 @@ export function RegisterPage({ fetcher = fetch }: { fetcher?: typeof fetch }) {
       <h1 className={styles.heading}>Create a Seller account</h1>
       <p className={styles.intro}>Register parcels and follow each delivery. You’ll sign in with the username you choose here.</p>
       {signedIn ? <p className="guard-status mt-6" role="status">You’re already signed in. Opening your workspace…</p> :
-      <form className={styles.form} onSubmit={submit} noValidate aria-busy={pending} aria-label="Create a Seller account">
+      <form method="post" className={styles.form} onSubmit={submit} noValidate aria-busy={pending} aria-label="Create a Seller account">
         <div className={styles.field}>
           <Label htmlFor="username" className="block">Username</Label>
           <Input ref={element => { inputs.current.username = element; }} id="username" name="username" className="mt-2.5" autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={50}
