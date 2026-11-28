@@ -207,8 +207,13 @@ Revision order is fixed and equals dependency order; a revision is "applied" onc
 | `0006_delivery_functions` | Syauqi | Implemented: `update_delivery_status`, start-delivery branch only |
 | `0007_delivery_final` | Syauqi | Implemented: `assign_parcel`, `lock_delivery_target`, `lock_assignee` (target-Rider check owned by `auth_fn_owner`), final-outcome branch. Reconcile helpers are in `proof_maintenance_functions` |
 | `0008_account_functions` | Naszrul | Implemented: `register_account`, `change_password`, `set_user_active`, `admin_reset_password`, the 72-hour `credential_expires_at` column, `get_login_snapshot` reporting `credential_expired`, and the Admin directory and audit indexes |
+<<<<<<< HEAD
 | `0011_audit_viewer` | Naszrul | Implemented: `list_audit_events`, the only read path to `audit_event` for the runtime role (re-verifies the Admin, returns allowlisted fields and detail keys only) |
 | later, named | owner of the function | `tracking_lookup`, `retention_functions` (Zikri); `proof_maintenance_functions` (Syauqi); `session_cleanup_functions`, `ops_functions` (Naszrul) |
+=======
+| `0012_ops_functions` | Naszrul | Implemented: `provision_admin`, `set_maintenance_mode` and `get_maintenance_state`, owned by `ops_fn_owner` and executable only by `ops_runtime`. Follows `0011_audit_viewer`, which must be on `main` first |
+| later, named | owner of the function | `tracking_lookup`, `retention_functions` (Zikri); `proof_maintenance_functions` (Syauqi); `session_cleanup_functions` and the remaining `ops_functions` commands (Naszrul) |
+>>>>>>> origin/feat/m1-ph3-ops-provision-admin
 
 Roles. Login roles: `migration_owner` (owns only application schema `app`, not the Supabase database or vendor schemas), `app_runtime`, `tracking_runtime`, `maintenance_runtime`, `ops_runtime`, `backup_operator` (operator-only, never supplied to the Next.js service, `BYPASSRLS` so a logical dump is complete; the single documented exception, listed in the grants snapshot) and, outside production only, `fixture_provisioner` (member of `domain_writer` with `SET` so seeding passes the same policies and no production migration references it). Non-login owners: `domain_writer`, `auth_fn_owner`, `lookup_fn_owner`, `maintenance_fn_owner`, `ops_fn_owner`. Function owners get `USAGE` and `CREATE` on schema `app` (needed for `ALTER FUNCTION ... OWNER TO`) and nothing more; runtime roles get neither. On PostgreSQL 16 or later memberships use `WITH SET TRUE`. `ALTER DEFAULT PRIVILEGES` is set for each function owner, not only for `migration_owner`.
 
