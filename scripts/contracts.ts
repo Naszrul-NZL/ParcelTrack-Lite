@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import { z } from 'zod';
-import { principalSchema,userSummarySchema,userListSchema,userStatusSchema,registerSchema,changePasswordSchema,createRiderSchema,temporaryPasswordSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema,trackingInputSchema,PARCEL_SORTS } from '../src/shared/schemas';
-import { STATUSES } from '../src/shared/constants';
+import { principalSchema,userSummarySchema,userListSchema,userStatusSchema,registerSchema,changePasswordSchema,createRiderSchema,temporaryPasswordSchema,auditListSchema,loginSchema,loginResponseSchema,csrfResponseSchema,parcelInputSchema,parcelListSchema,parcelSummarySchema,parcelDetailSchema,publicTrackingSchema,trackingInputSchema,PARCEL_SORTS } from '../src/shared/schemas';
+import { AUDIT_TYPES, STATUSES } from '../src/shared/constants';
 import { riderListSchema,riderStatusMultipartSchema } from '../src/features/delivery/rider-contract';
 import { adminParcelListSchema,assignmentSchema,dashboardSchema } from '../src/features/delivery/admin-contract';
 import { assertPlanEndpointParity, assertProductionImportBoundary, implementedEndpoints } from './contract-inventory';
-const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,UserSummary:userSummarySchema,UserList:userListSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelList:parcelListSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema,RiderList:riderListSchema,TemporaryPassword:temporaryPasswordSchema,AdminParcelList:adminParcelListSchema,Dashboard:dashboardSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
+const schemas=Object.fromEntries(Object.entries({Principal:principalSchema,UserSummary:userSummarySchema,UserList:userListSchema,LoginRequest:loginSchema,LoginResponse:loginResponseSchema,CsrfResponse:csrfResponseSchema,ParcelList:parcelListSchema,ParcelSummary:parcelSummarySchema,ParcelDetail:parcelDetailSchema,PublicTracking:publicTrackingSchema,RiderList:riderListSchema,TemporaryPassword:temporaryPasswordSchema,AuditList:auditListSchema,AdminParcelList:adminParcelListSchema,Dashboard:dashboardSchema}).map(([name,schema])=>[name,z.toJSONSchema(schema)]));
 assertPlanEndpointParity();
 assertProductionImportBoundary();
 const paths:Record<string,Record<string,unknown>>={};
@@ -97,6 +97,23 @@ for(const endpoint of implementedEndpoints()) {
       ],
       responses: {
         '200': { description: 'Page of account summaries.', content: { 'application/json': { schema: { $ref: '#/components/schemas/UserList' } } } },
+        default: { description: 'Safe error envelope. See the system contract.' },
+      },
+    };
+    continue;
+  }
+  if (endpoint.id === 'A20') {
+    paths[endpoint.path].get = {
+      operationId: endpoint.id,
+      description: 'List audit events for an Admin, newest first. Each event carries only safe fields and allowlisted details; request bodies, passwords and tokens are never part of an audit record.',
+      parameters: [
+        { name: 'eventType', in: 'query', schema: { type: 'string', enum: [...AUDIT_TYPES] } },
+        { name: 'parcelId', in: 'query', schema: { type: 'string', pattern: '^[1-9][0-9]{0,17}$' } },
+        { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100000, default: 1 } },
+        { name: 'pageSize', in: 'query', description: 'Values above 100 are capped at 100.', schema: { type: 'integer', minimum: 1, default: 20 } },
+      ],
+      responses: {
+        '200': { description: 'Page of audit events.', content: { 'application/json': { schema: { $ref: '#/components/schemas/AuditList' } } } },
         default: { description: 'Safe error envelope. See the system contract.' },
       },
     };

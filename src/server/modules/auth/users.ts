@@ -1,6 +1,6 @@
 import 'server-only';
 import type { PoolClient } from 'pg';
-import { userListSchema, userSummarySchema, type UserList } from '@/shared/schemas';
+import { auditListSchema, userListSchema, userSummarySchema, type AuditList, type UserList } from '@/shared/schemas';
 
 export type UserStatusInput = { isActive: boolean; expectedVersion: number };
 
@@ -64,4 +64,16 @@ export async function listUsers(client: PoolClient, { role, isActive, page, page
   `, [role ?? null, isActive ?? null, pageSize, (page - 1) * pageSize]);
   // The strict response schema is the allowlist: an extra column would fail here instead of reaching the client.
   return userListSchema.parse({ items: result.items, page, pageSize, total: Number(result.total) });
+}
+
+export type AuditFilters = { eventType?: string; parcelId?: string; page: number; pageSize: number };
+
+/**
+ * Admin audit list (A20). `app_runtime` cannot read the audit table: `app.list_audit_events` re-verifies the Admin,
+ * returns allowlisted fields and detail keys only, and the strict response schema checks it again.
+ */
+export async function listAuditEvents(client: PoolClient, { eventType, parcelId, page, pageSize }: AuditFilters): Promise<AuditList> {
+  const { rows: [row] } = await client.query<{ result: unknown }>(
+    'SELECT app.list_audit_events($1, $2, $3, $4) AS result', [eventType ?? null, parcelId ?? null, page, pageSize]);
+  return auditListSchema.parse(row.result);
 }

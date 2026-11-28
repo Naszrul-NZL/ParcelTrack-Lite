@@ -8,7 +8,7 @@ const admin = (database: IsolatedDatabase) => createUserAdminHandlers(createPrin
   APP_ORIGIN: origin(), SESSION_COOKIE_NAME: 'ptl_session_dev',
 }));
 
-/** M1 Admin rows (PH3): A07 to A09 and A21; A20 registers its row with its endpoint. */
+/** M1 Admin rows (PH3): A07 to A09, A20 and A21. */
 export const adminRows: MatrixRow[] = [
   {
     endpoint: 'A07', label: 'GET /admin/users',
@@ -42,5 +42,10 @@ export const adminRows: MatrixRow[] = [
       const userId = database.accounts['seller.b'];
       return admin(database).resetPassword(actor.request(`/admin/users/${userId}/password-reset`, { method: 'POST' }), { params: Promise.resolve({ userId }) });
     },
+  },
+  {
+    endpoint: 'A20', label: 'GET /admin/audit',
+    expected: { anonymous: 401, 'seller.a': 403, 'seller.b': 403, 'rider.a': 403, 'rider.b': 403, admin: 200, inactive: 401, 'must.change': 403 },
+    call: (actor, _handlers, database) => admin(database).audit(actor.request('/admin/audit')),
   },
 ];

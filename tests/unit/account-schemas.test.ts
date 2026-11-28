@@ -69,3 +69,9 @@ describe('0008_account_functions hardening', () => {
     expect(lintSql(fs.readFileSync('db/sql/0008_account_functions.sql', 'utf8'))).toEqual([]);
   });
 });
+
+describe('0011_audit_viewer hardening', () => {
+  it('passes the privileged SQL lint rules', () => {
+    expect(lintSql(fs.readFileSync('db/sql/0011_audit_viewer.sql', 'utf8'))).toEqual([]);
+  });
+});

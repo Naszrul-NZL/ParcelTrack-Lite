@@ -13,6 +13,8 @@ const shape = z.object({
   DB_POOL_MAX: z.coerce.number().int().min(1).max(20).default(4),
   HASH_CONCURRENCY: z.coerce.number().int().min(1).max(8).default(2),
   REGISTRATION_LIMIT_PER_HOUR: z.coerce.number().int().min(1).max(1000).default(30),
+  // Where the off-database account journal is appended (D-16). Unset means the journal is off.
+  ACCOUNT_JOURNAL_PATH: z.string().min(1).optional(),
 });
 export type Settings = z.infer<typeof shape>;
 export function parseSettings(env: Record<string,string|undefined>): Settings {
