@@ -38,6 +38,7 @@ function failureCopy(failure: Failure): { title: string; detail: string } {
 const notices = {
   registered: { title: 'Your account is ready.', detail: 'Sign in with the username and password you just chose.' },
   'password-changed': { title: 'Your password was changed.', detail: 'You’ve been signed out everywhere. Sign in with your new password.' },
+  expired: { title: 'Your session ended.', detail: 'You were signed out after a period of inactivity, or because your account changed. Sign in again to continue.' },
 };
 export type LoginNotice = keyof typeof notices;
 

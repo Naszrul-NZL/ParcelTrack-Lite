@@ -114,6 +114,6 @@ function Screen({ onChanged }: { onChanged(): void }) {
 
 /** A06: the signed-in account changes its own password. Reachable while a password change is still required. */
 export function ChangePasswordPage() {
-  const [signInPath, setSignInPath] = useState('/login');
+  const [signInPath, setSignInPath] = useState<string>();
   return <RouteGuard allowPasswordChange signInPath={signInPath}><Screen onChanged={() => setSignInPath('/login?notice=password-changed')} /></RouteGuard>;
 }

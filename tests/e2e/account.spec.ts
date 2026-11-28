@@ -127,3 +127,23 @@ test('the change screen is not shown to a visitor who is not signed in', async (
   await page.goto('/account/password');
   await expect(page).toHaveURL(/\/login$/);
 });
+
+test('a session the server ends is explained on the sign-in page, and the next sign-in shows no earlier data', async ({ page, context }) => {
+  await signIn(page, 'seller.a');
+  await expect(page).toHaveURL(/\/seller\/parcels$/);
+  await page.getByRole('link', { name: 'Track a parcel', exact: true }).click();
+  await expect(page).toHaveURL(/\/track$/);
+  // The server no longer knows the session (as after an idle timeout or a password reset elsewhere).
+  await context.clearCookies();
+  await page.getByRole('link', { name: 'Your workspace', exact: true }).click();
+  await expect(page).toHaveURL(/\/login\?notice=expired$/);
+  await expect(page.getByText('Your session ended.', { exact: true })).toBeVisible();
+
+  // A different person signs in on the same browser: nothing of the earlier account is left on screen or in storage.
+  await signIn(page, 'admin');
+  await expect(page).toHaveURL(/\/admin\/dashboard$/);
+  await expect(page.locator('body')).not.toContainText('seller.a');
+  const stored = await page.evaluate(() => ({ local: Object.keys(localStorage), session: Object.keys(sessionStorage) }));
+  expect(stored.session).toEqual([]);
+  expect(stored.local.filter(key => key !== 'ptl_theme')).toEqual([]);
+});

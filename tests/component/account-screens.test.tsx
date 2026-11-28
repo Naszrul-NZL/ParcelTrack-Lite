@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 const router = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn() }));
@@ -297,5 +297,82 @@ describe('M1-PH3-TC14 sign-in connections to the account screens', () => {
     await user.type(screen.getByLabelText('Password'), PASSWORD);
     await user.click(screen.getByRole('button', { name: 'Sign in' }));
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/account/password'));
+  });
+});
+
+describe('M1-PH3-T09 shell session handling', () => {
+  const guardedRoutes = (principal: typeof seller, extra: Record<string, Route | Route[]> = {}) => server({ ...signedIn(principal), ...extra });
+
+  it('says the session ended, on the sign-in page, when the server ends a signed-in session (401 on a later call)', async () => {
+    const { RouteGuard } = await import('@/features/auth/route-guard');
+    const { useSession } = await import('@/features/auth/session-provider');
+    function Screen() {
+      const session = useSession();
+      return <button onClick={() => void session.request('/seller/parcels').catch(() => undefined)}>Load parcels</button>;
+    }
+    const api = guardedRoutes(seller, { 'GET /seller/parcels': () => failure(401, 'UNAUTHENTICATED') });
+    const actor = userEvent.setup();
+    render(<SessionProvider fetcher={api.fetcher}><RouteGuard><Screen /></RouteGuard></SessionProvider>);
+    await actor.click(await screen.findByRole('button', { name: 'Load parcels' }));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/login?notice=expired'));
+  });
+
+  it('does not call a deliberate sign-out an expired session', async () => {
+    const { RouteGuard } = await import('@/features/auth/route-guard');
+    const { AppNavigation } = await import('@/components/app-navigation');
+    const api = guardedRoutes(seller, { 'POST /auth/logout': () => new Response(null, { status: 204 }) });
+    const actor = userEvent.setup();
+    render(<SessionProvider fetcher={api.fetcher}><AppNavigation /><RouteGuard><p>Private</p></RouteGuard></SessionProvider>);
+    await actor.click(await screen.findByRole('button', { name: 'Sign out' }));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/login'));
+    expect(router.replace).not.toHaveBeenCalledWith('/login?notice=expired');
+  });
+
+  it('shows the expiry notice on the sign-in page', async () => {
+    const api = server(anonymousVisitor);
+    render(<SessionProvider fetcher={api.fetcher}><LoginPage initialWorkspace="seller" notice="expired" /></SessionProvider>);
+    expect(await screen.findByText('Your session ended.')).toBeInTheDocument();
+    expect(screen.getByText(/Sign in again to continue/)).toBeInTheDocument();
+  });
+
+  it('sends a must-change account from any private screen to the password screen and trims its navigation', async () => {
+    const { RouteGuard } = await import('@/features/auth/route-guard');
+    const { AppNavigation } = await import('@/components/app-navigation');
+    const api = guardedRoutes({ ...seller, role: 'ADMIN', mustChangePassword: true });
+    render(<SessionProvider fetcher={api.fetcher}><AppNavigation /><RouteGuard role="ADMIN"><p>Admin only</p></RouteGuard></SessionProvider>);
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/account/password'));
+    expect(screen.queryByText('Admin only')).not.toBeInTheDocument();
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    expect(within(nav).getAllByRole('link').map(link => link.textContent)).toEqual(['Home', 'Track a parcel', 'Change password']);
+    expect(within(nav).getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+  });
+
+  it('shows a normal Admin the workspace, Accounts and Password links', async () => {
+    const { AppNavigation } = await import('@/components/app-navigation');
+    const api = guardedRoutes({ ...seller, role: 'ADMIN' });
+    render(<SessionProvider fetcher={api.fetcher}><AppNavigation /></SessionProvider>);
+    await screen.findByRole('button', { name: 'Sign out' });
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    expect(within(nav).getAllByRole('link').map(link => link.textContent)).toEqual(['Home', 'Track a parcel', 'Your workspace', 'Accounts', 'Password']);
+  });
+
+  it('clears private screens when a different person signs in, so nothing carries over', async () => {
+    const { RouteGuard } = await import('@/features/auth/route-guard');
+    const { useSession } = await import('@/features/auth/session-provider');
+    function Private() {
+      const session = useSession();
+      return <p>Private for {session.principal?.username}</p>;
+    }
+    function Switch() {
+      const session = useSession();
+      return <button onClick={() => void session.signIn({ username: 'rider.a', password: PASSWORD })}>Switch</button>;
+    }
+    const api = guardedRoutes(seller, { 'POST /auth/login': () => Response.json({ ...seller, id: '9', username: 'rider.a', role: 'RIDER', csrfToken: 'csrf-2' }) });
+    const actor = userEvent.setup();
+    render(<SessionProvider fetcher={api.fetcher}><Switch /><RouteGuard><Private /></RouteGuard></SessionProvider>);
+    expect(await screen.findByText('Private for seller.a')).toBeInTheDocument();
+    await actor.click(screen.getByRole('button', { name: 'Switch' }));
+    expect(await screen.findByText('Private for rider.a')).toBeInTheDocument();
+    expect(screen.queryByText('Private for seller.a')).not.toBeInTheDocument();
   });
 });

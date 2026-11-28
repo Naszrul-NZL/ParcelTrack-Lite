@@ -191,10 +191,12 @@ describe('M1-PH2-T10 route guard, sign-out and identity change', () => {
     expect(screen.queryByText(/Private for/)).not.toBeInTheDocument();
   });
 
-  it('holds a must-change account on a notice instead of the workspace', async () => {
+  it('holds a must-change account on a notice and sends it to the password screen instead of the workspace', async () => {
     guarded(signedIn({ mustChangePassword: true }));
     expect(await screen.findByText('Change your password before you continue.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Change password' })).toHaveAttribute('href', '/account/password');
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/account/password'));
+    for (const link of screen.getAllByRole('link', { name: 'Change password' })) expect(link).toHaveAttribute('href', '/account/password');
+    expect(screen.queryByRole('link', { name: 'Your workspace' })).not.toBeInTheDocument();
     expect(screen.queryByText(/Private for/)).not.toBeInTheDocument();
   });
 
