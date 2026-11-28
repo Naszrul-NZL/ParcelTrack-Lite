@@ -5,9 +5,9 @@ import { AppError } from '@/server/core/errors';
 import { apiHandler } from '@/server/core/handler';
 import { readJsonBody } from '@/server/core/json-body';
 import { getSettings } from '@/server/core/settings';
-import { createRiderSchema, idSchema, temporaryPasswordSchema, userListQuerySchema, userStatusSchema } from '@/shared/schemas';
+import { auditQuerySchema, createRiderSchema, idSchema, temporaryPasswordSchema, userListQuerySchema, userStatusSchema } from '@/shared/schemas';
 import { PasswordService, validatePassword } from './password';
-import { createRider, listUsers, resetPassword, setUserActive } from './users';
+import { createRider, listAuditEvents, listUsers, resetPassword, setUserActive } from './users';
 
 let production: PasswordService | undefined;
 const defaultPasswords = () => (production ??= new PasswordService(getSettings().HASH_CONCURRENCY));
@@ -28,6 +28,14 @@ export function createUserAdminHandlers(authorize: typeof principalUow = princip
         // A repeated key is ambiguous input, not something to merge or pick from.
         if (entries.length !== new Set(params.keys()).size) throw new AppError('VALIDATION_ERROR');
         return listUsers(client, userListQuerySchema.parse(Object.fromEntries(entries)));
+      });
+      return Response.json(result);
+    }),
+    audit: apiHandler(async request => {
+      const result = await authorize(request, { roles: ['ADMIN'] }, async client => {
+        const entries = Array.from(new URL(request.url).searchParams.entries());
+        if (entries.length !== new Set(entries.map(([key]) => key)).size) throw new AppError('VALIDATION_ERROR');
+        return listAuditEvents(client, auditQuerySchema.parse(Object.fromEntries(entries)));
       });
       return Response.json(result);
     }),
