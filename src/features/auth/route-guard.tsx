@@ -12,10 +12,14 @@ import { useSession } from './session-provider';
  * Client-side gate for a role workspace. It decides what to render only; every API and server service still
  * checks the session, role and CSRF token itself.
  */
-export function RouteGuard({ role, allowPasswordChange = false, signInPath = '/login', children }: { role?: Role; allowPasswordChange?: boolean; signInPath?: string; children: ReactNode }) {
+export function RouteGuard({ role, allowPasswordChange = false, signInPath, children }: { role?: Role; allowPasswordChange?: boolean; signInPath?: string; children: ReactNode }) {
   const session = useSession();
   const router = useRouter();
-  useEffect(() => { if (session.status === 'anonymous') router.replace(signInPath); }, [session.status, signInPath, router]);
+  const destination = signInPath ?? (session.ended === 'expired' ? '/login?notice=expired' : '/login');
+  const held = session.status === 'authenticated' && !!session.principal?.mustChangePassword && !allowPasswordChange;
+  useEffect(() => { if (session.status === 'anonymous') router.replace(destination); }, [session.status, destination, router]);
+  // A must-change account is taken to the password screen from any private page, not left on a notice.
+  useEffect(() => { if (held) router.replace('/account/password'); }, [held, router]);
 
   if (session.status === 'loading') return <p className="guard-status" role="status">Checking your session…</p>;
   if (session.status === 'anonymous') return <p className="guard-status" role="status">Taking you to sign in…</p>;

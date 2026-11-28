@@ -26,7 +26,9 @@ export function SessionProvider({ children, fetcher = fetch }: { children: React
       clearIdentity: () => {
         if (started !== epoch.current) return;
         csrf.current = null;
-        setState(current => current.status === 'anonymous' ? current : anonymous);
+        // A 401 on a signed-in page means the server ended the session (idle or absolute timeout, a password change or
+        // reset elsewhere, or the account was disabled). Keep that reason so the guard can say so on the sign-in page.
+        setState(current => current.status === 'anonymous' ? current : current.status === 'authenticated' ? { ...anonymous, ended: 'expired' } : anonymous);
       },
     })<T>(path, init);
   }, [fetcher]);
