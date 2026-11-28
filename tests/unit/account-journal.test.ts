@@ -76,7 +76,7 @@ describe('M1-PH3 account journal (D-16)', () => {
     expect(readJournal(file, new Date('2026-11-28T00:00:00.000Z')).records.map(record => record.userId)).toEqual(['2']);
     fs.writeFileSync(file + '.gap', '{}\n');
     expect(readJournal(file).gap).toBe(true);
-    expect(readJournal(path.join(directory, 'missing.ndjson'))).toEqual({ records: [], unreadable: 0, gap: false, unavailable: false });
+    expect(readJournal(path.join(directory, 'missing.ndjson'))).toEqual({ records: [], unreadable: 0, gap: false, unavailable: true });
   });
 
   it('is configured only through ACCOUNT_JOURNAL_PATH, and stays optional', () => {

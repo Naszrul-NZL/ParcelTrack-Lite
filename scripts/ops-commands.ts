@@ -14,6 +14,8 @@ const ERROR_MESSAGES: Record<string, string> = {
 /** Turns a database failure into one safe sentence: a SQLSTATE we know, or a generic line. Never the driver's text. */
 export function describeFailure(error: unknown) {
   const code = error && typeof error === 'object' && 'code' in error ? String((error as { code: unknown }).code) : '';
+  // The password rules reject before the database is asked.
+  if (code === 'VALIDATION_ERROR' || (error instanceof Error && error.name === 'ZodError')) return 'That password is too long or too common. Choose another.';
   return ERROR_MESSAGES[code] ?? 'The database refused the command.';
 }
 
@@ -101,17 +103,17 @@ export async function purgeSessions(client: Pick<Client, 'query'>, username: str
 }
 
 export type Reading = { records: { userId: string; event: string; isActive?: boolean }[]; unreadable: number; gap: boolean; unavailable: boolean };
-export type Reconciliation = { disabled: number; passwordChangeForced: number; accountsCreatedSinceBackup: string[]; reactivatedSinceBackup: string[]; unreadableLines: number; alreadyConsistent: number };
+export type Reconciliation = { disabled: number; passwordChangeForced: number; accountsCreatedSinceBackup: string[]; reactivatedSinceBackup: string[]; alreadyConsistent: number };
 
 /**
  * `reconcile-accounts --from-journal`: replays the journal for events after the backup time. Accounts disabled or locked
  * since are disabled again (the last status event wins); accounts whose password changed, was reset or was recovered since
  * must change it, because the restored hash is stale. Accounts created since the backup do not exist any more and are
- * listed, never recreated (their password hashes were not journaled). A journal that is unavailable or has a gap is
+ * listed, never recreated (their password hashes were not journaled). A journal that is missing, unreadable, damaged or has a gap is
  * refused: the answer is `quarantine-after-restore`, not a partial replay.
  */
 export async function reconcileAccounts(client: Pick<Client, 'query'>, reading: Reading): Promise<Reconciliation | Usage> {
-  if (reading.unavailable || reading.gap) return { error: 'The account journal is unavailable or has a gap, so it cannot be trusted. Run quarantine-after-restore instead.' };
+  if (reading.unavailable || reading.gap || reading.unreadable > 0) return { error: 'The account journal is missing, damaged or has a gap, so it cannot be trusted. Run quarantine-after-restore instead.' };
   const lastStatus = new Map<string, boolean>();
   const stale = new Set<string>();
   const created = new Set<string>();
@@ -122,7 +124,7 @@ export async function reconcileAccounts(client: Pick<Client, 'query'>, reading: 
     else if (record.event === 'PASSWORD_CHANGED' || record.event === 'PASSWORD_RESET') stale.add(record.userId);
     else if (record.event === 'USER_CREATED') created.add(record.userId);
   }
-  const result: Reconciliation = { disabled: 0, passwordChangeForced: 0, accountsCreatedSinceBackup: [], reactivatedSinceBackup: [], unreadableLines: reading.unreadable, alreadyConsistent: 0 };
+  const result: Reconciliation = { disabled: 0, passwordChangeForced: 0, accountsCreatedSinceBackup: [], reactivatedSinceBackup: [], alreadyConsistent: 0 };
   for (const [userId, active] of lastStatus) {
     if (active) { result.reactivatedSinceBackup.push(userId); continue; }
     const { rows: [row] } = await client.query<{ changed: boolean }>('SELECT app.lock_account_by_id($1, $2) AS changed', [userId, randomUUID()]);

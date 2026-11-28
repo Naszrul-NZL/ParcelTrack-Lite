@@ -159,7 +159,7 @@ describe('M1-PH3-T04 reconcile-accounts and quarantine-after-restore', () => {
       );
       const reading = readJournal(file, new Date('2026-11-27T00:00:00.000Z'));
       const result = await withOps(database, client => reconcileAccounts(client, reading));
-      expect(result).toEqual({ disabled: 1, passwordChangeForced: 2, accountsCreatedSinceBackup: ['999999'], reactivatedSinceBackup: [riderA.id], unreadableLines: 0, alreadyConsistent: 0 });
+      expect(result).toEqual({ disabled: 1, passwordChangeForced: 2, accountsCreatedSinceBackup: ['999999'], reactivatedSinceBackup: [riderA.id], alreadyConsistent: 0 });
       expect(await row(database, 'seller.b')).toMatchObject({ is_active: false, sessions: 0 });
       expect(await row(database, 'seller.a')).toMatchObject({ is_active: true, must_change_password: true });
       expect(await row(database, 'rider.b')).toMatchObject({ must_change_password: true });
@@ -171,12 +171,12 @@ describe('M1-PH3-T04 reconcile-accounts and quarantine-after-restore', () => {
     });
   });
 
-  it('refuses a journal that is unavailable or has a gap, and points to quarantine', async () => {
+  it('refuses a journal that is missing, damaged or has a gap, and points to quarantine', async () => {
     await harness.run(async database => {
       const before = await row(database, 'seller.b');
-      for (const reading of [{ records: [], unreadable: 0, gap: true, unavailable: false }, { records: [], unreadable: 0, gap: true, unavailable: true }]) {
+      for (const reading of [{ records: [], unreadable: 0, gap: true, unavailable: false }, { records: [], unreadable: 0, gap: true, unavailable: true }, { records: [], unreadable: 1, gap: false, unavailable: false }, readJournal(file + '.absent')]) {
         const result = await withOps(database, client => reconcileAccounts(client, reading));
-        expect(result).toEqual({ error: 'The account journal is unavailable or has a gap, so it cannot be trusted. Run quarantine-after-restore instead.' });
+        expect(result).toEqual({ error: 'The account journal is missing, damaged or has a gap, so it cannot be trusted. Run quarantine-after-restore instead.' });
       }
       expect(await row(database, 'seller.b')).toEqual(before);
     });

@@ -19,7 +19,7 @@ Private operations commands for the people who run ParcelTrack Lite. They sign i
 
 1. Keep the web service stopped, or in maintenance mode, until reconciliation is finished.
 2. `npm run ops -- purge-sessions --all`.
-3. Run `reconcile-accounts` with the journal file and the time of the backup. It refuses a journal that is unreadable or has a `.gap` marker beside it; in that case run `quarantine-after-restore --confirm` instead.
+3. Run `reconcile-accounts` with the journal file and the time of the backup. It refuses a journal that is missing or unreadable, has a damaged line, or has a `.gap` marker beside it; in that case run `quarantine-after-restore --confirm` instead.
 4. Read the result:
    - `disabled`: accounts disabled or locked since the backup are disabled again (the last status event wins).
    - `passwordChangeForced`: accounts whose password was changed, reset or recovered since the backup now must change it, because the restored hash is stale.

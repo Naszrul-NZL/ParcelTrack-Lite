@@ -55,11 +55,11 @@ export type JournalReading = { records: JournalRecord[]; unreadable: number; gap
 
 /**
  * Reads the journal for a restore: records at or after `since`, the number of damaged lines, whether a gap marker exists,
- * and whether the file could not be read at all (the restore then treats the journal as unavailable).
+ * and whether the file is missing or could not be read (the restore then treats the journal as unavailable).
  */
 export function readJournal(file: string, since?: Date): JournalReading {
   const gap = fs.existsSync(file + '.gap');
-  if (!fs.existsSync(file)) return { records: [], unreadable: 0, gap, unavailable: false };
+  if (!fs.existsSync(file)) return { records: [], unreadable: 0, gap, unavailable: true };
   let text: string;
   try { text = fs.readFileSync(file, 'utf8'); } catch { return { records: [], unreadable: 0, gap: true, unavailable: true }; }
   const records: JournalRecord[] = [];
